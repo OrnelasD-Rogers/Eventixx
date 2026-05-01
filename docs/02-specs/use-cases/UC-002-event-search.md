@@ -51,7 +51,7 @@
   - `services/search-service/` — Already scaffolded in UC-001 Task 3. If not done yet, create it now.
   - Elasticsearch index mapping: `events` index with analyzers for title/description.
 - **Prompt for agent:**
-  > Ensure the `search-service` module exists with Spring Boot 3.4.x, Java 21, Spring Data Elasticsearch, Spring Kafka, Eureka Client, Lombok. Define the `EventDocument` entity with `@Document(indexName = "events")`. Configure a custom Elasticsearch index mapping with: `title` (text, keyword subfield), `description` (text), `category` (keyword), `venueName` (text, keyword), `city` (keyword), `country` (keyword), `startDate` (date), `endDate` (date), `minPrice` (scaled_float), `maxPrice` (scaled_float), `ticketTypes` (nested). Use a standard analyzer for text fields.
+  > Ensure the `search-service` module exists with Spring Boot **4.0.6**, Java 21, Spring Data Elasticsearch, Spring Kafka, Eureka Client, Lombok. Define the `EventDocument` entity with `@Document(indexName = "events")`. Configure a custom Elasticsearch index mapping with: `title` (text, keyword subfield), `description` (text), `category` (keyword), `venueName` (text, keyword), `city` (keyword), `country` (keyword), `startDate` (date), `endDate` (date), `minPrice` (scaled_float), `maxPrice` (scaled_float), `ticketTypes` (nested). Use a standard analyzer for text fields.
 - **Verification:** Service starts; index mapping is created in Elasticsearch on startup.
 
 ### Task 2: Core Implementation — Search API

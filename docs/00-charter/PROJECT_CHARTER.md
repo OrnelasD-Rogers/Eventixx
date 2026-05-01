@@ -43,7 +43,7 @@ For this version, the system supports:
 
 ### 2.2 Tech Stack
 
-- **Language / Framework:** Java 21, Spring Boot 3.4.x
+- **Language / Framework:** Java 21, Spring Boot 4.0.6
 - **API Gateway:** Spring Cloud Gateway
 - **Service Discovery:** Netflix Eureka
 - **Messaging / Event Streaming:** Apache Kafka (KRaft mode, no Zookeeper)
@@ -104,7 +104,7 @@ Each use case is a single self-contained specification file that includes requir
 
 | ID | Decision | Context / Justification |
 |---|---|---|
-| **D1** | **Java 21 + Spring Boot 3.4.x** | Aligned with 2026 market demands (Java 21 preferred in US/EU senior roles). Spring Boot 3.x is mandatory for modern microservices. |
+| **D1** | **Java 21 + Spring Boot 4.0.6** | Aligned with 2026 market demands (Java 21 preferred in US/EU senior roles). Spring Boot 4.x is mandatory for modern microservices. |
 | **D2** | **Apache Kafka (KRaft)** | Required for event sourcing, CQRS, saga, and high-throughput event streaming. KRaft simplifies operations (no Zookeeper). |
 | **D3** | **PostgreSQL as default transactional DB** | Most demanded relational DB in Java roles. Database-per-service pattern enforced. |
 | **D4** | **Resilience4j over Netflix Hystrix** | Hystrix is in maintenance mode. Resilience4j is the modern standard for Spring Boot 3.x. |
