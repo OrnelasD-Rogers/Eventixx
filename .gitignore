@@ -2,3 +2,4 @@
 /.memsearch
 skills-lock.json
 /.idea
+/services/**/target/

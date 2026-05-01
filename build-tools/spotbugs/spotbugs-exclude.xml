@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+
+    <!-- DTOs and Records: exposing internal representation is acceptable for immutable data carriers -->
+    <Match>
+        <Class name="~.*\.dto\..*"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- JPA Entities and their builders: mutable fields are expected -->
+    <Match>
+        <Class name="~.*\.entities\..*"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR"/>
+    </Match>
+
+    <!-- Spring Controllers: constructor injection of services is standard -->
+    <Match>
+        <Class name="~.*\.controllers\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Spring Services: constructor injection of repositories/mappers is standard -->
+    <!-- Also covers domain event records (e.g., EventPublished) in messaging sub-packages -->
+    <Match>
+        <Class name="~.*\.services\..*"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Spring Configuration classes -->
+    <Match>
+        <Class name="~.*\.config\..*"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
+    </Match>
+
+    <!-- Spring Exception Handlers: re-throwing RuntimeException is idiomatic -->
+    <Match>
+        <Class name="~.*\.GlobalExceptionHandler"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
+
+    <!-- Kafka publishers: RuntimeException wrapping is idiomatic -->
+    <Match>
+        <Class name="~.*\.messaging\..*"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
+
+    <!-- SLF4J logging with placeholders: CRLF injection is a false positive for structured logging -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <!-- Spring endpoint detection is informational, not a bug -->
+    <Match>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+
+    <!-- Spring Boot Application main method -->
+    <Match>
+        <Class name="~.*Application"/>
+        <Method name="main"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    </Match>
+
+</FindBugsFilter>

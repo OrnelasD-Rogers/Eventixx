@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<ruleset name="Eventixx PMD Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>PMD ruleset for Eventixx microservices</description>
+
+    <!-- Exclude generated code (MapStruct mappers) -->
+    <exclude-pattern>.*MapperImpl\.java</exclude-pattern>
+    <exclude-pattern>.*Impl\.java</exclude-pattern>
+
+    <!-- Best Practices -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="UnusedPrivateField"/> <!-- Lombok -->
+        <exclude name="UseTryWithResources"/> <!-- Spring manages resources -->
+        <exclude name="GuardLogStatement"/> <!-- SLF4J is safe without guards -->
+    </rule>
+
+    <!-- Error Prone -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="AvoidDuplicateLiterals"/> <!-- Duplicate strings in DTOs are common -->
+        <exclude name="MissingSerialVersionUID"/>
+    </rule>
+
+    <!-- Multithreading -->
+    <rule ref="category/java/multithreading.xml"/>
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops"/> <!-- DTO creation in loops is common -->
+    </rule>
+
+    <!-- Security -->
+    <rule ref="category/java/security.xml"/>
+
+    <!-- Style -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="AtLeastOneConstructor"/> <!-- Lombok handles this -->
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="CommentDefaultAccessModifier"/> <!-- package-private is common in Spring -->
+        <exclude name="UselessParentheses"/>
+        <exclude name="UseExplicitTypes"/> <!-- var is acceptable -->
+        <exclude name="MethodArgumentCouldBeFinal"/> <!-- Too noisy for Spring -->
+        <exclude name="LocalVariableCouldBeFinal"/> <!-- Too noisy for Spring -->
+    </rule>
+
+    <!-- Design -->
+    <rule ref="category/java/design.xml">
+        <exclude name="LoosePackageCoupling"/>
+        <exclude name="LawOfDemeter"/> <!-- Spring services naturally violate this -->
+        <exclude name="UseObjectForClearerAPI"/> <!-- DTOs with many params are common -->
+        <exclude name="TooManyMethods"/> <!-- Spring services often have many CRUD methods -->
+        <exclude name="UseUtilityClass"/> <!-- Spring Boot Application class false positive -->
+        <exclude name="SignatureDeclareThrowsException"/> <!-- Spring Security config throws Exception -->
+        <exclude name="AvoidThrowingRawExceptionTypes"/> <!-- RuntimeException wrapping is idiomatic -->
+    </rule>
+
+</ruleset>
