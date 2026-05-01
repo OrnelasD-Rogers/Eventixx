@@ -1,0 +1,53 @@
+package com.eventixx.eventcatalog.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "ticket_types")
+@SQLRestriction("deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE ticket_types SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
+public class TicketType {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false)
+    private Event event;
+
+    @Setter
+    @Column(nullable = false, length = 100)
+    private String name;
+
+    @Setter
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Setter
+    @Column(name = "quantity_available", nullable = false)
+    private Integer quantityAvailable;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @Builder.Default
+    private Instant createdAt = Instant.now();
+
+    @Column(name = "updated_at", nullable = false)
+    @Builder.Default
+    private Instant updatedAt = Instant.now();
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+}
