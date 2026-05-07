@@ -13,7 +13,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -40,6 +50,13 @@ public class EventController {
         return eventService.findById(id);
     }
 
+    /**
+     * Lists events with optional status filter.
+     *
+     * @param pageable pagination info
+     * @param status   optional status filter
+     * @return page of events
+     */
     @GetMapping
     @Operation(summary = "List events")
     public Page<EventSummaryResponse> list(Pageable pageable,
@@ -50,6 +67,22 @@ public class EventController {
         return eventService.findAll(pageable);
     }
 
+    /**
+     * Updates an existing event.
+     *
+     * @param id     the event ID
+     * @param request the update request
+     * @param userId the user ID from header
+     * @return the updated event
+     */
+    /**
+     * Updates an existing event.
+     *
+     * @param id      the event ID
+     * @param request the update request
+     * @param userId  the user ID from header
+     * @return the updated event
+     */
     @PutMapping("/{id}")
     @Operation(summary = "Update event")
     public EventResponse update(@PathVariable UUID id,
