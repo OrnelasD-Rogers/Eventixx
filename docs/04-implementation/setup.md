@@ -84,11 +84,39 @@ http://localhost:8080/swagger-ui.html
 ### MapStruct + Lombok
 MapStruct code generation is automatic during compilation. No manual step required. The `maven-compiler-plugin` in the root POM configures annotation processors in the correct order (Lombok first, then MapStruct).
 
+> **Spring Boot 4 Note:** The compiler also requires the `-parameters` flag to retain parameter names at runtime. This is mandatory for `@PathVariable` and `@RequestParam` resolution. The flag is already configured in the root POM.
+
 ### Adding a New Service
 1. Create `services/<service-name>/pom.xml` with parent `eventixx-parent`
 2. Add module to root `pom.xml`
 3. Add database container to `docker-compose.yml` (next available port)
 4. Create Flyway migration directory: `src/main/resources/db/migration/`
+5. Add test dependencies:
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-webmvc-test</artifactId>
+       <scope>test</scope>
+   </dependency>
+   ```
+
+### Running Tests
+
+```bash
+# All tests in a service (fast — no Docker Compose needed for unit/web)
+./mvnw test -pl services/event-catalog-service
+
+# Only unit tests (Mockito, no Spring context)
+./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.unit.*"
+
+# Only web tests (@WebMvcTest)
+./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.web.*"
+
+# Full verification (tests + SpotBugs + PMD + Checkstyle)
+./mvnw verify -pl services/event-catalog-service
+```
+
+Testcontainers containers are started automatically during integration tests. No manual `docker-compose up` is required for testing.
 
 ### Quality Checks
 
@@ -129,4 +157,10 @@ docker-compose down -v  # -v removes named volumes
 | Flyway migration fails | Check `docker logs event-catalog-db` for SQL errors |
 | MapStruct mapper not found | Ensure `mvnw clean compile` ran after adding `@Mapper` |
 | Eureka shows no services | Verify `eureka.client.service-url.defaultZone` in `application.yml` |
+| `@PathVariable` throws `IllegalArgumentException` | Verify `-parameters` flag is in root POM `maven-compiler-plugin` |
+| `@MockBean` not found in tests | Spring Boot 4 uses `@MockitoBean` instead. See `testing-strategy.md` |
+| `WebMvcTest` class not found | Add `spring-boot-starter-webmvc-test` to service POM |
+| Testcontainers dependency version missing | Use `testcontainers-*` artifact names (e.g., `testcontainers-postgresql`) |
+| Corrupted Spring Boot test JARs | Delete `~/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/` and re-run |
+| `MethodArgumentNotValidException` returns 500 | Add handler in `GlobalExceptionHandler` for validation errors |
 

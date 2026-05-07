@@ -45,6 +45,8 @@
 - **Write operations require JWT:** Only authenticated organizers can create/modify events.
 - **Soft delete on all catalog tables:** All entities (`categories`, `venues`, `events`, `ticket_types`) use a `deleted_at` timestamp instead of hard deletion. This preserves referential integrity (e.g., events referencing venues) and enables audit trails. Queries must explicitly filter `WHERE deleted_at IS NULL`.
 - **Event status enum:** `DRAFT` → `PUBLISHED` → (`CANCELLED` | `ENDED`). `ENDED` is set by a future scheduled job when `end_time` passes; `CANCELLED` is manual.
+- **Compiler `-parameters` flag mandatory:** Spring Framework 7 (shipped with Spring Boot 4) requires `javac -parameters` to retain parameter names at runtime. Without it, `@PathVariable` and `@RequestParam` resolution fails with `IllegalArgumentException`. Added to root POM `maven-compiler-plugin`.
+- **Validation errors return structured ProblemDetail:** `MethodArgumentNotValidException` is handled in `GlobalExceptionHandler` to return RFC 7807 `ProblemDetail` with a map of field errors, instead of falling through to the generic 500 handler.
 
 ---
 
@@ -72,7 +74,8 @@
 - **Verification:** Service starts without errors; Flyway migration runs successfully; Eureka dashboard shows `EVENT-CATALOG-SERVICE` registered.
 
 ### Task 2: Core Implementation
-- **Status:** ☐ Pending
+- **Status:** ☑ Completed
+- **Date:** 2026-04-30
 - **Complexity:** Medium
 - **Artifacts to create/modify:**
   - **Entities** (`entities/`): `Venue`, `Event`, `TicketType`, `Category`
@@ -100,14 +103,27 @@
 - **Verification:** Publish an event via Event Catalog API; within 5 seconds, it is searchable via Search Service API.
 
 ### Task 4: Conformance Tests
-- **Status:** ☐ Pending
+- **Status:** 🔄 Partial — Unit & Web tests completed; Integration tests pending
+- **Date:** 2026-05-07 (unit + web), TBD (integration)
 - **Complexity:** Medium
-- **Artifacts to create/modify:**
-  - `EventCatalogServiceApplicationTests`
-  - `EventControllerIntegrationTest` (with Testcontainers for PostgreSQL + Kafka)
-  - `SearchServiceIntegrationTest` (with Testcontainers for Elasticsearch + Kafka)
+- **Artifacts created/modified:**
+  - `unit/EventValidatorTest` — 15 cases covering publish/update/cancel rules
+  - `unit/EventServiceTest` — 12 cases (create, find, update, publish, cancel, delete)
+  - `unit/VenueServiceTest` — 6 cases
+  - `unit/CategoryServiceTest` — 6 cases
+  - `unit/TicketTypeServiceTest` — 7 cases
+  - `unit/KafkaDomainEventPublisherTest` — 2 cases (publish + serialization failure)
+  - `web/EventControllerWebTest` — 12 cases (CRUD + publish/cancel + validation + error handling)
+  - `web/VenueControllerWebTest` — 7 cases
+  - `web/CategoryControllerWebTest` — 7 cases
+  - `web/TicketTypeControllerWebTest` — 7 cases
+  - `arch/ArchitectureTest` — 9 ArchUnit rules (pre-existing)
+  - `application-test.yml` — profile de teste com datasource e Kafka configurados
+- **Pending:**
+  - `@DataJpaTest` com Testcontainers PostgreSQL (repositórios)
+  - `@SpringBootTest` com Testcontainers PostgreSQL + Kafka (end-to-end)
 - **Prompt for agent:**
-  > Write integration tests for event-catalog-service Busing Testcontainers. Spin up a dedicated PostgreSQL container for this service (port 5433 or dynamic) and a Kafka container. Test: create event, publish event, and verify Kafka message is sent. Use `@DynamicPropertySource` to wire Testcontainers ports. Ensure tests are self-contained and can run with `mvn verify`. The test must use its own isolated PostgreSQL instance (do not share with other services).
+  > Write integration tests for event-catalog-service using Testcontainers. Spin up a dedicated PostgreSQL container for this service (port 5433 or dynamic) and a Kafka container. Test: create event, publish event, and verify Kafka message is sent. Use `@DynamicPropertySource` to wire Testcontainers ports. Ensure tests are self-contained and can run with `mvn verify`. The test must use its own isolated PostgreSQL instance (do not share with other services).
 - **Verification:** `mvn verify` passes; Testcontainers spin up and tear down automatically.
 
 ### Task 5: Documentation & Observability
@@ -125,12 +141,14 @@
 
 ## Acceptance Criteria
 
-- [ ] Venue CRUD works via REST API
-- [ ] Event CRUD works; event can be linked to venue and ticket types
-- [ ] Publishing an event emits `event.published` to Kafka
+- [x] Venue CRUD works via REST API
+- [x] Event CRUD works; event can be linked to venue and ticket types
+- [x] Publishing an event emits `event.published` to Kafka
 - [ ] Search Service indexes published events within 5 seconds
 - [ ] Search API supports full-text query, city filter, category filter, date range
-- [ ] All write operations require authentication (JWT or dummy header)
+- [x] All write operations require authentication (JWT or dummy header)
+- [x] Unit tests for business rules (EventValidator, Services) pass
+- [x] Web tests for REST endpoints (`@WebMvcTest`) pass
 - [ ] Integration tests with Testcontainers pass
 - [ ] Structured JSON logs with trace IDs are emitted
 
@@ -142,30 +160,40 @@
 |------|--------|------|-------|
 | T1   | ☑ Completed | 2026-04-30 | Created Maven module, Dockerfile, application.yml. Configured MapStruct processor with Lombok ordering in root POM. Created `V1__init.sql` with 4 tables (soft delete, triggers, partial indexes, CHECK constraints). Schema documented in `data-model.md`. |
 | T2   | ☑ Completed | 2026-04-30 | Refactored to Anemic Model + **package-by-layer** structure (`controllers/`, `services/`, `repositories/`, `entities/`, `dto/`, `exceptions/`, `config/`). Added `EventValidator` component for publish/update/cancel rules. Services use private `findXxxOrThrow()` helpers and `Optional.ifPresent()` for updates. Added `POST /{id}/cancel` endpoint. Kafka event published directly from Service (no AggregateRoot/domainEvents list). Build SUCCESS. |
-| T3   |        |      |       |
-| T4   |        |      |       |
-| T5   |        |      |       |
+| T3   | ☐ Pending |      |       |
+| T4   | 🔄 Partial | 2026-05-07 | 90 tests passing: 48 unit (services + validator + publisher), 33 web (`@WebMvcTest` controllers), 9 ArchUnit. Testcontainers 2.0.5 dependencies added. Spring Boot 4 migration notes documented. Integration tests with real PostgreSQL + Kafka pending. |
+| T5   | ☐ Pending |      |       |
 
 ---
 
 ## Lessons Learned
 
 ### What worked well
-{...}
+- **Anemic Model + dedicated validator:** Separating business rules into `EventValidator` made unit testing straightforward — 15 focused test cases covering all publish/update/cancel scenarios without needing database or Spring context.
+- **Package-by-layer:** The flat layer structure (`controllers/`, `services/`, `repositories/`) made it easy for the agent to generate and navigate code. ArchUnit rules enforce the boundaries automatically.
+- **Spring Boot 4 starter-test module:** The new `spring-boot-starter-webmvc-test` dependency cleanly separates MVC test infrastructure. Auto-configuration of `MockMvc` and security filters worked out of the box.
 
 ### What didn't work / Surprises
-{...}
+- **Spring Boot 4 removed `@MockBean`:** The annotation was deprecated in 3.4 and removed in 4.0. All `@WebMvcTest` classes broke until we replaced `@MockBean` with `@MockitoBean` (from `org.springframework.test.context.bean.override.mockito`). The package change for `@WebMvcTest` (`org.springframework.boot.webmvc.test.autoconfigure`) was also undocumented in many migration guides.
+- **Testcontainers 2.x renamed artifacts:** `org.testcontainers:junit-jupiter` became `org.testcontainers:testcontainers-junit-jupiter`. Same for `postgresql` → `testcontainers-postgresql` and `kafka` → `testcontainers-kafka`. Spring Boot 4.0.6 BOM manages version 2.0.5.
+- **Spring Framework 7 requires `-parameters` compiler flag:** Without it, `@PathVariable UUID id` throws `IllegalArgumentException: Name for argument of type [java.util.UUID] not specified`. This was not obvious and took significant debugging. The fix is adding `<arg>-parameters</arg>` to `maven-compiler-plugin` in the root POM.
+- **`MethodArgumentNotValidException` not handled:** The initial `GlobalExceptionHandler` only caught `BusinessException`, `EntityNotFoundException`, and generic `Exception`. Validation failures (`@Valid` DTOs) fell through to the 500 handler. Added explicit handler returning `ProblemDetail` with a map of field errors.
+- **Corrupted local Maven cache:** `spring-boot-test-autoconfigure` JAR in `~/.m2` was only 28KB (incomplete download). Deleting the cached directory and letting Maven re-download fixed the missing `@WebMvcTest` class.
 
 ### Deviations from original plan
 - **Rich Model → Anemic Model:** Original prompt specified DDD-style rich behavior in entities (`Event.publish()`). After review, switched to Anemic Model (entities = pure data, Services = all logic) for simpler readability and to align with common Spring Boot patterns. Extracted validations into dedicated `EventValidator` component.
+- **Task 4 split into phases:** Instead of jumping straight to integration tests with Testcontainers, we wrote unit tests (Mockito) and web tests (`@WebMvcTest`) first. This validated business rules and controller contracts before dealing with container startup overhead. Integration tests (PostgreSQL + Kafka) are the final phase.
 
 ### What almost went wrong
-{Problems avoided by little — prime material for LinkedIn storytelling}
+- **Kafka message sent before database commit:** In `EventService.publish()`, `publishEventToKafka()` is called before `eventRepository.save()`. If the save fails, the Kafka message was already sent. This is a consistency risk. For now it is acceptable (study project), but a production fix would either: (a) use Kafka transactions, (b) use Outbox pattern, or (c) publish after successful save.
+- **Missing `-parameters` would break all controllers in production:** The compiler flag was missing from the root POM. Without it, every controller with `@PathVariable` or `@RequestParam` would fail at runtime. We caught this during `@WebMvcTest` execution, not at compile time.
 
 ### What would I do differently next time
-{Retrospective insight}
+- Add the `-parameters` compiler flag to the project template/scaffold from day one, not after tests fail.
+- Write a single "Spring Boot 4 migration checklist" document at project start, listing: `@MockBean` → `@MockitoBean`, Testcontainers artifact renames, new starters, `-parameters` flag.
+- Consider using Outbox pattern for Kafka publishing from the beginning, rather than direct `KafkaTemplate.send()` from the service.
 
 ### Key metrics (before / after)
-- Baseline: {...}
-- Result: {...}
-- Tool used: {...}
+- Baseline: 9 tests (ArchUnit only)
+- Result: 90 tests (48 unit + 33 web + 9 ArchUnit), all passing in ~11s
+- Tool used: JUnit 5, Mockito, `@WebMvcTest` (Spring Boot 4), Testcontainers 2.0.5 (deps configured)
