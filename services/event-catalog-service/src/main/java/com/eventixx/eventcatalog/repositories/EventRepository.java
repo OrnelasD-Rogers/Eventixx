@@ -9,6 +9,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository for event persistence operations.
+ */
 public interface EventRepository {
 
     Event save(Event event);

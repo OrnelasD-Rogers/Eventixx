@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/** Response DTO for an event. */
 public record EventResponse(
     UUID id,
     String title,
@@ -20,4 +21,4 @@ public record EventResponse(
     Instant createdAt,
     Instant updatedAt,
     List<TicketTypeResponse> ticketTypes
-) {}
+) { }

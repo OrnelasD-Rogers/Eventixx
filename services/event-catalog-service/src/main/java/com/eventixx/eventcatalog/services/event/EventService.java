@@ -41,6 +41,9 @@ public class EventService {
     private final DomainEventPublisher domainEventPublisher;
     private final EventValidator eventValidator;
 
+    /**
+     * Creates a new event.
+     */
     @Transactional
     public EventResponse create(CreateEventRequest request) {
         Venue venue = findVenueOrThrow(request.venueId());
@@ -65,6 +68,9 @@ public class EventService {
         return eventRepository.findAllByStatus(eventStatus, pageable).map(eventMapper::toSummary);
     }
 
+    /**
+     * Updates an existing event.
+     */
     @Transactional
     public EventResponse update(UUID id, UpdateEventRequest request) {
         Event event = findEventOrThrow(id);
@@ -73,6 +79,12 @@ public class EventService {
         return eventMapper.toResponse(eventRepository.save(event));
     }
 
+    /**
+     * Publishes an event.
+     *
+     * @param id the event ID
+     * @return the updated event
+     */
     @Transactional
     public EventResponse publish(UUID id) {
         Event event = findEventOrThrow(id);
@@ -82,6 +94,12 @@ public class EventService {
         return eventMapper.toResponse(eventRepository.save(event));
     }
 
+    /**
+     * Cancels a published event.
+     *
+     * @param id the event ID
+     * @return the updated event
+     */
     @Transactional
     public EventResponse cancel(UUID id) {
         Event event = findEventOrThrow(id);
@@ -90,6 +108,11 @@ public class EventService {
         return eventMapper.toResponse(eventRepository.save(event));
     }
 
+    /**
+     * Soft-deletes an event.
+     *
+     * @param id the event ID
+     */
     @Transactional
     public void delete(UUID id) {
         Event event = findEventOrThrow(id);

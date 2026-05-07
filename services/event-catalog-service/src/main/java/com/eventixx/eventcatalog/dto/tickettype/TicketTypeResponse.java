@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+/** Response DTO for a ticket type. */
 public record TicketTypeResponse(
     UUID id,
     String name,
@@ -11,4 +12,4 @@ public record TicketTypeResponse(
     Integer quantityAvailable,
     Instant createdAt,
     Instant updatedAt
-) {}
+) { }

@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository for category persistence operations.
+ */
 public interface CategoryRepository {
 
     Category save(Category category);

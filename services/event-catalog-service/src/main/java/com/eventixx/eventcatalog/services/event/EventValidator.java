@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class EventValidator {
 
+    /**
+     * Validates that the event can be published.
+     */
     public void validateCanBePublished(Event event) {
         if (event.getStatus() != EventStatus.DRAFT) {
             throw new BusinessException("Event is already published", HttpStatus.CONFLICT);
@@ -25,12 +28,18 @@ public class EventValidator {
         }
     }
 
+    /**
+     * Validates that the event can be updated.
+     */
     public void validateCanBeUpdated(Event event) {
         if (event.getStatus() != EventStatus.DRAFT) {
             throw new BusinessException("Only draft events can be updated", HttpStatus.BAD_REQUEST);
         }
     }
 
+    /**
+     * Validates that the event can be cancelled.
+     */
     public void validateCanBeCancelled(Event event) {
         if (event.getStatus() != EventStatus.PUBLISHED) {
             throw new BusinessException("Only published events can be cancelled", HttpStatus.BAD_REQUEST);

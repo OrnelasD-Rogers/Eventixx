@@ -9,10 +9,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.Instant;
 
+/**
+ * Global exception handler for the event catalog service.
+ * Converts exceptions into RFC 7807 ProblemDetail responses.
+ */
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Handles business rule violations (e.g. event already published).
+     */
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusinessException(BusinessException ex) {
         log.warn("Business exception: {}", ex.getMessage());
@@ -22,6 +29,9 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /**
+     * Handles JPA entity not found exceptions.
+     */
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
     public ProblemDetail handleEntityNotFound(jakarta.persistence.EntityNotFoundException ex) {
         log.warn("Entity not found: {}", ex.getMessage());
@@ -31,6 +41,9 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    /**
+     * Handles unexpected / uncaught exceptions.
+     */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);

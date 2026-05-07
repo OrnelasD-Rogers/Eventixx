@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Domain event emitted when an event is published.
+ */
 public record EventPublished(
         UUID eventId,
         String title,
@@ -55,6 +58,9 @@ public record EventPublished(
         return correlationId;
     }
 
+    /**
+     * Information about a ticket type within an event.
+     */
     public record TicketTypeInfo(String name, BigDecimal price, Integer quantityAvailable) {
     }
 }

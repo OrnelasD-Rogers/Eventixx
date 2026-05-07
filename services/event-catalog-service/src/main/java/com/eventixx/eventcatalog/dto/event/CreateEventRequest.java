@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/** Request DTO to create an event. */
 public record CreateEventRequest(
     @NotBlank String title,
     String description,
@@ -16,4 +17,4 @@ public record CreateEventRequest(
     @NotNull @Future Instant startTime,
     @NotNull @Future Instant endTime,
     @NotNull List<CreateTicketTypeRequest> ticketTypes
-) {}
+) { }

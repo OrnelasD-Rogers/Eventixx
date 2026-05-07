@@ -8,6 +8,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Configures OpenAPI documentation bean.
+     *
+     * @return the OpenAPI configuration
+     */
     @Bean
     public OpenAPI eventCatalogOpenAPI() {
         return new OpenAPI()

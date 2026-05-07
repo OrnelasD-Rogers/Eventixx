@@ -39,6 +39,9 @@ public class CategoryService {
         return categoryRepository.findAll(pageable).map(categoryMapper::toSummary);
     }
 
+    /**
+     * Updates an existing category.
+     */
     @Transactional
     public CategoryResponse update(UUID id, UpdateCategoryRequest request) {
         Category category = findCategoryOrThrow(id);

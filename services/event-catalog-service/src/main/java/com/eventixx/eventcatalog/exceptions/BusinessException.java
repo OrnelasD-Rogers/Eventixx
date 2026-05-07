@@ -3,6 +3,9 @@ package com.eventixx.eventcatalog.exceptions;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Runtime exception for business rule violations.
+ */
 @Getter
 public class BusinessException extends RuntimeException {
 

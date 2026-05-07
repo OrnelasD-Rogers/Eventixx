@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository for venue persistence operations.
+ */
 public interface VenueRepository {
 
     Venue save(Venue venue);

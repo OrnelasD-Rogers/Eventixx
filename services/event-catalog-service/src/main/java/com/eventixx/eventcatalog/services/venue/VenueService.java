@@ -39,6 +39,13 @@ public class VenueService {
         return venueRepository.findAll(pageable).map(venueMapper::toSummary);
     }
 
+    /**
+     * Updates an existing venue.
+     *
+     * @param id      the venue ID
+     * @param request the update request
+     * @return the updated venue
+     */
     @Transactional
     public VenueResponse update(UUID id, UpdateVenueRequest request) {
         Venue venue = findVenueOrThrow(id);

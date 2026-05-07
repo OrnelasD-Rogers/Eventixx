@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/** Request DTO to update an event. */
 public record UpdateEventRequest(
     String title,
     String description,
@@ -14,4 +15,4 @@ public record UpdateEventRequest(
     @Future Instant startTime,
     @Future Instant endTime,
     List<UpdateTicketTypeRequest> ticketTypes
-) {}
+) { }
