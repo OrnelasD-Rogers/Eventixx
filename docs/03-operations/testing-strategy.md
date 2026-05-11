@@ -57,6 +57,16 @@ We follow the standard test pyramid with an emphasis on fast feedback:
     <scope>test</scope>
 </dependency>
 <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-testcontainers</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
     <groupId>org.testcontainers</groupId>
     <artifactId>testcontainers-junit-jupiter</artifactId>
     <scope>test</scope>
@@ -94,6 +104,33 @@ Critical changes from Spring Boot 3.x that affect testing:
 | `org.testcontainers:postgresql` | `org.testcontainers:testcontainers-postgresql` | Artifact rename |
 | `org.testcontainers:kafka` | `org.testcontainers:testcontainers-kafka` | Artifact rename |
 | `-parameters` flag | **Mandatory** | Add `<arg>-parameters</arg>` to `maven-compiler-plugin` or `@PathVariable` fails at runtime |
+| `@DynamicPropertySource` | `@ServiceConnection` | `@ServiceConnection` has lifecycle issues with `@DataJpaTest` + shared static containers. We use explicit `@DynamicPropertySource` for reliability. |
+| `TestEntityManager` in `spring-boot-test-autoconfigure` | `TestEntityManager` in `spring-boot-starter-data-jpa-test` | New starter `spring-boot-starter-data-jpa-test` required; package changed to `org.springframework.boot.jpa.test.autoconfigure` |
+
+### Singleton Container Pattern
+
+When sharing a PostgreSQL container across multiple `@DataJpaTest` classes, do **not** use `@Testcontainers` + `@Container` on the base class or subclasses. The JUnit 5 extension restarts the container between classes, causing `Connection refused` errors when Spring tries to reuse the cached context with stale port mappings.
+
+Instead, use a **static initializer block** in the abstract base class:
+
+```java
+public abstract class PostgresRepositoryTest {
+    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
+    static {
+        postgres.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+}
+```
+
+This ensures the container starts once when the classloader loads the base class, and stays alive for the entire test suite.
 
 ---
 
@@ -114,10 +151,11 @@ src/test/java/com/eventixx/<service>/
 │   ├── CategoryControllerWebTest.java
 │   └── TicketTypeControllerWebTest.java
 ├── repository/                     # JPA tests (@DataJpaTest + Testcontainers)
-│   ├── JpaEventRepositoryTest.java
-│   ├── JpaVenueRepositoryTest.java
-│   ├── JpaCategoryRepositoryTest.java
-│   └── JpaTicketTypeRepositoryTest.java
+│   ├── PostgresRepositoryTest.java   # shared base class: singleton PostgreSQL container (static initializer) + @DynamicPropertySource
+│   ├── VenueRepositorySoftDeleteTest.java
+│   ├── CategoryRepositorySoftDeleteTest.java
+│   ├── EventRepositorySoftDeleteTest.java
+│   └── TicketTypeRepositorySoftDeleteTest.java
 ├── integration/                    # End-to-end (@SpringBootTest + Testcontainers)
 │   └── EventCatalogIntegrationTest.java
 └── arch/                           # Architecture rules
@@ -170,6 +208,9 @@ For Testcontainers-based tests, containers override these properties via `@Dynam
 # Only web tests
 ./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.web.*"
 
+# Only repository tests (Testcontainers)
+./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.repository.*"
+
 # Only ArchUnit
 ./mvnw test -pl services/event-catalog-service -Dtest=ArchitectureTest
 
@@ -221,6 +262,53 @@ class EventControllerWebTest {
 }
 ```
 
+### Repository Test Pattern (@DataJpaTest + Singleton Container)
+
+```java
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ImportAutoConfiguration({ FlywayAutoConfiguration.class })
+@ActiveProfiles("test")
+public abstract class PostgresRepositoryTest {
+
+    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
+    static {
+        postgres.start(); // singleton: started once, shared across all subclasses
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
+}
+
+class VenueRepositorySoftDeleteTest extends PostgresRepositoryTest {
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Test
+    void shouldSoftDeleteVenue() {
+        Venue saved = entityManager.persistFlushFind(venue);
+        entityManager.remove(saved);
+        entityManager.flush();
+
+        // @SQLRestriction filters deleted records
+        assertThat(entityManager.find(Venue.class, saved.getId())).isNull();
+
+        // But record still exists with deleted_at populated
+        Instant deletedAt = jdbcTemplate.queryForObject(
+            "SELECT deleted_at FROM venues WHERE id = ?", Instant.class, saved.getId());
+        assertThat(deletedAt).isNotNull();
+    }
+}
+```
+
 ### Integration Test Pattern (Testcontainers)
 
 ```java
@@ -228,16 +316,13 @@ class EventControllerWebTest {
 @Testcontainers
 class EventCatalogIntegrationTest {
     @Container
+    @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Container
     static KafkaContainer kafka = new KafkaContainer("confluentinc/cp-kafka:latest");
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-    }
+    // No @DynamicPropertySource needed — @ServiceConnection auto-wires everything
 }
 ```
 
@@ -264,6 +349,7 @@ class EventCatalogIntegrationTest {
 | `WebMvcTest` not found | Moved to `spring-boot-webmvc-test` module | Add `spring-boot-starter-webmvc-test` dependency |
 | Testcontainers dependency version missing | Artifact renamed in 2.x | Use `testcontainers-*` prefix (e.g., `testcontainers-postgresql`) |
 | Corrupted `spring-boot-test-autoconfigure` JAR | Incomplete Maven download | Delete `~/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/` and re-run |
+| Docker fails with "TTRPC connection: unsupported protocol" | Incompatibility between Docker daemon and containerd/runc versions | Restart Docker daemon or downgrade containerd to a compatible version |
 
 ---
 

@@ -5,3 +5,8 @@ skills-lock.json
 *.iml
 /target/
 /services/**/target/
+.doc-synth/
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
