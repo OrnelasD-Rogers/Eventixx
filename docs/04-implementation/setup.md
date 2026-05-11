@@ -142,6 +142,26 @@ Tools configured in the parent POM:
 - **Checkstyle**: Google Java Style formatting with 120-character line length
 - **ArchUnit**: Architecture rules (package cycles, layer independence, naming conventions, Spring proxy rules)
 
+### Running a Single Service in Isolation
+
+Each service has a `docker-compose.{service}.yml` with only its dependencies and an `application-dev.yml` profile with Eureka disabled and `localhost` connections.
+
+```bash
+# Example: event-catalog-service
+# 1. Start only its infrastructure (PostgreSQL + Kafka)
+docker compose -f docker-compose.event-catalog.yml up -d
+
+# 2. Run the service with dev profile (no Eureka, no other services)
+./mvnw spring-boot:run -pl services/event-catalog-service -Dspring-boot.run.profiles=dev
+
+# 3. Test
+curl http://localhost:8080/api/v1/categories
+curl http://localhost:8080/swagger-ui.html
+
+# 4. Stop
+docker compose -f docker-compose.event-catalog.yml down -v
+```
+
 ### Stopping Everything
 ```bash
 docker-compose down -v  # -v removes named volumes
