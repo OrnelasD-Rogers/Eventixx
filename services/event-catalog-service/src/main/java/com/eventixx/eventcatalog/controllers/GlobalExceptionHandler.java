@@ -49,6 +49,7 @@ public class GlobalExceptionHandler {
      * Handles validation errors (e.g. @Valid DTOs).
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
     public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
         log.warn("Validation failed: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");

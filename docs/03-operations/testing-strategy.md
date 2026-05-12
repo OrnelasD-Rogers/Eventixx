@@ -217,9 +217,25 @@ For Testcontainers-based tests, containers override these properties via `@Dynam
 # Full verification (tests + quality checks)
 ./mvnw verify -pl services/event-catalog-service
 
+# Quality checks only (SpotBugs + PMD + Checkstyle, no tests)
+./mvnw verify -DskipTests
+
+# Same as above with full error stacktraces
+./mvnw verify -DskipTests -e
+
 # Skip tests during build
 ./mvnw clean install -DskipTests
 ```
+
+### Useful Maven Flags
+
+| Flag | Purpose |
+|------|---------|
+| `-DskipTests` | Compiles tests but does not execute them |
+| `-Dmaven.test.skip=true` | Skips both compilation and execution of tests |
+| `-e` | Prints the full stacktrace on error (essential for debugging plugin failures) |
+| `-X` | Enables debug output (verbose Maven lifecycle logging) |
+| `-pl <module>` | Restricts execution to a specific module (e.g., `-pl services/event-catalog-service`) |
 
 ---
 

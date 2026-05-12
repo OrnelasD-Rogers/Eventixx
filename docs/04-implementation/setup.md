@@ -129,6 +129,9 @@ All quality tools run automatically during `./mvnw verify`:
 # Run only static analysis (skip tests)
 ./mvnw verify -DskipTests
 
+# Run static analysis with full error stacktraces
+./mvnw verify -DskipTests -e
+
 # Run only ArchUnit architecture tests
 ./mvnw test -pl services/event-catalog-service -Dtest=ArchitectureTest
 
@@ -141,6 +144,8 @@ Tools configured in the parent POM:
 - **PMD + CPD**: Code smells, copy-paste detection, and best practice enforcement
 - **Checkstyle**: Google Java Style formatting with 120-character line length
 - **ArchUnit**: Architecture rules (package cycles, layer independence, naming conventions, Spring proxy rules)
+
+> **SpotBugs + Lombok:** Lombok annotations (`@RequiredArgsConstructor`, `@Slf4j`, etc.) and MapStruct generate bytecode that SpotBugs misinterprets (e.g., `NP_UNWRITTEN_FIELD`, `CT_CONSTRUCTOR_THROW`). These false positives are suppressed via `build-tools/spotbugs/spotbugs-exclude.xml`. When adding a new Lombok-heavy module, ensure the exclude filter covers its patterns.
 
 ### Running a Single Service in Isolation
 
