@@ -5,6 +5,7 @@ import com.eventixx.eventcatalog.dto.event.EventResponse;
 import com.eventixx.eventcatalog.dto.event.EventSummaryResponse;
 import com.eventixx.eventcatalog.dto.event.UpdateEventRequest;
 
+import com.eventixx.eventcatalog.config.MapStructConfig;
 import com.eventixx.eventcatalog.services.tickettype.TicketTypeMapper;
 import com.eventixx.eventcatalog.entities.Event;
 import java.util.List;
@@ -12,7 +13,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring", uses = TicketTypeMapper.class)
+@Mapper(config = MapStructConfig.class, uses = TicketTypeMapper.class)
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)

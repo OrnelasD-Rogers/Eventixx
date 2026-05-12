@@ -5,13 +5,14 @@ import com.eventixx.eventcatalog.dto.venue.UpdateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.VenueResponse;
 import com.eventixx.eventcatalog.dto.venue.VenueSummaryResponse;
 
+import com.eventixx.eventcatalog.config.MapStructConfig;
 import com.eventixx.eventcatalog.entities.Venue;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface VenueMapper {
 
     @Mapping(target = "id", ignore = true)

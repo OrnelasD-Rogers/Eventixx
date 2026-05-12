@@ -5,13 +5,14 @@ import com.eventixx.eventcatalog.dto.category.CategorySummaryResponse;
 import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 
+import com.eventixx.eventcatalog.config.MapStructConfig;
 import com.eventixx.eventcatalog.entities.Category;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface CategoryMapper {
 
     @Mapping(target = "id", ignore = true)
