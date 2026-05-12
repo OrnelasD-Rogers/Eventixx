@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: search-service
+  elasticsearch:
+    uris: http://localhost:9200
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+
+server:
+  port: 0
+
+eureka:
+  client:
+    enabled: false
+
+logging:
+  level:
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN
+    org.testcontainers: INFO
