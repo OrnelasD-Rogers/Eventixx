@@ -5,7 +5,7 @@ import com.eventixx.eventcatalog.dto.category.CategoryResponse;
 import com.eventixx.eventcatalog.dto.category.CategorySummaryResponse;
 import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.services.category.CategoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -85,7 +85,7 @@ class CategoryControllerWebTest {
     @Test
     void shouldReturn404_whenCategoryNotFound() throws Exception {
         when(categoryService.findById(categoryId))
-            .thenThrow(new BusinessException("Category not found", HttpStatus.NOT_FOUND));
+            .thenThrow(new ResourceNotFoundException("Category not found"));
 
         mockMvc.perform(get("/api/v1/categories/{id}", categoryId))
             .andExpect(status().isNotFound());

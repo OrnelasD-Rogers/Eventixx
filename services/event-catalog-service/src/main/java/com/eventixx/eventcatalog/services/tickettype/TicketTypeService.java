@@ -6,13 +6,12 @@ import com.eventixx.eventcatalog.dto.tickettype.UpdateTicketTypeRequest;
 
 import com.eventixx.eventcatalog.entities.Event;
 import com.eventixx.eventcatalog.repositories.EventRepository;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.entities.TicketType;
 import com.eventixx.eventcatalog.repositories.TicketTypeRepository;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +34,7 @@ public class TicketTypeService {
     @Transactional
     public TicketTypeResponse create(UUID eventId, CreateTicketTypeRequest request) {
         Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new BusinessException(
-                "Event with id " + eventId + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Event with id " + eventId + " not found"));
         TicketType ticketType = ticketTypeMapper.toEntity(request);
         ticketType.setEvent(event);
         return ticketTypeMapper.toResponse(ticketTypeRepository.save(ticketType));
@@ -50,8 +48,7 @@ public class TicketTypeService {
      */
     public TicketTypeResponse findById(UUID id) {
         return ticketTypeMapper.toResponse(ticketTypeRepository.findById(id)
-            .orElseThrow(() -> new BusinessException(
-                "Ticket type with id " + id + " not found", HttpStatus.NOT_FOUND)));
+            .orElseThrow(() -> new ResourceNotFoundException("Ticket type with id " + id + " not found")));
     }
 
     /**
@@ -74,7 +71,7 @@ public class TicketTypeService {
     @Transactional
     public TicketTypeResponse update(UUID id, UpdateTicketTypeRequest request) {
         TicketType ticketType = ticketTypeRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Ticket type with id " + id + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Ticket type with id " + id + " not found"));
         ticketTypeMapper.updateEntity(request, ticketType);
         return ticketTypeMapper.toResponse(ticketType);
     }
@@ -87,7 +84,7 @@ public class TicketTypeService {
     @Transactional
     public void delete(UUID id) {
         TicketType ticketType = ticketTypeRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Ticket type with id " + id + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Ticket type with id " + id + " not found"));
         ticketTypeRepository.delete(ticketType);
     }
 }

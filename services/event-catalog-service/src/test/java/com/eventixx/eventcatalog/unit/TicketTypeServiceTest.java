@@ -5,7 +5,7 @@ import com.eventixx.eventcatalog.dto.tickettype.TicketTypeResponse;
 import com.eventixx.eventcatalog.dto.tickettype.UpdateTicketTypeRequest;
 import com.eventixx.eventcatalog.entities.Event;
 import com.eventixx.eventcatalog.entities.TicketType;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.repositories.TicketTypeRepository;
 import com.eventixx.eventcatalog.services.tickettype.TicketTypeMapper;
@@ -90,9 +90,8 @@ class TicketTypeServiceTest {
         when(eventRepository.findById(event.getId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> ticketTypeService.create(event.getId(), request))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Event with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Event with id");
     }
 
     @Test
@@ -111,9 +110,8 @@ class TicketTypeServiceTest {
         when(ticketTypeRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> ticketTypeService.findById(id))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Ticket type with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Ticket type with id");
     }
 
     @Test

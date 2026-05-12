@@ -5,7 +5,7 @@ import com.eventixx.eventcatalog.dto.venue.CreateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.UpdateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.VenueResponse;
 import com.eventixx.eventcatalog.dto.venue.VenueSummaryResponse;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.services.venue.VenueService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,6 +70,7 @@ class VenueControllerWebTest {
                 .header("X-User-Id", "user-123")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
             .andExpect(status().isBadRequest());
     }
 
@@ -85,7 +87,7 @@ class VenueControllerWebTest {
     @Test
     void shouldReturn404_whenVenueNotFound() throws Exception {
         when(venueService.findById(venueId))
-            .thenThrow(new BusinessException("Venue not found", HttpStatus.NOT_FOUND));
+            .thenThrow(new ResourceNotFoundException("Venue not found"));
 
         mockMvc.perform(get("/api/v1/venues/{id}", venueId))
             .andExpect(status().isNotFound());

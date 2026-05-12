@@ -1,22 +1,11 @@
 package com.eventixx.eventcatalog.exceptions;
 
-import lombok.Getter;
-import org.springframework.http.HttpStatus;
-
 /**
- * Runtime exception for business rule violations.
+ * Runtime exception for business rule violations (HTTP 400).
  */
-@Getter
 public class BusinessException extends RuntimeException {
 
-    private final HttpStatus status;
-
     public BusinessException(String message) {
-        this(message, HttpStatus.BAD_REQUEST);
-    }
-
-    public BusinessException(String message, HttpStatus status) {
         super(message);
-        this.status = status;
     }
 }

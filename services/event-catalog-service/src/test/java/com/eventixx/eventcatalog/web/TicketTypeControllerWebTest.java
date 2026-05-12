@@ -4,7 +4,7 @@ import com.eventixx.eventcatalog.controllers.TicketTypeController;
 import com.eventixx.eventcatalog.dto.tickettype.CreateTicketTypeRequest;
 import com.eventixx.eventcatalog.dto.tickettype.TicketTypeResponse;
 import com.eventixx.eventcatalog.dto.tickettype.UpdateTicketTypeRequest;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.services.tickettype.TicketTypeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -84,7 +84,7 @@ class TicketTypeControllerWebTest {
     @Test
     void shouldReturn404_whenTicketTypeNotFound() throws Exception {
         when(ticketTypeService.findById(ticketTypeId))
-            .thenThrow(new BusinessException("Ticket type not found", HttpStatus.NOT_FOUND));
+            .thenThrow(new ResourceNotFoundException("Ticket type not found"));
 
         mockMvc.perform(get("/api/v1/events/{eventId}/ticket-types/{id}", eventId, ticketTypeId))
             .andExpect(status().isNotFound());

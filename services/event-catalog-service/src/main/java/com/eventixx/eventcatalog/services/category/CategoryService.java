@@ -7,11 +7,10 @@ import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 
 import com.eventixx.eventcatalog.entities.Category;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +56,6 @@ public class CategoryService {
 
     private Category findCategoryOrThrow(UUID id) {
         return categoryRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Category with id " + id + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Category with id " + id + " not found"));
     }
 }

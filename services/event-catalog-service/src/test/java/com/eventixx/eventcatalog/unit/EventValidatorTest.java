@@ -5,6 +5,7 @@ import com.eventixx.eventcatalog.entities.EventStatus;
 import com.eventixx.eventcatalog.entities.TicketType;
 import com.eventixx.eventcatalog.entities.Venue;
 import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.services.event.EventValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,9 +58,8 @@ class EventValidatorTest {
         Event event = eventWithStatus(status, venueWithCapacity(100), List.of(ticketType("GA", 10)));
 
         assertThatThrownBy(() -> validator.validateCanBePublished(event))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("already published")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("already published");
     }
 
     @Test
@@ -68,8 +68,7 @@ class EventValidatorTest {
 
         assertThatThrownBy(() -> validator.validateCanBePublished(event))
             .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("at least one ticket type")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+            .hasMessageContaining("at least one ticket type");
     }
 
     @Test
@@ -81,8 +80,7 @@ class EventValidatorTest {
 
         assertThatThrownBy(() -> validator.validateCanBePublished(event))
             .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("exceeds venue capacity")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+            .hasMessageContaining("exceeds venue capacity");
     }
 
     // === validateCanBeUpdated ===
@@ -101,8 +99,7 @@ class EventValidatorTest {
 
         assertThatThrownBy(() -> validator.validateCanBeUpdated(event))
             .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Only draft events can be updated")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+            .hasMessageContaining("Only draft events can be updated");
     }
 
     // === validateCanBeCancelled ===
@@ -121,8 +118,7 @@ class EventValidatorTest {
 
         assertThatThrownBy(() -> validator.validateCanBeCancelled(event))
             .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Only published events can be cancelled")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+            .hasMessageContaining("Only published events can be cancelled");
     }
 
     // === Helpers ===

@@ -10,7 +10,7 @@ import com.eventixx.eventcatalog.entities.Event;
 import com.eventixx.eventcatalog.entities.EventStatus;
 import com.eventixx.eventcatalog.entities.TicketType;
 import com.eventixx.eventcatalog.entities.Venue;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
 import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
@@ -28,7 +28,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -135,9 +134,8 @@ class EventServiceTest {
         when(venueRepository.findById(venue.getId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> eventService.create(request))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Venue with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Venue with id");
     }
 
     @Test
@@ -151,9 +149,18 @@ class EventServiceTest {
         when(categoryRepository.findById(category.getId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> eventService.create(request))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Category with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Category with id");
+    }
+
+    @Test
+    void shouldThrow_whenEventNotFound() {
+        UUID id = UUID.randomUUID();
+        when(eventRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> eventService.findById(id))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Event with id");
     }
 
     // === findById ===
@@ -166,17 +173,6 @@ class EventServiceTest {
         EventResponse result = eventService.findById(event.getId());
 
         assertThat(result).isEqualTo(eventResponse);
-    }
-
-    @Test
-    void shouldThrow_whenEventNotFound() {
-        UUID id = UUID.randomUUID();
-        when(eventRepository.findById(id)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> eventService.findById(id))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Event with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     // === findAll ===

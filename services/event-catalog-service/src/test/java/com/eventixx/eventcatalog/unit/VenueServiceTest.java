@@ -5,7 +5,7 @@ import com.eventixx.eventcatalog.dto.venue.UpdateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.VenueResponse;
 import com.eventixx.eventcatalog.dto.venue.VenueSummaryResponse;
 import com.eventixx.eventcatalog.entities.Venue;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
 import com.eventixx.eventcatalog.services.venue.VenueMapper;
 import com.eventixx.eventcatalog.services.venue.VenueService;
@@ -94,9 +94,8 @@ class VenueServiceTest {
         when(venueRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> venueService.findById(id))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Venue with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Venue with id");
     }
 
     @Test

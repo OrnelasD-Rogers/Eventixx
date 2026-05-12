@@ -5,7 +5,7 @@ import com.eventixx.eventcatalog.dto.category.CategorySummaryResponse;
 import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 import com.eventixx.eventcatalog.entities.Category;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
 import com.eventixx.eventcatalog.services.category.CategoryMapper;
 import com.eventixx.eventcatalog.services.category.CategoryService;
@@ -90,9 +90,8 @@ class CategoryServiceTest {
         when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> categoryService.findById(id))
-            .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("Category with id")
-            .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND));
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Category with id");
     }
 
     @Test

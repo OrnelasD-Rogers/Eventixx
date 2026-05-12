@@ -12,7 +12,7 @@ import com.eventixx.eventcatalog.entities.Event;
 import com.eventixx.eventcatalog.services.messaging.EventPublished;
 import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.entities.EventStatus;
-import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.services.DomainEventPublisher;
 import com.eventixx.eventcatalog.entities.TicketType;
 import com.eventixx.eventcatalog.entities.Venue;
@@ -20,7 +20,6 @@ import com.eventixx.eventcatalog.repositories.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,17 +122,17 @@ public class EventService {
 
     private Event findEventOrThrow(UUID id) {
         return eventRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Event with id " + id + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Event with id " + id + " not found"));
     }
 
     private Venue findVenueOrThrow(UUID id) {
         return venueRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Venue with id " + id + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Venue with id " + id + " not found"));
     }
 
     private Category findCategoryOrThrow(UUID id) {
         return categoryRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Category with id " + id + " not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResourceNotFoundException("Category with id " + id + " not found"));
     }
 
     private Event buildEvent(CreateEventRequest request, Venue venue, Category category) {

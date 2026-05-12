@@ -6,6 +6,8 @@ import com.eventixx.eventcatalog.dto.event.EventResponse;
 import com.eventixx.eventcatalog.dto.event.EventSummaryResponse;
 import com.eventixx.eventcatalog.dto.event.UpdateEventRequest;
 import com.eventixx.eventcatalog.exceptions.BusinessException;
+import com.eventixx.eventcatalog.exceptions.ConflictException;
+import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.services.event.EventService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -13,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static com.eventixx.eventcatalog.exceptions.ProblemType.TITLE_NOT_FOUND;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -102,11 +104,11 @@ class EventControllerWebTest {
     @Test
     void shouldReturn404_whenEventNotFound() throws Exception {
         when(eventService.findById(eventId))
-            .thenThrow(new BusinessException("Event not found", HttpStatus.NOT_FOUND));
+            .thenThrow(new ResourceNotFoundException("Event not found"));
 
         mockMvc.perform(get("/api/v1/events/{id}", eventId))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.title").value("Business Rule Violation"));
+            .andExpect(jsonPath("$.title").value(TITLE_NOT_FOUND));
     }
 
     @Test
@@ -169,7 +171,7 @@ class EventControllerWebTest {
     @Test
     void shouldReturn409_whenAlreadyPublished() throws Exception {
         when(eventService.publish(eventId))
-            .thenThrow(new BusinessException("Event is already published", HttpStatus.CONFLICT));
+            .thenThrow(new ConflictException("Event is already published"));
 
         mockMvc.perform(post("/api/v1/events/{id}/publish", eventId)
                 .header("X-User-Id", "user-123"))
@@ -194,7 +196,7 @@ class EventControllerWebTest {
     @Test
     void shouldReturn400_whenCancelNotPublished() throws Exception {
         when(eventService.cancel(eventId))
-            .thenThrow(new BusinessException("Only published events can be cancelled", HttpStatus.BAD_REQUEST));
+            .thenThrow(new BusinessException("Only published events can be cancelled"));
 
         mockMvc.perform(post("/api/v1/events/{id}/cancel", eventId)
                 .header("X-User-Id", "user-123"))
