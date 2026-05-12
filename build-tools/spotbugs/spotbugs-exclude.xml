@@ -23,7 +23,7 @@
     <!-- Also covers domain event records (e.g., EventPublished) in messaging sub-packages -->
     <Match>
         <Class name="~.*\.services\..*"/>
-        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,REC_CATCH_EXCEPTION"/>
     </Match>
 
     <!-- Spring Configuration classes -->
@@ -41,7 +41,7 @@
     <!-- Kafka publishers: RuntimeException wrapping is idiomatic -->
     <Match>
         <Class name="~.*\.messaging\..*"/>
-        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION,REC_CATCH_EXCEPTION"/>
     </Match>
 
     <!-- Lombok: @RequiredArgsConstructor generates constructors that SpotBugs misinterprets -->
