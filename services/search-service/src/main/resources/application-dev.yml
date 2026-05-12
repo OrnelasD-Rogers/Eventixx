@@ -1,0 +1,12 @@
+server:
+  port: 8082
+
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+  kafka:
+    bootstrap-servers: localhost:9092
+
+eureka:
+  client:
+    enabled: false
