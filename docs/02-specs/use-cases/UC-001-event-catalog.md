@@ -103,8 +103,8 @@
 - **Verification:** Publish an event via Event Catalog API; within 5 seconds, it is searchable via Search Service API.
 
 ### Task 4: Conformance Tests
-- **Status:** 🔄 Partial — Unit, Web & Repository tests completed; Integration tests pending execution
-- **Date:** 2026-05-07 (unit + web), 2026-05-11 (repository), TBD (integration)
+- **Status:** ☑ Completed
+- **Date:** 2026-05-07 (unit + web), 2026-05-11 (repository), 2026-05-12 (integration)
 - **Complexity:** Medium
 - **Artifacts created/modified:**
   - `unit/EventValidatorTest` — 15 cases covering publish/update/cancel rules
@@ -118,18 +118,30 @@
   - `web/CategoryControllerWebTest` — 7 cases
   - `web/TicketTypeControllerWebTest` — 7 cases
   - `arch/ArchitectureTest` — 9 ArchUnit rules (pre-existing)
-  - `application-test.yml` — profile de teste com datasource e Kafka configurados
+  - `application-test.yml` — test profile with datasource and Kafka config
   - `repository/VenueRepositorySoftDeleteTest` — 2 cases (soft delete + query filtering)
   - `repository/CategoryRepositorySoftDeleteTest` — 2 cases
   - `repository/EventRepositorySoftDeleteTest` — 2 cases (with Venue + Category setup)
   - `repository/TicketTypeRepositorySoftDeleteTest` — 2 cases (with full dependency chain + `findAllByEventId`)
-  - `repository/PostgresRepositoryTest` — base class with shared `@ServiceConnection` container
-- **Pending execution:**
-  - Repository tests compile but cannot run due to local Docker daemon issue (TTRPC connection error)
-  - `@SpringBootTest` com Testcontainers PostgreSQL + Kafka (end-to-end) not yet implemented
-- **Prompt for agent:**
-  > Write integration tests for event-catalog-service using Testcontainers. Spin up a dedicated PostgreSQL container for this service (port 5433 or dynamic) and a Kafka container. Test: create event, publish event, and verify Kafka message is sent. Use `@ServiceConnection` (Spring Boot 3.1+) to auto-wire Testcontainers ports. Ensure tests are self-contained and can run with `mvn verify`. The test must use its own isolated PostgreSQL instance (do not share with other services).
-- **Verification:** `mvn verify` passes; Testcontainers spin up and tear down automatically.
+  - `repository/PostgresRepositoryTest` — base class with shared `@DynamicPropertySource` container
+  - `integration/CatalogIntegrationTestBase` — `@SpringBootTest` + Testcontainers (PostgreSQL + Kafka) with `@DynamicPropertySource` via static initializer (not `@Container`)
+  - `integration/VenueCatalogIntegrationTest` — Venue CRUD lifecycle (create, read, update, delete, 404)
+  - `integration/CategoryCatalogIntegrationTest` — Category CRUD lifecycle
+  - `integration/TicketTypeCatalogIntegrationTest` — TicketType CRUD lifecycle
+  - `integration/EventCatalogIntegrationTest` — 12 cases:
+    - A1: Publish event (happy path)
+    - A2: Kafka message payload verification (EventPublished JSON)
+    - A3: List events by status (DRAFT / PUBLISHED)
+    - A4: Cancel published event
+    - A5: Soft delete → 404
+    - A6: Update event
+    - A7: GET without auth header
+    - B1: Publish already published → 409
+    - B2: Cancel DRAFT → 400
+    - B3: Publish without ticket types → 400
+    - B4: Ticket quantity exceeds capacity → 400
+    - B5: Event not found → 404
+- **Verification:** `mvn verify -pl services/event-catalog-service` passes — 128 tests, 0 violations (SpotBugs, PMD, Checkstyle, ArchUnit).
 
 ### Task 5: Documentation & Observability
 - **Status:** ☐ Pending
@@ -154,7 +166,7 @@
 - [x] All write operations require authentication (JWT or dummy header)
 - [x] Unit tests for business rules (EventValidator, Services) pass
 - [x] Web tests for REST endpoints (`@WebMvcTest`) pass
-- [ ] Integration tests with Testcontainers pass
+- [x] Integration tests with Testcontainers pass
 - [ ] Structured JSON logs with trace IDs are emitted
 
 ---
@@ -166,7 +178,7 @@
 | T1   | ☑ Completed | 2026-04-30 | Created Maven module, Dockerfile, application.yml. Configured MapStruct processor with Lombok ordering in root POM. Created `V1__init.sql` with 4 tables (soft delete, triggers, partial indexes, CHECK constraints). Schema documented in `data-model.md`. |
 | T2   | ☑ Completed | 2026-04-30 | Refactored to Anemic Model + **package-by-layer** structure (`controllers/`, `services/`, `repositories/`, `entities/`, `dto/`, `exceptions/`, `config/`). Added `EventValidator` component for publish/update/cancel rules. Services use private `findXxxOrThrow()` helpers and `Optional.ifPresent()` for updates. Added `POST /{id}/cancel` endpoint. Kafka event published directly from Service (no AggregateRoot/domainEvents list). Build SUCCESS. |
 | T3   | ☐ Pending |      |       |
-| T4   | 🔄 Partial | 2026-05-11 | 98 tests implemented: 48 unit (services + validator + publisher), 33 web (`@WebMvcTest` controllers), 9 ArchUnit, **8 repository** (`@DataJpaTest` + `@ServiceConnection` + PostgreSQL container). Repository tests use `TestEntityManager` to verify `@SQLDelete`/`@SQLRestriction` soft delete behavior. Docker daemon issue prevents container startup locally; tests ready to run once resolved. |
+| T4   | ☑ Completed | 2026-05-13 | 128 tests: 48 unit, 33 web (`@WebMvcTest`), 8 repository (`@DataJpaTest` + Testcontainers PostgreSQL), 30 integration (`@SpringBootTest` + Testcontainers PostgreSQL + Kafka), 9 ArchUnit. Build SUCCESS with 0 violations (SpotBugs, PMD, Checkstyle, ArchUnit). Integration tests split into 4 controller-specific classes covering Event, Venue, Category, and TicketType CRUD lifecycles with Kafka payload verification via Awaitility and error paths. Containers managed via `static { start(); }` (not `@Container`) for suite-wide sharing. |
 | T5   | ☐ Pending |      |       |
 
 ---
@@ -179,6 +191,7 @@
 - **Spring Boot 4 starter-test module:** The new `spring-boot-starter-webmvc-test` dependency cleanly separates MVC test infrastructure. Auto-configuration of `MockMvc` and security filters worked out of the box.
 
 ### What didn't work / Surprises
+- **Spring Boot 4 `TestRestTemplate` migration:** In Spring Boot 4, `TestRestTemplate` moved from `spring-boot-starter-test` to a new module `spring-boot-resttestclient` with a new package `org.springframework.boot.resttestclient`. It also requires `@AutoConfigureTestRestTemplate` to be auto-configured, and `spring-boot-restclient` must be on the classpath for `RestTemplateBuilder`. Without these, `@Autowired TestRestTemplate` fails with `NoSuchBeanDefinitionException`.
 - **Spring Boot 4 removed `@MockBean`:** The annotation was deprecated in 3.4 and removed in 4.0. All `@WebMvcTest` classes broke until we replaced `@MockBean` with `@MockitoBean` (from `org.springframework.test.context.bean.override.mockito`). The package change for `@WebMvcTest` (`org.springframework.boot.webmvc.test.autoconfigure`) was also undocumented in many migration guides.
 - **Testcontainers 2.x renamed artifacts:** `org.testcontainers:junit-jupiter` became `org.testcontainers:testcontainers-junit-jupiter`. Same for `postgresql` → `testcontainers-postgresql` and `kafka` → `testcontainers-kafka`. Spring Boot 4.0.6 BOM manages version 2.0.5.
 - **Spring Framework 7 requires `-parameters` compiler flag:** Without it, `@PathVariable UUID id` throws `IllegalArgumentException: Name for argument of type [java.util.UUID] not specified`. This was not obvious and took significant debugging. The fix is adding `<arg>-parameters</arg>` to `maven-compiler-plugin` in the root POM.

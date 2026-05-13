@@ -105,6 +105,7 @@ Critical changes from Spring Boot 3.x that affect testing:
 | `org.testcontainers:kafka` | `org.testcontainers:testcontainers-kafka` | Artifact rename |
 | `-parameters` flag | **Mandatory** | Add `<arg>-parameters</arg>` to `maven-compiler-plugin` or `@PathVariable` fails at runtime |
 | `-Xlint` compiler flags | Main: `-Xlint:all,-processing` with `failOnWarning=true`; Test: `-Xlint:all,-processing,-rawtypes,-unchecked` | Zero-compiler-warning policy for `src/main/java`. Test warnings visible but non-blocking (`rawtypes`/`unchecked` excluded due to Mockito noise). |
+| `TestRestTemplate` in `spring-boot-starter-test` | `TestRestTemplate` in `spring-boot-resttestclient` | Moved to dedicated module. Add `spring-boot-resttestclient` (test) + `@AutoConfigureTestRestTemplate`. Also needs `spring-boot-restclient` for `RestTemplateBuilder`. |
 | `@DynamicPropertySource` | `@ServiceConnection` | `@ServiceConnection` has lifecycle issues with `@DataJpaTest` + shared static containers. We use explicit `@DynamicPropertySource` for reliability. |
 | `TestEntityManager` in `spring-boot-test-autoconfigure` | `TestEntityManager` in `spring-boot-starter-data-jpa-test` | New starter `spring-boot-starter-data-jpa-test` required; package changed to `org.springframework.boot.jpa.test.autoconfigure` |
 
@@ -116,17 +117,17 @@ Instead, use a **static initializer block** in the abstract base class:
 
 ```java
 public abstract class PostgresRepositoryTest {
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
 
     static {
-        postgres.start();
+        POSTGRES.start();
     }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
     }
 }
 ```
@@ -158,7 +159,12 @@ src/test/java/com/eventixx/<service>/
 │   ├── EventRepositorySoftDeleteTest.java
 │   └── TicketTypeRepositorySoftDeleteTest.java
 ├── integration/                    # End-to-end (@SpringBootTest + Testcontainers)
-│   └── EventCatalogIntegrationTest.java
+│   ├── CatalogIntegrationTestBase.java   # shared base: PostgreSQL + Kafka containers, auth helpers
+│   ├── RestPage.java                      # helper to deserialize Page<T> via Jackson @JsonCreator
+│   ├── EventCatalogIntegrationTest.java  # Event lifecycle (create, publish, cancel, delete)
+│   ├── VenueCatalogIntegrationTest.java  # Venue CRUD
+│   ├── CategoryCatalogIntegrationTest.java # Category CRUD
+│   └── TicketTypeCatalogIntegrationTest.java # TicketType CRUD
 └── arch/                           # Architecture rules
     └── ArchitectureTest.java
 ```
@@ -211,6 +217,9 @@ For Testcontainers-based tests, containers override these properties via `@Dynam
 
 # Only repository tests (Testcontainers)
 ./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.repository.*"
+
+# Only integration tests (Testcontainers)
+./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.integration.*"
 
 # Only ArchUnit
 ./mvnw test -pl services/event-catalog-service -Dtest=ArchitectureTest
@@ -288,17 +297,17 @@ class EventControllerWebTest {
 @ActiveProfiles("test")
 public abstract class PostgresRepositoryTest {
 
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
 
     static {
-        postgres.start(); // singleton: started once, shared across all subclasses
+        POSTGRES.start(); // singleton: started once, shared across all subclasses
     }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
     }
 
     @Autowired
@@ -330,17 +339,93 @@ class VenueRepositorySoftDeleteTest extends PostgresRepositoryTest {
 
 ```java
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@Testcontainers
-class EventCatalogIntegrationTest {
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
+@AutoConfigureTestRestTemplate
+@ActiveProfiles("test")
+public abstract class CatalogIntegrationTestBase {
 
-    @Container
-    static KafkaContainer kafka = new KafkaContainer("confluentinc/cp-kafka:latest");
+    static final PostgreSQLContainer POSTGRES;
+    static final KafkaContainer KAFKA;
 
-    // No @DynamicPropertySource needed — @ServiceConnection auto-wires everything
+    static {
+        POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
+        KAFKA = new KafkaContainer("apache/kafka:4.0.0");
+        POSTGRES.start();
+        KAFKA.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.kafka.bootstrap-servers", KAFKA::getBootstrapServers);
+    }
+
+    @Autowired
+    protected TestRestTemplate restTemplate;
+
+    protected static HttpEntity<Void> authEntity() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-User-Id", "user-1");
+        return new HttpEntity<>(headers);
+    }
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void cleanDatabase() {
+        jdbcTemplate.execute("TRUNCATE TABLE ticket_types, events, venues, categories RESTART IDENTITY CASCADE");
+    }
+
+    protected Consumer<String, String> createKafkaConsumer() {
+        Map<String, Object> props = KafkaTestUtils.consumerProps(
+                KAFKA.getBootstrapServers(), "test-group-" + UUID.randomUUID(), false);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        var consumer = new DefaultKafkaConsumerFactory<String, String>(
+                props, new StringDeserializer(), new StringDeserializer()
+        ).createConsumer();
+        consumer.subscribe(List.of("event.published"));
+        return consumer;
+    }
 }
+```
+
+### Page Deserialization with RestTemplate
+
+Spring Data's `Page` is an interface — Jackson cannot construct it directly. Use `RestPage<T>`, a concrete `PageImpl<T>` subclass annotated for Jackson:
+
+```java
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"pageable"})
+public class RestPage<T> extends PageImpl<T> {
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public RestPage(
+            @JsonProperty("content") List<T> content,
+            @JsonProperty("number") int page,
+            @JsonProperty("size") int size,
+            @JsonProperty("totalElements") long total) {
+        super(content, PageRequest.of(page, size), total);
+    }
+}
+```
+
+Usage in integration tests:
+
+```java
+var response = restTemplate.exchange(
+        "/api/v1/venues", HttpMethod.GET, null,
+        new ParameterizedTypeReference<RestPage<VenueSummaryResponse>>() { });
+assertThat(response.getBody().getContent()).hasSize(2);
+```
+
+For endpoints returning a plain `List<T>` (not `Page<T>`):
+
+```java
+var response = restTemplate.exchange(
+        "/api/v1/events/{id}/ticket-types", HttpMethod.GET, null,
+        new ParameterizedTypeReference<List<TicketTypeResponse>>() { }, eventId);
 ```
 
 ---
@@ -367,6 +452,7 @@ class EventCatalogIntegrationTest {
 | Testcontainers dependency version missing | Artifact renamed in 2.x | Use `testcontainers-*` prefix (e.g., `testcontainers-postgresql`) |
 | Corrupted `spring-boot-test-autoconfigure` JAR | Incomplete Maven download | Delete `~/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/` and re-run |
 | Docker fails with "TTRPC connection: unsupported protocol" | Incompatibility between Docker daemon and containerd/runc versions | Restart Docker daemon or downgrade containerd to a compatible version |
+| `TestRestTemplate` not injected (`NoSuchBeanDefinitionException`) | Moved to new module in Spring Boot 4 | Add `spring-boot-resttestclient` (test) + `spring-boot-restclient` (compile) dependencies and annotate test with `@AutoConfigureTestRestTemplate` |
 | Compiler warning blocking the build | `-Xlint:all,-processing` + `failOnWarning=true` on main sources | Fix the warning (e.g., deprecation, removal, unused variable). Test code uses relaxed linting (`-rawtypes,-unchecked`) where Mockito noise is expected. |
 | Checkstyle violation blocking the build | `severity=error` + `failOnViolation=true` on both main and test sources | Fix the violation (e.g., unused imports, line length, naming). Test method naming underscores are suppressed via `SuppressionSingleFilter`. |
 
