@@ -45,7 +45,7 @@
 - **Write operations require JWT:** Only authenticated organizers can create/modify events.
 - **Soft delete on all catalog tables:** All entities (`categories`, `venues`, `events`, `ticket_types`) use a `deleted_at` timestamp instead of hard deletion. This preserves referential integrity (e.g., events referencing venues) and enables audit trails. Queries must explicitly filter `WHERE deleted_at IS NULL`.
 - **Event status enum:** `DRAFT` → `PUBLISHED` → (`CANCELLED` | `ENDED`). `ENDED` is set by a future scheduled job when `end_time` passes; `CANCELLED` is manual.
-- **Compiler `-parameters` flag mandatory:** Spring Framework 7 (shipped with Spring Boot 4) requires `javac -parameters` to retain parameter names at runtime. Without it, `@PathVariable` and `@RequestParam` resolution fails with `IllegalArgumentException`. Added to root POM `maven-compiler-plugin`.
+- **Compiler strictness:** Two flags configured in the root POM `maven-compiler-plugin`: (a) `-parameters` — mandatory for Spring Framework 7's parameter name resolution; `@PathVariable` and `@RequestParam` fail at runtime without it. (b) `-Xlint:all,-processing` with `failOnWarning=true` — enforces zero compiler warnings on main sources. Test sources use relaxed linting `-Xlint:all,-processing,-rawtypes,-unchecked`.
 - **Validation errors return structured ProblemDetail:** `MethodArgumentNotValidException` is handled in `GlobalExceptionHandler` to return RFC 7807 `ProblemDetail` with a map of field errors, instead of falling through to the generic 500 handler.
 
 ---

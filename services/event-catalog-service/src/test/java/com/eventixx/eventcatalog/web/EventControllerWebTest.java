@@ -26,7 +26,6 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -55,7 +54,8 @@ class EventControllerWebTest {
         CreateEventRequest request = new CreateEventRequest(
             "Concert", "A music concert", UUID.randomUUID(), UUID.randomUUID(),
             Instant.now().plusSeconds(3600), Instant.now().plusSeconds(7200),
-            List.of(new com.eventixx.eventcatalog.dto.tickettype.CreateTicketTypeRequest("GA", BigDecimal.valueOf(50), 100))
+            List.of(new com.eventixx.eventcatalog.dto.tickettype.CreateTicketTypeRequest(
+                "GA", BigDecimal.valueOf(50), 100))
         );
         EventResponse response = new EventResponse(
             eventId, "Concert", "A music concert", "DRAFT",

@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.util.List;
@@ -67,7 +66,9 @@ class VenueServiceTest {
     @Test
     void shouldCreateVenue() {
         CreateVenueRequest request = new CreateVenueRequest("New Venue", "Addr", "City", "BR", 200);
-        Venue newVenue = Venue.builder().name("New Venue").address("Addr").city("City").country("BR").capacity(200).build();
+        Venue newVenue = Venue.builder()
+            .name("New Venue").address("Addr").city("City")
+            .country("BR").capacity(200).build();
 
         when(venueMapper.toEntity(request)).thenReturn(newVenue);
         when(venueRepository.save(newVenue)).thenReturn(newVenue);

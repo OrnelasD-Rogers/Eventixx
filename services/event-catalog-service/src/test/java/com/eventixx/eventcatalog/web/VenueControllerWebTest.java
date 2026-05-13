@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,7 +49,9 @@ class VenueControllerWebTest {
     @Test
     void shouldCreateVenue() throws Exception {
         CreateVenueRequest request = new CreateVenueRequest("Arena", "123 St", "SP", "BR", 5000);
-        VenueResponse response = new VenueResponse(venueId, "Arena", "123 St", "SP", "BR", 5000, Instant.now(), Instant.now());
+        VenueResponse response = new VenueResponse(
+            venueId, "Arena", "123 St", "SP", "BR", 5000,
+            Instant.now(), Instant.now());
         when(venueService.create(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/venues")
@@ -76,7 +77,9 @@ class VenueControllerWebTest {
 
     @Test
     void shouldGetVenueById() throws Exception {
-        VenueResponse response = new VenueResponse(venueId, "Arena", "123 St", "SP", "BR", 5000, Instant.now(), Instant.now());
+        VenueResponse response = new VenueResponse(
+            venueId, "Arena", "123 St", "SP", "BR", 5000,
+            Instant.now(), Instant.now());
         when(venueService.findById(venueId)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/venues/{id}", venueId))
@@ -108,7 +111,9 @@ class VenueControllerWebTest {
     @Test
     void shouldUpdateVenue() throws Exception {
         UpdateVenueRequest request = new UpdateVenueRequest("Updated Arena", null, null, null, null);
-        VenueResponse response = new VenueResponse(venueId, "Updated Arena", "123 St", "SP", "BR", 5000, Instant.now(), Instant.now());
+        VenueResponse response = new VenueResponse(
+            venueId, "Updated Arena", "123 St", "SP", "BR", 5000,
+            Instant.now(), Instant.now());
         when(venueService.update(eq(venueId), any())).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/venues/{id}", venueId)

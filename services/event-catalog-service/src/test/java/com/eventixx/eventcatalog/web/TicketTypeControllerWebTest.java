@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,7 +47,9 @@ class TicketTypeControllerWebTest {
     @Test
     void shouldCreateTicketType() throws Exception {
         CreateTicketTypeRequest request = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(200), 50);
-        TicketTypeResponse response = new TicketTypeResponse(ticketTypeId, "VIP", BigDecimal.valueOf(200), 50, Instant.now(), Instant.now());
+        TicketTypeResponse response = new TicketTypeResponse(
+            ticketTypeId, "VIP", BigDecimal.valueOf(200), 50,
+            Instant.now(), Instant.now());
         when(ticketTypeService.create(eq(eventId), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/events/{eventId}/ticket-types", eventId)
@@ -73,7 +74,9 @@ class TicketTypeControllerWebTest {
 
     @Test
     void shouldGetTicketTypeById() throws Exception {
-        TicketTypeResponse response = new TicketTypeResponse(ticketTypeId, "GA", BigDecimal.valueOf(50), 100, Instant.now(), Instant.now());
+        TicketTypeResponse response = new TicketTypeResponse(
+            ticketTypeId, "GA", BigDecimal.valueOf(50), 100,
+            Instant.now(), Instant.now());
         when(ticketTypeService.findById(ticketTypeId)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/events/{eventId}/ticket-types/{id}", eventId, ticketTypeId))
@@ -105,7 +108,9 @@ class TicketTypeControllerWebTest {
     @Test
     void shouldUpdateTicketType() throws Exception {
         UpdateTicketTypeRequest request = new UpdateTicketTypeRequest("Updated VIP", null, null);
-        TicketTypeResponse response = new TicketTypeResponse(ticketTypeId, "Updated VIP", BigDecimal.valueOf(200), 50, Instant.now(), Instant.now());
+        TicketTypeResponse response = new TicketTypeResponse(
+            ticketTypeId, "Updated VIP", BigDecimal.valueOf(200), 50,
+            Instant.now(), Instant.now());
         when(ticketTypeService.update(eq(ticketTypeId), any())).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/events/{eventId}/ticket-types/{id}", eventId, ticketTypeId)

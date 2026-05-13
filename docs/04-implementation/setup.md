@@ -84,7 +84,7 @@ http://localhost:8080/swagger-ui.html
 ### MapStruct + Lombok
 MapStruct code generation is automatic during compilation. No manual step required. The `maven-compiler-plugin` in the root POM configures annotation processors in the correct order (Lombok first, then MapStruct).
 
-> **Spring Boot 4 Note:** The compiler also requires the `-parameters` flag to retain parameter names at runtime. This is mandatory for `@PathVariable` and `@RequestParam` resolution. The flag is already configured in the root POM.
+> **Spring Boot 4 Note:** The compiler requires two flags in the root POM `maven-compiler-plugin`: (a) `-parameters` to retain parameter names at runtime (mandatory for `@PathVariable`/`@RequestParam`); (b) `-Xlint:all,-processing` with `failOnWarning=true` for zero-warning enforcement on main sources. Test sources use `-Xlint:all,-processing,-rawtypes,-unchecked` (warnings shown but non-blocking).
 
 ### Adding a New Service
 1. Create `services/<service-name>/pom.xml` with parent `eventixx-parent`
@@ -142,7 +142,7 @@ All quality tools run automatically during `./mvnw verify`:
 Tools configured in the parent POM:
 - **SpotBugs + FindSecBugs**: Bytecode-level bug and security vulnerability detection
 - **PMD + CPD**: Code smells, copy-paste detection, and best practice enforcement
-- **Checkstyle**: Google Java Style formatting with 120-character line length
+- **Checkstyle**: Google Java Style formatting with 120-character line length. Applies to **both main and test sources** (`includeTestSourceDirectory=true`). Violations are **errors** (block the build), not warnings. BDD-style test method names (with underscores like `shouldThrow_whenX`) are excluded via `SuppressionSingleFilter`.
 - **ArchUnit**: Architecture rules (package cycles, layer independence, naming conventions, Spring proxy rules)
 
 > **SpotBugs + Lombok:** Lombok annotations (`@RequiredArgsConstructor`, `@Slf4j`, etc.) and MapStruct generate bytecode that SpotBugs misinterprets (e.g., `NP_UNWRITTEN_FIELD`, `CT_CONSTRUCTOR_THROW`). These false positives are suppressed via `build-tools/spotbugs/spotbugs-exclude.xml`. When adding a new Lombok-heavy module, ensure the exclude filter covers its patterns.

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,7 +25,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,7 +69,9 @@ class TicketTypeServiceTest {
     @Test
     void shouldCreateTicketType_forEvent() {
         CreateTicketTypeRequest request = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(150), 50);
-        TicketType newTicketType = TicketType.builder().name("VIP").price(BigDecimal.valueOf(150)).quantityAvailable(50).build();
+        TicketType newTicketType = TicketType.builder()
+            .name("VIP").price(BigDecimal.valueOf(150))
+            .quantityAvailable(50).build();
 
         when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
         when(ticketTypeMapper.toEntity(request)).thenReturn(newTicketType);

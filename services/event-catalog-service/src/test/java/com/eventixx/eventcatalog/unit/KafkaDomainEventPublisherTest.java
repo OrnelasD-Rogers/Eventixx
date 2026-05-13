@@ -18,7 +18,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,7 +59,9 @@ class KafkaDomainEventPublisherTest {
 
     @Test
     void shouldThrow_whenSerializationFails() throws JsonProcessingException {
-        when(objectMapper.writeValueAsString(event)).thenThrow(new JsonProcessingException("Boom") {});
+        when(objectMapper.writeValueAsString(event))
+            .thenThrow(new JsonProcessingException("Boom") {
+            });
 
         assertThatThrownBy(() -> publisher.publish(event))
             .isInstanceOf(RuntimeException.class)
@@ -75,21 +76,33 @@ class KafkaDomainEventPublisherTest {
         private final Instant timestamp = Instant.now();
 
         @Override
-        public UUID getEventId() { return eventId; }
+        public UUID getEventId() {
+            return eventId;
+        }
 
         @Override
-        public String getEventType() { return "test.event"; }
+        public String getEventType() {
+            return "test.event";
+        }
 
         @Override
-        public String getEventVersion() { return "1.0"; }
+        public String getEventVersion() {
+            return "1.0";
+        }
 
         @Override
-        public Instant getTimestamp() { return timestamp; }
+        public Instant getTimestamp() {
+            return timestamp;
+        }
 
         @Override
-        public UUID getAggregateId() { return aggregateId; }
+        public UUID getAggregateId() {
+            return aggregateId;
+        }
 
         @Override
-        public UUID getCorrelationId() { return correlationId; }
+        public UUID getCorrelationId() {
+            return correlationId;
+        }
     }
 }

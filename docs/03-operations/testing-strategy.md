@@ -104,6 +104,7 @@ Critical changes from Spring Boot 3.x that affect testing:
 | `org.testcontainers:postgresql` | `org.testcontainers:testcontainers-postgresql` | Artifact rename |
 | `org.testcontainers:kafka` | `org.testcontainers:testcontainers-kafka` | Artifact rename |
 | `-parameters` flag | **Mandatory** | Add `<arg>-parameters</arg>` to `maven-compiler-plugin` or `@PathVariable` fails at runtime |
+| `-Xlint` compiler flags | Main: `-Xlint:all,-processing` with `failOnWarning=true`; Test: `-Xlint:all,-processing,-rawtypes,-unchecked` | Zero-compiler-warning policy for `src/main/java`. Test warnings visible but non-blocking (`rawtypes`/`unchecked` excluded due to Mockito noise). |
 | `@DynamicPropertySource` | `@ServiceConnection` | `@ServiceConnection` has lifecycle issues with `@DataJpaTest` + shared static containers. We use explicit `@DynamicPropertySource` for reliability. |
 | `TestEntityManager` in `spring-boot-test-autoconfigure` | `TestEntityManager` in `spring-boot-starter-data-jpa-test` | New starter `spring-boot-starter-data-jpa-test` required; package changed to `org.springframework.boot.jpa.test.autoconfigure` |
 
@@ -366,6 +367,8 @@ class EventCatalogIntegrationTest {
 | Testcontainers dependency version missing | Artifact renamed in 2.x | Use `testcontainers-*` prefix (e.g., `testcontainers-postgresql`) |
 | Corrupted `spring-boot-test-autoconfigure` JAR | Incomplete Maven download | Delete `~/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/` and re-run |
 | Docker fails with "TTRPC connection: unsupported protocol" | Incompatibility between Docker daemon and containerd/runc versions | Restart Docker daemon or downgrade containerd to a compatible version |
+| Compiler warning blocking the build | `-Xlint:all,-processing` + `failOnWarning=true` on main sources | Fix the warning (e.g., deprecation, removal, unused variable). Test code uses relaxed linting (`-rawtypes,-unchecked`) where Mockito noise is expected. |
+| Checkstyle violation blocking the build | `severity=error` + `failOnViolation=true` on both main and test sources | Fix the violation (e.g., unused imports, line length, naming). Test method naming underscores are suppressed via `SuppressionSingleFilter`. |
 
 ---
 

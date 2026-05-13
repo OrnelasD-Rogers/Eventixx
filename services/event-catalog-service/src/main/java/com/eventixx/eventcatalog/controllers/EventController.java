@@ -70,14 +70,6 @@ public class EventController {
     /**
      * Updates an existing event.
      *
-     * @param id     the event ID
-     * @param request the update request
-     * @param userId the user ID from header
-     * @return the updated event
-     */
-    /**
-     * Updates an existing event.
-     *
      * @param id      the event ID
      * @param request the update request
      * @param userId  the user ID from header

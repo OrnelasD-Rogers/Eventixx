@@ -8,7 +8,6 @@ import com.eventixx.eventcatalog.dto.tickettype.CreateTicketTypeRequest;
 import com.eventixx.eventcatalog.entities.Category;
 import com.eventixx.eventcatalog.entities.Event;
 import com.eventixx.eventcatalog.entities.EventStatus;
-import com.eventixx.eventcatalog.entities.TicketType;
 import com.eventixx.eventcatalog.entities.Venue;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
@@ -38,7 +37,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -183,7 +181,10 @@ class EventServiceTest {
         Page<Event> page = new PageImpl<>(List.of(event));
         when(eventRepository.findAll(pageable)).thenReturn(page);
         when(eventMapper.toSummary(any(Event.class))).thenReturn(
-            new EventSummaryResponse(event.getId(), event.getTitle(), event.getStatus().name(), event.getStartTime(), event.getEndTime(), venue.getName(), category.getName(), null)
+            new EventSummaryResponse(
+                event.getId(), event.getTitle(), event.getStatus().name(),
+                event.getStartTime(), event.getEndTime(), venue.getName(),
+                category.getName(), null)
         );
 
         Page<EventSummaryResponse> result = eventService.findAll(pageable);
@@ -199,7 +200,10 @@ class EventServiceTest {
         Page<Event> page = new PageImpl<>(List.of(event));
         when(eventRepository.findAllByStatus(EventStatus.DRAFT, pageable)).thenReturn(page);
         when(eventMapper.toSummary(any(Event.class))).thenReturn(
-            new EventSummaryResponse(event.getId(), event.getTitle(), event.getStatus().name(), event.getStartTime(), event.getEndTime(), venue.getName(), category.getName(), null)
+            new EventSummaryResponse(
+                event.getId(), event.getTitle(), event.getStatus().name(),
+                event.getStartTime(), event.getEndTime(), venue.getName(),
+                category.getName(), null)
         );
 
         Page<EventSummaryResponse> result = eventService.findAllByStatus("DRAFT", pageable);
@@ -226,9 +230,12 @@ class EventServiceTest {
 
     @Test
     void shouldUpdateEvent_withNewVenueAndCategory() {
-        Venue newVenue = Venue.builder().id(UUID.randomUUID()).name("New Venue").address("A").city("C").country("B").capacity(200).build();
+        Venue newVenue = Venue.builder()
+            .id(UUID.randomUUID()).name("New Venue").address("A")
+            .city("C").country("B").capacity(200).build();
         Category newCategory = Category.builder().id(UUID.randomUUID()).name("Sports").build();
-        UpdateEventRequest request = new UpdateEventRequest(null, null, newVenue.getId(), newCategory.getId(), null, null, null);
+        UpdateEventRequest request = new UpdateEventRequest(
+            null, null, newVenue.getId(), newCategory.getId(), null, null, null);
 
         when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
         when(venueRepository.findById(newVenue.getId())).thenReturn(Optional.of(newVenue));

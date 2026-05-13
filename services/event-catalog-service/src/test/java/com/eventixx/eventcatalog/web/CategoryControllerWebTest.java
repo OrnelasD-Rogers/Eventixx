@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -49,7 +48,9 @@ class CategoryControllerWebTest {
     @Test
     void shouldCreateCategory() throws Exception {
         CreateCategoryRequest request = new CreateCategoryRequest("Music", "Live music events");
-        CategoryResponse response = new CategoryResponse(categoryId, "Music", "Live music events", Instant.now(), Instant.now());
+        CategoryResponse response = new CategoryResponse(
+            categoryId, "Music", "Live music events",
+            Instant.now(), Instant.now());
         when(categoryService.create(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/categories")
@@ -106,7 +107,9 @@ class CategoryControllerWebTest {
     @Test
     void shouldUpdateCategory() throws Exception {
         UpdateCategoryRequest request = new UpdateCategoryRequest("Updated Music", null);
-        CategoryResponse response = new CategoryResponse(categoryId, "Updated Music", "Desc", Instant.now(), Instant.now());
+        CategoryResponse response = new CategoryResponse(
+            categoryId, "Updated Music", "Desc",
+            Instant.now(), Instant.now());
         when(categoryService.update(eq(categoryId), any())).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/categories/{id}", categoryId)

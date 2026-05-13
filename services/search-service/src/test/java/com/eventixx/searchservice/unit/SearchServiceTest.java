@@ -95,8 +95,8 @@ class SearchServiceTest {
         SearchResult result = searchService.search(criteria);
 
         assertThat(result.events()).hasSize(1);
-        assertThat(result.events().get(0).title()).isEqualTo("Test Event");
-        assertThat(result.events().get(0).categoryName()).isEqualTo("Music");
+        assertThat(result.events().getFirst().title()).isEqualTo("Test Event");
+        assertThat(result.events().getFirst().categoryName()).isEqualTo("Music");
         assertThat(result.total()).isEqualTo(1L);
     }
 
@@ -121,7 +121,8 @@ class SearchServiceTest {
         when(operations.search(any(NativeQuery.class), eq(EventDocument.class)))
                 .thenReturn(searchHits);
 
-        var criteria = new SearchCriteria(null, null, null, LocalDate.now(), LocalDate.now().plusDays(30), null, null, null, null, 20);
+        var criteria = new SearchCriteria(null, null, null, LocalDate.now(),
+                LocalDate.now().plusDays(30), null, null, null, null, 20);
         SearchResult result = searchService.search(criteria);
 
         assertThat(result.events()).isEmpty();
@@ -134,7 +135,8 @@ class SearchServiceTest {
         when(operations.search(any(NativeQuery.class), eq(EventDocument.class)))
                 .thenReturn(searchHits);
 
-        var criteria = new SearchCriteria(null, null, null, null, null, BigDecimal.TEN, BigDecimal.valueOf(100), null, null, 20);
+        var criteria = new SearchCriteria(null, null, null, null, null,
+                BigDecimal.TEN, BigDecimal.valueOf(100), null, null, 20);
         SearchResult result = searchService.search(criteria);
 
         assertThat(result.events()).isEmpty();
