@@ -203,6 +203,19 @@ docs/
 
 ---
 
+---
+
+## Zero-Warnings Code Rules
+
+This project enforces **4 static analysis tools** at `mvn verify`: Checkstyle, PMD, SpotBugs, EditorConfig. The checklist in `.opencode/instructions/coding-rules.md` is loaded automatically by OpenCode — follow it to avoid rework.
+
+After any code change, run:
+```bash
+./mvnw verify -pl services/<service>
+```
+
+---
+
 ## Commit Message Conventions
 
 Short messages in Portuguese or English, describing **what** and **why**:
