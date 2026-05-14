@@ -50,17 +50,10 @@ docker-compose up -d
 
 ## Commit Rules
 
-- **Before every commit**, run full verification:
-  ```bash
-  ./mvnw verify -pl services/event-catalog-service
-  # or for all modules:
-  ./mvnw verify -pl services/event-catalog-service,services/search-service
-  ```
-- Only commit if **all checks pass** (compiler warnings + tests + SpotBugs + PMD + Checkstyle + ArchUnit).
-  - **Zero compiler warnings** in both `src/main/java` and `src/test/java`. The parent POM enforces `-Xlint:all,-processing` with `failOnWarning=true` for main sources. Test sources use `-Xlint:all,-processing,-rawtypes,-unchecked` (warnings shown but not blocking).
-- If verify fails, fix violations before committing.
-- Never use `--no-verify`, `--no-gpg-sign`, or any flags that skip hooks.
-- Commits must be atomic with descriptive messages in Portuguese or English.
+- Run `./mvnw verify -pl services/event-catalog-service` before committing. For multiple commits in a session, verify once on the full change set — splitting into atomic commits does not alter code. Re-verify after the last commit.
+- All checks must pass (tests, SpotBugs, PMD, Checkstyle, ArchUnit). Zero compiler warnings in main sources.
+- Fix violations before committing. Never use `--no-verify`, `--no-gpg-sign`, etc.
+- Atomic commits with descriptive messages in Portuguese or English.
 
 ---
 
