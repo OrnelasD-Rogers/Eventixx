@@ -20,4 +20,8 @@ public interface CategoryRepository {
     Page<Category> findAll(Pageable pageable);
 
     void delete(Category category);
+
+    boolean existsByName(String name);
+
+    Category saveAndFlush(Category category);
 }

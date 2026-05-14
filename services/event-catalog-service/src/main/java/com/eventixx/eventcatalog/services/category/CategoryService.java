@@ -7,8 +7,10 @@ import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 
 import com.eventixx.eventcatalog.entities.Category;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
+import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,10 +26,23 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
+    /**
+     * Creates a new category, throwing {@link ConflictException} if the name already exists.
+     * <p>Uses check-then-act with an explicit flush to close the race window and catch
+     * {@link DataIntegrityViolationException} as a safety net for concurrent duplicate inserts.</p>
+     */
     @Transactional
     public CategoryResponse create(CreateCategoryRequest request) {
+        if (categoryRepository.existsByName(request.name())) {
+            throw new ConflictException("Category with name '" + request.name() + "' already exists");
+        }
         Category category = categoryMapper.toEntity(request);
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        try {
+            Category saved = categoryRepository.saveAndFlush(category);
+            return categoryMapper.toResponse(saved);
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("Category with name '" + request.name() + "' already exists", e);
+        }
     }
 
     public CategoryResponse findById(UUID id) {

@@ -65,7 +65,7 @@ class CategoryServiceTest {
         Category newCategory = Category.builder().name("Sports").description("Sports events").build();
 
         when(categoryMapper.toEntity(request)).thenReturn(newCategory);
-        when(categoryRepository.save(newCategory)).thenReturn(newCategory);
+        when(categoryRepository.saveAndFlush(newCategory)).thenReturn(newCategory);
         when(categoryMapper.toResponse(newCategory)).thenReturn(categoryResponse);
 
         CategoryResponse result = categoryService.create(request);
