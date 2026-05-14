@@ -172,6 +172,7 @@
                                     <arg>-parameters</arg>
                                     <arg>-Xlint:all,-processing,-rawtypes,-unchecked</arg>
                                 </compilerArgs>
+                                <failOnWarning>true</failOnWarning>
                             </configuration>
                         </execution>
                     </executions>
