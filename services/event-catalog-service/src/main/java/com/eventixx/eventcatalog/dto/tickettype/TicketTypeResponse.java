@@ -11,5 +11,4 @@ public record TicketTypeResponse(
     BigDecimal price,
     Integer quantityAvailable,
     Instant createdAt,
-    Instant updatedAt
-) { }
+    Instant updatedAt) {}

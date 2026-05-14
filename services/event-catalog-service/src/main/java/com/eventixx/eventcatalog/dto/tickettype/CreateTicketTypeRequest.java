@@ -9,5 +9,4 @@ import java.math.BigDecimal;
 public record CreateTicketTypeRequest(
     @NotBlank String name,
     @NotNull @Min(0) BigDecimal price,
-    @NotNull @Min(1) Integer quantityAvailable
-) { }
+    @NotNull @Min(1) Integer quantityAvailable) {}

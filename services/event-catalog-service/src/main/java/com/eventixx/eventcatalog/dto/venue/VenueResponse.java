@@ -12,5 +12,4 @@ public record VenueResponse(
     String country,
     Integer capacity,
     Instant createdAt,
-    Instant updatedAt
-) { }
+    Instant updatedAt) {}

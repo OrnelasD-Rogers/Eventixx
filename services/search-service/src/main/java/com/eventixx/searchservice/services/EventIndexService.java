@@ -11,13 +11,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EventIndexService {
 
-    private final EventDocumentRepository repository;
-    private final EventDocumentMapper mapper;
+  private final EventDocumentRepository repository;
+  private final EventDocumentMapper mapper;
 
-    /** Indexes an event from a Kafka payload into Elasticsearch. */
-    public void indexEvent(com.eventixx.searchservice.services.messaging.EventPublished event) {
-        EventDocument document = mapper.toDocument(event);
-        repository.save(document);
-        log.info("Indexed event {} in Elasticsearch", document.getEventId());
-    }
+  /** Indexes an event from a Kafka payload into Elasticsearch. */
+  public void indexEvent(com.eventixx.searchservice.services.messaging.EventPublished event) {
+    EventDocument document = mapper.toDocument(event);
+    repository.save(document);
+    log.info("Indexed event {} in Elasticsearch", document.getEventId());
+  }
 }

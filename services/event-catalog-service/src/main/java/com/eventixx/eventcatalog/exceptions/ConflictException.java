@@ -5,13 +5,13 @@ package com.eventixx.eventcatalog.exceptions;
  */
 public class ConflictException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    public ConflictException(String message) {
-        super(message);
-    }
+  public ConflictException(String message) {
+    super(message);
+  }
 
-    public ConflictException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public ConflictException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

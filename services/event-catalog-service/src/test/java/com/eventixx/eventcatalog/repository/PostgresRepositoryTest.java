@@ -29,26 +29,23 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ImportAutoConfiguration({
-    FlywayAutoConfiguration.class
-})
+@ImportAutoConfiguration({FlywayAutoConfiguration.class})
 @ActiveProfiles("test")
 public abstract class PostgresRepositoryTest {
 
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine")
-            .withReuse(true);
+  static final PostgreSQLContainer POSTGRES =
+      new PostgreSQLContainer("postgres:16-alpine").withReuse(true);
 
-    static {
-        POSTGRES.start();
-    }
+  static {
+    POSTGRES.start();
+  }
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
-    }
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+    registry.add("spring.datasource.username", POSTGRES::getUsername);
+    registry.add("spring.datasource.password", POSTGRES::getPassword);
+  }
 
-    @Autowired
-    protected JdbcTemplate jdbcTemplate;
+  @Autowired protected JdbcTemplate jdbcTemplate;
 }

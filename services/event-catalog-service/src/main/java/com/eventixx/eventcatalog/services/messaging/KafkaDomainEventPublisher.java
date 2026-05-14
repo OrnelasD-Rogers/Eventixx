@@ -14,20 +14,24 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class KafkaDomainEventPublisher implements DomainEventPublisher {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+  private final KafkaTemplate<String, String> kafkaTemplate;
+  private final ObjectMapper objectMapper;
 
-    @Override
-    public void publish(DomainEvent event) {
-        try {
-            String payload = objectMapper.writeValueAsString(event);
-            String topic = event.getEventType();
-            String key = event.getAggregateId().toString();
+  @Override
+  public void publish(DomainEvent event) {
+    try {
+      String payload = objectMapper.writeValueAsString(event);
+      String topic = event.getEventType();
+      String key = event.getAggregateId().toString();
 
-            log.info("Publishing domain event to topic {}: type={}, aggregateId={}", topic, event.getEventType(), key);
-            kafkaTemplate.send(topic, key, payload);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize domain event: " + event.getEventType(), e);
-        }
+      log.info(
+          "Publishing domain event to topic {}: type={}, aggregateId={}",
+          topic,
+          event.getEventType(),
+          key);
+      kafkaTemplate.send(topic, key, payload);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Failed to serialize domain event: " + event.getEventType(), e);
     }
+  }
 }

@@ -5,8 +5,4 @@ import java.util.UUID;
 
 /** Response DTO for a ticket type summary. */
 public record TicketTypeSummaryResponse(
-    UUID id,
-    String name,
-    BigDecimal price,
-    Integer quantityAvailable
-) { }
+    UUID id, String name, BigDecimal price, Integer quantityAvailable) {}

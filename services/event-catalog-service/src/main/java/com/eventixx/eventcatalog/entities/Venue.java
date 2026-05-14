@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "venues")
@@ -28,38 +27,38 @@ import java.util.UUID;
 @Builder
 public class Venue {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Setter
-    @Column(nullable = false, length = 200)
-    private String name;
+  @Setter
+  @Column(nullable = false, length = 200)
+  private String name;
 
-    @Setter
-    @Column(nullable = false, length = 500)
-    private String address;
+  @Setter
+  @Column(nullable = false, length = 500)
+  private String address;
 
-    @Setter
-    @Column(nullable = false, length = 100)
-    private String city;
+  @Setter
+  @Column(nullable = false, length = 100)
+  private String city;
 
-    @Setter
-    @Column(nullable = false, length = 100)
-    private String country;
+  @Setter
+  @Column(nullable = false, length = 100)
+  private String country;
 
-    @Setter
-    @Column(nullable = false)
-    private Integer capacity;
+  @Setter
+  @Column(nullable = false)
+  private Integer capacity;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+  @Column(name = "created_at", nullable = false, updatable = false)
+  @Builder.Default
+  private Instant createdAt = Instant.now();
 
-    @Column(name = "updated_at", nullable = false)
-    @Builder.Default
-    private Instant updatedAt = Instant.now();
+  @Column(name = "updated_at", nullable = false)
+  @Builder.Default
+  private Instant updatedAt = Instant.now();
 
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
 }

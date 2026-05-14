@@ -12,5 +12,4 @@ public record EventSummaryResponse(
     Instant endTime,
     String venueName,
     String categoryName,
-    Instant publishedAt
-) { }
+    Instant publishedAt) {}

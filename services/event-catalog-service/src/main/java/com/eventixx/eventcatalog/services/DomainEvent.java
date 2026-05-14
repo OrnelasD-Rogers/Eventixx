@@ -8,15 +8,15 @@ import java.util.UUID;
  */
 public interface DomainEvent {
 
-    UUID getEventId();
+  UUID getEventId();
 
-    String getEventType();
+  String getEventType();
 
-    String getEventVersion();
+  String getEventVersion();
 
-    Instant getTimestamp();
+  Instant getTimestamp();
 
-    UUID getAggregateId();
+  UUID getAggregateId();
 
-    UUID getCorrelationId();
+  UUID getCorrelationId();
 }

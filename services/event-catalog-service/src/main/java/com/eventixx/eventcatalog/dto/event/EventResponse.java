@@ -20,5 +20,4 @@ public record EventResponse(
     Instant publishedAt,
     Instant createdAt,
     Instant updatedAt,
-    List<TicketTypeResponse> ticketTypes
-) { }
+    List<TicketTypeResponse> ticketTypes) {}

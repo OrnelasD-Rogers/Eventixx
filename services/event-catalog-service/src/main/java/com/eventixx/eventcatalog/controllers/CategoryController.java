@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,50 +25,49 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @Tag(name = "Categories", description = "Event category management")
 public class CategoryController {
 
-    private final CategoryService categoryService;
+  private final CategoryService categoryService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new category")
-    @ApiResponse(responseCode = "201", description = "Category created successfully")
-    public CategoryResponse create(@Valid @RequestBody CreateCategoryRequest request,
-                                   @RequestHeader("X-User-Id") String userId) {
-        return categoryService.create(request);
-    }
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  @Operation(summary = "Create a new category")
+  @ApiResponse(responseCode = "201", description = "Category created successfully")
+  public CategoryResponse create(
+      @Valid @RequestBody CreateCategoryRequest request,
+      @RequestHeader("X-User-Id") String userId) {
+    return categoryService.create(request);
+  }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get category by ID")
-    public CategoryResponse getById(@PathVariable UUID id) {
-        return categoryService.findById(id);
-    }
+  @GetMapping("/{id}")
+  @Operation(summary = "Get category by ID")
+  public CategoryResponse getById(@PathVariable UUID id) {
+    return categoryService.findById(id);
+  }
 
-    @GetMapping
-    @Operation(summary = "List all categories")
-    public Page<CategorySummaryResponse> list(Pageable pageable) {
-        return categoryService.findAll(pageable);
-    }
+  @GetMapping
+  @Operation(summary = "List all categories")
+  public Page<CategorySummaryResponse> list(Pageable pageable) {
+    return categoryService.findAll(pageable);
+  }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update category")
-    public CategoryResponse update(@PathVariable UUID id,
-                                   @Valid @RequestBody UpdateCategoryRequest request,
-                                   @RequestHeader("X-User-Id") String userId) {
-        return categoryService.update(id, request);
-    }
+  @PutMapping("/{id}")
+  @Operation(summary = "Update category")
+  public CategoryResponse update(
+      @PathVariable UUID id,
+      @Valid @RequestBody UpdateCategoryRequest request,
+      @RequestHeader("X-User-Id") String userId) {
+    return categoryService.update(id, request);
+  }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete category")
-    public void delete(@PathVariable UUID id,
-                       @RequestHeader("X-User-Id") String userId) {
-        categoryService.delete(id);
-    }
+  @DeleteMapping("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "Delete category")
+  public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
+    categoryService.delete(id);
+  }
 }

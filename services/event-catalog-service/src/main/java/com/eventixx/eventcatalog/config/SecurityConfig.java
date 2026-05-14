@@ -12,28 +12,33 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /**
-     * Configures the security filter chain.
-     *
-     * @param http the HttpSecurity configurer
-     * @return the security filter chain
-     * @throws Exception if an error occurs
-     */
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/events/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/venues/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
-                .anyRequest().permitAll()
-            );
+  /**
+   * Configures the security filter chain.
+   *
+   * @param http the HttpSecurity configurer
+   * @return the security filter chain
+   * @throws Exception if an error occurs
+   */
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.csrf(AbstractHttpConfigurer::disable)
+        .formLogin(AbstractHttpConfigurer::disable)
+        .httpBasic(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/actuator/**")
+                    .permitAll()
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/events/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/venues/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/categories/**")
+                    .permitAll()
+                    .anyRequest()
+                    .permitAll());
 
-        return http.build();
-    }
+    return http.build();
+  }
 }

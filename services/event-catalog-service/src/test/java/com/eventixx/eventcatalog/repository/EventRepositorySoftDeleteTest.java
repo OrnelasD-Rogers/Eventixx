@@ -1,26 +1,25 @@
 package com.eventixx.eventcatalog.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.eventixx.eventcatalog.entities.Category;
 import com.eventixx.eventcatalog.entities.Event;
 import com.eventixx.eventcatalog.entities.Venue;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
-import java.time.Instant;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 class EventRepositorySoftDeleteTest extends PostgresRepositoryTest {
 
-    @Autowired
-    private TestEntityManager entityManager;
+  @Autowired private TestEntityManager entityManager;
 
-    @Test
-    void shouldSoftDeleteEvent() {
-        // 1. Setup dependencies
-        Venue venue = Venue.builder()
+  @Test
+  void shouldSoftDeleteEvent() {
+    // 1. Setup dependencies
+    Venue venue =
+        Venue.builder()
             .name("Test Venue")
             .address("123 Main St")
             .city("Sao Paulo")
@@ -28,15 +27,14 @@ class EventRepositorySoftDeleteTest extends PostgresRepositoryTest {
             .capacity(100)
             .build();
 
-        Category category = Category.builder()
-            .name("Music" + UUID.randomUUID())
-            .description("Music events")
-            .build();
+    Category category =
+        Category.builder().name("Music" + UUID.randomUUID()).description("Music events").build();
 
-        venue = entityManager.persistFlushFind(venue);
-        category = entityManager.persistFlushFind(category);
+    venue = entityManager.persistFlushFind(venue);
+    category = entityManager.persistFlushFind(category);
 
-        Event event = Event.builder()
+    Event event =
+        Event.builder()
             .title("Test Event")
             .description("A test event")
             .startTime(Instant.now().plusSeconds(3600))
@@ -45,25 +43,27 @@ class EventRepositorySoftDeleteTest extends PostgresRepositoryTest {
             .category(category)
             .build();
 
-        Event saved = entityManager.persistFlushFind(event);
-        UUID id = saved.getId();
+    Event saved = entityManager.persistFlushFind(event);
+    UUID id = saved.getId();
 
-        // 2. Soft delete
-        entityManager.remove(saved);
-        entityManager.flush();
+    // 2. Soft delete
+    entityManager.remove(saved);
+    entityManager.flush();
 
-        // 3. Assert: @SQLRestriction filters deleted records
-        assertThat(entityManager.find(Event.class, id)).isNull();
+    // 3. Assert: @SQLRestriction filters deleted records
+    assertThat(entityManager.find(Event.class, id)).isNull();
 
-        // 4. Assert: record still exists in DB with deleted_at populated
-        Instant deletedAt = jdbcTemplate.queryForObject(
+    // 4. Assert: record still exists in DB with deleted_at populated
+    Instant deletedAt =
+        jdbcTemplate.queryForObject(
             "SELECT deleted_at FROM events WHERE id = ?", Instant.class, id);
-        assertThat(deletedAt).isNotNull();
-    }
+    assertThat(deletedAt).isNotNull();
+  }
 
-    @Test
-    void shouldNotIncludeDeletedEventInQuery() {
-        Venue venue = Venue.builder()
+  @Test
+  void shouldNotIncludeDeletedEventInQuery() {
+    Venue venue =
+        Venue.builder()
             .name("Venue 2")
             .address("456")
             .city("Rio")
@@ -71,15 +71,14 @@ class EventRepositorySoftDeleteTest extends PostgresRepositoryTest {
             .capacity(200)
             .build();
 
-        Category category = Category.builder()
-            .name("Sports" + UUID.randomUUID())
-            .description("Sports events")
-            .build();
+    Category category =
+        Category.builder().name("Sports" + UUID.randomUUID()).description("Sports events").build();
 
-        venue = entityManager.persistFlushFind(venue);
-        category = entityManager.persistFlushFind(category);
+    venue = entityManager.persistFlushFind(venue);
+    category = entityManager.persistFlushFind(category);
 
-        Event event = Event.builder()
+    Event event =
+        Event.builder()
             .title("Deleted Event")
             .startTime(Instant.now().plusSeconds(3600))
             .endTime(Instant.now().plusSeconds(7200))
@@ -87,15 +86,15 @@ class EventRepositorySoftDeleteTest extends PostgresRepositoryTest {
             .category(category)
             .build();
 
-        Event saved = entityManager.persistFlushFind(event);
-        entityManager.remove(saved);
-        entityManager.flush();
+    Event saved = entityManager.persistFlushFind(event);
+    entityManager.remove(saved);
+    entityManager.flush();
 
-        Integer totalCount = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM events", Integer.class);
-        Integer activeCount = jdbcTemplate.queryForObject(
+    Integer totalCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events", Integer.class);
+    Integer activeCount =
+        jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM events WHERE deleted_at IS NULL", Integer.class);
 
-        assertThat(totalCount).isGreaterThan(activeCount);
-    }
+    assertThat(totalCount).isGreaterThan(activeCount);
+  }
 }

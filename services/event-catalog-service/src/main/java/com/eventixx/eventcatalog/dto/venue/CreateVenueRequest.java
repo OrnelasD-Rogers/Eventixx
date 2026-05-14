@@ -10,5 +10,4 @@ public record CreateVenueRequest(
     @NotBlank String address,
     @NotBlank String city,
     @NotBlank String country,
-    @NotNull @Min(1) Integer capacity
-) { }
+    @NotNull @Min(1) Integer capacity) {}

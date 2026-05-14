@@ -14,5 +14,4 @@ public record UpdateEventRequest(
     UUID categoryId,
     @Future Instant startTime,
     @Future Instant endTime,
-    List<UpdateTicketTypeRequest> ticketTypes
-) { }
+    List<UpdateTicketTypeRequest> ticketTypes) {}

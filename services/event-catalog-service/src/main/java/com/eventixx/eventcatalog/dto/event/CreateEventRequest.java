@@ -16,5 +16,4 @@ public record CreateEventRequest(
     @NotNull UUID categoryId,
     @NotNull @Future Instant startTime,
     @NotNull @Future Instant endTime,
-    @NotNull List<CreateTicketTypeRequest> ticketTypes
-) { }
+    @NotNull List<CreateTicketTypeRequest> ticketTypes) {}

@@ -5,5 +5,4 @@ import org.mapstruct.ReportingPolicy;
 
 /** Central MapStruct configuration for the Search Service. */
 @MapperConfig(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface MapStructConfig {
-}
+public interface MapStructConfig {}
