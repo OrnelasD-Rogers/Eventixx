@@ -6,10 +6,6 @@ import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
@@ -20,26 +16,30 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
     @Test
     void shouldCreateCategory() {
         var request = new CreateCategoryRequest("Music", "Live music events");
-        ResponseEntity<CategoryResponse> response = restTemplate.exchange(
-                "/api/v1/categories", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                CategoryResponse.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().name()).isEqualTo("Music");
+        var created = restClient.post()
+                .uri("/api/v1/categories")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(CategoryResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(created).isNotNull();
+        assertThat(created.name()).isEqualTo("Music");
     }
 
     @Test
     void shouldGetCategoryById() {
         var category = createCategory(1);
 
-        ResponseEntity<CategoryResponse> response = restTemplate.getForEntity(
-                "/api/v1/categories/{id}", CategoryResponse.class, category.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assert response.getBody() != null;
-        assertThat(response.getBody().name()).isEqualTo(category.name());
+        var response = restClient.get()
+                .uri("/api/v1/categories/{id}", category.id())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(CategoryResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(response).isNotNull();
+        assertThat(response.name()).isEqualTo(category.name());
     }
 
     @Test
@@ -47,13 +47,15 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
         createCategory(1);
         createCategory(2);
 
-        var response = restTemplate.exchange(
-                "/api/v1/categories", HttpMethod.GET, null,
-                new ParameterizedTypeReference<RestPage<CategorySummaryResponse>>() { });
+        var page = restClient.get()
+                .uri("/api/v1/categories")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<RestPage<CategorySummaryResponse>>() {})
+                .returnResult().getResponseBody();
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assert response.getBody() != null;
-        assertThat(response.getBody().getContent())
+        assertThat(page).isNotNull();
+        assertThat(page.getContent())
                 .hasSize(2)
                 .extracting(CategorySummaryResponse::name)
                 .contains("Test Category_1", "Test Category_2");
@@ -64,33 +66,37 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var update = new UpdateCategoryRequest("Updated Music", "Updated description");
 
-        ResponseEntity<CategoryResponse> response = restTemplate.exchange(
-                "/api/v1/categories/{id}", HttpMethod.PUT,
-                new HttpEntity<>(update, authEntity().getHeaders()),
-                CategoryResponse.class, category.id());
-
-        assert response.getBody() != null;
-        assertThat((response.getBody()).name()).isEqualTo("Updated Music");
+        var updated = restClient.put()
+                .uri("/api/v1/categories/{id}", category.id())
+                .headers(requestHeaders())
+                .body(update)
+                .exchange()
+                .expectBody(CategoryResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(updated).isNotNull();
+        assertThat(updated.name()).isEqualTo("Updated Music");
     }
 
     @Test
     void shouldReturn404AfterSoftDelete() {
         var category = createCategory(1);
 
-        restTemplate.exchange("/api/v1/categories/{id}", HttpMethod.DELETE,
-                authEntity(), Void.class, category.id());
+        restClient.delete()
+                .uri("/api/v1/categories/{id}", category.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        ResponseEntity<CategoryResponse> response = restTemplate.getForEntity(
-                "/api/v1/categories/{id}", CategoryResponse.class, category.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/categories/{id}", category.id())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
     void shouldReturn404WhenNotFound() {
-        ResponseEntity<CategoryResponse> response = restTemplate.getForEntity(
-                "/api/v1/categories/{id}", CategoryResponse.class, UUID.randomUUID());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/categories/{id}", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }

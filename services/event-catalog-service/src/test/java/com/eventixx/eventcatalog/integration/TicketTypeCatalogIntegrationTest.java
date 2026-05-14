@@ -5,10 +5,6 @@ import com.eventixx.eventcatalog.dto.tickettype.TicketTypeResponse;
 import com.eventixx.eventcatalog.dto.tickettype.UpdateTicketTypeRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,14 +21,16 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var event = createEvent(venue.id(), category.id());
         var request = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(200), 50);
 
-        ResponseEntity<TicketTypeResponse> response = restTemplate.exchange(
-                "/api/v1/events/{eventId}/ticket-types", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                TicketTypeResponse.class, event.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().name()).isEqualTo("VIP");
+        var created = restClient.post()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(TicketTypeResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(created).isNotNull();
+        assertThat(created.name()).isEqualTo("VIP");
     }
 
     @Test
@@ -41,17 +39,22 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
         var request = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(200), 50);
-        var ticketType = restTemplate.exchange(
-                "/api/v1/events/{eventId}/ticket-types", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                TicketTypeResponse.class, event.id()).getBody();
+        var ticketType = restClient.post()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(TicketTypeResponse.class)
+                .returnResult().getResponseBody();
 
-        ResponseEntity<TicketTypeResponse> response = restTemplate.getForEntity(
-                "/api/v1/events/{eventId}/ticket-types/{id}",
-                TicketTypeResponse.class, event.id(), ticketType.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().name()).isEqualTo("VIP");
+        var response = restClient.get()
+                .uri("/api/v1/events/{eventId}/ticket-types/{id}", event.id(), ticketType.id())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(TicketTypeResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(response.name()).isEqualTo("VIP");
     }
 
     @Test
@@ -61,17 +64,25 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var event = createEvent(venue.id(), category.id());
         var request1 = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(200), 50);
         var request2 = new CreateTicketTypeRequest("Standard", BigDecimal.valueOf(50), 100);
-        restTemplate.exchange("/api/v1/events/{eventId}/ticket-types", HttpMethod.POST,
-                new HttpEntity<>(request1, authEntity().getHeaders()), TicketTypeResponse.class, event.id());
-        restTemplate.exchange("/api/v1/events/{eventId}/ticket-types", HttpMethod.POST,
-                new HttpEntity<>(request2, authEntity().getHeaders()), TicketTypeResponse.class, event.id());
+        restClient.post()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .headers(requestHeaders())
+                .body(request1)
+                .exchange()
+                .expectStatus().isCreated();
+        restClient.post()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .headers(requestHeaders())
+                .body(request2)
+                .exchange()
+                .expectStatus().isCreated();
 
-        var response = restTemplate.exchange(
-                "/api/v1/events/{eventId}/ticket-types", HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<TicketTypeResponse>>() { }, event.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody())
+        var ticketTypes = restClient.get()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .exchange()
+                .expectBody(new ParameterizedTypeReference<List<TicketTypeResponse>>() {})
+                .returnResult().getResponseBody();
+        assertThat(ticketTypes)
                 .extracting(TicketTypeResponse::name)
                 .contains("VIP", "Standard");
     }
@@ -82,18 +93,24 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
         var request = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(200), 50);
-        var ticketType = restTemplate.exchange(
-                "/api/v1/events/{eventId}/ticket-types", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                TicketTypeResponse.class, event.id()).getBody();
+        var ticketType = restClient.post()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(TicketTypeResponse.class)
+                .returnResult().getResponseBody();
         var update = new UpdateTicketTypeRequest("Updated VIP", BigDecimal.valueOf(250), 40);
 
-        ResponseEntity<TicketTypeResponse> response = restTemplate.exchange(
-                "/api/v1/events/{eventId}/ticket-types/{id}", HttpMethod.PUT,
-                new HttpEntity<>(update, authEntity().getHeaders()),
-                TicketTypeResponse.class, event.id(), ticketType.id());
-
-        assertThat(response.getBody().name()).isEqualTo("Updated VIP");
+        var updated = restClient.put()
+                .uri("/api/v1/events/{eventId}/ticket-types/{id}", event.id(), ticketType.id())
+                .headers(requestHeaders())
+                .body(update)
+                .exchange()
+                .expectBody(TicketTypeResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(updated.name()).isEqualTo("Updated VIP");
     }
 
     @Test
@@ -102,19 +119,24 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
         var request = new CreateTicketTypeRequest("VIP", BigDecimal.valueOf(200), 50);
-        var ticketType = restTemplate.exchange(
-                "/api/v1/events/{eventId}/ticket-types", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                TicketTypeResponse.class, event.id()).getBody();
+        var ticketType = restClient.post()
+                .uri("/api/v1/events/{eventId}/ticket-types", event.id())
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(TicketTypeResponse.class)
+                .returnResult().getResponseBody();
 
-        restTemplate.exchange("/api/v1/events/{eventId}/ticket-types/{id}", HttpMethod.DELETE,
-                authEntity(), Void.class, event.id(), ticketType.id());
+        restClient.delete()
+                .uri("/api/v1/events/{eventId}/ticket-types/{id}", event.id(), ticketType.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        ResponseEntity<TicketTypeResponse> response = restTemplate.getForEntity(
-                "/api/v1/events/{eventId}/ticket-types/{id}",
-                TicketTypeResponse.class, event.id(), ticketType.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/events/{eventId}/ticket-types/{id}", event.id(), ticketType.id())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -123,10 +145,9 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        ResponseEntity<TicketTypeResponse> response = restTemplate.getForEntity(
-                "/api/v1/events/{eventId}/ticket-types/{id}",
-                TicketTypeResponse.class, event.id(), UUID.randomUUID());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/events/{eventId}/ticket-types/{id}", event.id(), UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }

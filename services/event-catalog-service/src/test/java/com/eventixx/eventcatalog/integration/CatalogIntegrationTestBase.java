@@ -6,10 +6,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -27,8 +26,6 @@ import com.eventixx.eventcatalog.dto.event.EventResponse;
 import com.eventixx.eventcatalog.dto.tickettype.CreateTicketTypeRequest;
 import com.eventixx.eventcatalog.dto.venue.CreateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.VenueResponse;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -37,9 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Base class for catalog integration tests with shared PostgreSQL and Kafka Testcontainers. */
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestRestTemplate
+@AutoConfigureRestTestClient
 @ActiveProfiles("test")
 public abstract class CatalogIntegrationTestBase {
 
@@ -62,7 +59,7 @@ public abstract class CatalogIntegrationTestBase {
     }
 
     @Autowired
-    protected TestRestTemplate restTemplate;
+    protected RestTestClient restClient;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -74,29 +71,32 @@ public abstract class CatalogIntegrationTestBase {
         jdbcTemplate.execute("TRUNCATE TABLE ticket_types, events, venues, categories RESTART IDENTITY CASCADE");
     }
 
-    protected static HttpEntity<Void> authEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-User-Id", "user-1");
-        return new HttpEntity<>(headers);
+    protected static java.util.function.Consumer<HttpHeaders> requestHeaders() {
+        return headers -> headers.set("X-User-Id", "user-1");
     }
 
     protected VenueResponse createVenue() {
         var request = new CreateVenueRequest("Test Venue", "123 Street", "City", "Country", 100);
-        ResponseEntity<VenueResponse> response = restTemplate.exchange(
-                "/api/v1/venues", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                VenueResponse.class);
-        return response.getBody();
+        return restClient.post()
+                .uri("/api/v1/venues")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(VenueResponse.class)
+                .returnResult().getResponseBody();
     }
 
     protected CategoryResponse createCategory(int index) {
-        ResponseEntity<CategoryResponse> response = restTemplate.exchange(
-                "/api/v1/categories", HttpMethod.POST,
-                new HttpEntity<>(
-                        new CreateCategoryRequest("Test Category_%d".formatted(index), "Description"),
-                        authEntity().getHeaders()),
-                CategoryResponse.class);
-        return response.getBody();
+        var request = new CreateCategoryRequest("Test Category_%d".formatted(index), "Description");
+        return restClient.post()
+                .uri("/api/v1/categories")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(CategoryResponse.class)
+                .returnResult().getResponseBody();
     }
 
     protected CreateEventRequest buildCreateRequest(UUID venueId, UUID categoryId,
@@ -112,11 +112,14 @@ public abstract class CatalogIntegrationTestBase {
     }
 
     protected EventResponse createEvent(UUID venueId, UUID categoryId) {
-        ResponseEntity<EventResponse> response = restTemplate.exchange(
-                "/api/v1/events", HttpMethod.POST,
-                new HttpEntity<>(buildCreateRequest(venueId, categoryId), authEntity().getHeaders()),
-                EventResponse.class);
-        return response.getBody();
+        return restClient.post()
+                .uri("/api/v1/events")
+                .headers(requestHeaders())
+                .body(buildCreateRequest(venueId, categoryId))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
     }
 
     @AfterEach

@@ -8,10 +8,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 
 import java.math.BigDecimal;
@@ -31,12 +28,14 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        ResponseEntity<EventResponse> publishResponse = restTemplate.exchange(
-                "/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
-
-        assertThat(publishResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(publishResponse.getBody().status()).isEqualTo("PUBLISHED");
+        var published = restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(published.status()).isEqualTo("PUBLISHED");
     }
 
     // A2: Kafka message payload verification (EventPublished JSON)
@@ -46,8 +45,10 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        restTemplate.exchange("/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange();
 
         Consumer<String, String> consumer = createKafkaConsumer();
         await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
@@ -72,20 +73,26 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        var draftResponse = restTemplate.exchange(
-                "/api/v1/events?status=DRAFT", HttpMethod.GET, null,
-                new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() { });
-        assertThat(draftResponse.getBody().getContent())
+        var draftPage = restClient.get()
+                .uri("/api/v1/events?status=DRAFT")
+                .exchange()
+                .expectBody(new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() {})
+                .returnResult().getResponseBody();
+        assertThat(draftPage.getContent())
                 .extracting(EventSummaryResponse::title)
                 .contains("Test Event");
 
-        restTemplate.exchange("/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        var publishedResponse = restTemplate.exchange(
-                "/api/v1/events?status=PUBLISHED", HttpMethod.GET, null,
-                new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() { });
-        assertThat(publishedResponse.getBody().getContent())
+        var publishedPage = restClient.get()
+                .uri("/api/v1/events?status=PUBLISHED")
+                .exchange()
+                .expectBody(new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() {})
+                .returnResult().getResponseBody();
+        assertThat(publishedPage.getContent())
                 .extracting(EventSummaryResponse::title)
                 .contains("Test Event");
     }
@@ -97,14 +104,18 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        restTemplate.exchange("/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        ResponseEntity<EventResponse> cancelResponse = restTemplate.exchange(
-                "/api/v1/events/{id}/cancel", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
-
-        assertThat(cancelResponse.getBody().status()).isEqualTo("CANCELLED");
+        var cancelled = restClient.post()
+                .uri("/api/v1/events/{id}/cancel", event.id())
+                .headers(requestHeaders())
+                .exchange()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(cancelled.status()).isEqualTo("CANCELLED");
     }
 
     // A5: Soft delete → 404
@@ -114,12 +125,15 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        restTemplate.exchange("/api/v1/events/{id}", HttpMethod.DELETE,
-                authEntity(), Void.class, event.id());
+        restClient.delete()
+                .uri("/api/v1/events/{id}", event.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        ResponseEntity<EventResponse> getResponse = restTemplate.getForEntity(
-                "/api/v1/events/{id}", EventResponse.class, event.id());
-        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/events/{id}", event.id())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     // A6: Update event
@@ -130,11 +144,14 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var event = createEvent(venue.id(), category.id());
 
         var update = new UpdateEventRequest("Updated Title", null, null, null, null, null, null);
-        ResponseEntity<EventResponse> updateResponse = restTemplate.exchange(
-                "/api/v1/events/{id}", HttpMethod.PUT,
-                new HttpEntity<>(update, authEntity().getHeaders()), EventResponse.class, event.id());
-
-        assertThat(updateResponse.getBody().title()).isEqualTo("Updated Title");
+        var updated = restClient.put()
+                .uri("/api/v1/events/{id}", event.id())
+                .headers(requestHeaders())
+                .body(update)
+                .exchange()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(updated.title()).isEqualTo("Updated Title");
     }
 
     // A7: GET without auth header
@@ -144,9 +161,13 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        ResponseEntity<EventResponse> response = restTemplate.getForEntity(
-                "/api/v1/events/{id}", EventResponse.class, event.id());
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var response = restClient.get()
+                .uri("/api/v1/events/{id}", event.id())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(response.status()).isEqualTo("DRAFT");
     }
 
     // B1: Publish already published → 409
@@ -156,14 +177,16 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        restTemplate.exchange("/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        ResponseEntity<EventResponse> response = restTemplate.exchange(
-                "/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT);
     }
 
     // B2: Cancel DRAFT → 400
@@ -173,11 +196,11 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var category = createCategory(1);
         var event = createEvent(venue.id(), category.id());
 
-        ResponseEntity<EventResponse> response = restTemplate.exchange(
-                "/api/v1/events/{id}/cancel", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        restClient.post()
+                .uri("/api/v1/events/{id}/cancel", event.id())
+                .headers(requestHeaders())
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     // B3: Publish without ticket types → 400
@@ -186,16 +209,19 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var venue = createVenue();
         var category = createCategory(1);
         var request = buildCreateRequest(venue.id(), category.id(), List.of());
-        ResponseEntity<EventResponse> createResponse = restTemplate.exchange(
-                "/api/v1/events", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()), EventResponse.class);
-        var event = createResponse.getBody();
+        var event = restClient.post()
+                .uri("/api/v1/events")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
 
-        ResponseEntity<EventResponse> response = restTemplate.exchange(
-                "/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     // B4: Ticket quantity exceeds capacity → 400
@@ -206,23 +232,27 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var overCapacityTickets = List.of(
                 new CreateTicketTypeRequest("Standard", BigDecimal.valueOf(50), 150));
         var request = buildCreateRequest(venue.id(), category.id(), overCapacityTickets);
-        ResponseEntity<EventResponse> createResponse = restTemplate.exchange(
-                "/api/v1/events", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()), EventResponse.class);
-        var event = createResponse.getBody();
+        var event = restClient.post()
+                .uri("/api/v1/events")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectBody(EventResponse.class)
+                .returnResult().getResponseBody();
 
-        ResponseEntity<EventResponse> response = restTemplate.exchange(
-                "/api/v1/events/{id}/publish", HttpMethod.POST,
-                authEntity(), EventResponse.class, event.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        restClient.post()
+                .uri("/api/v1/events/{id}/publish", event.id())
+                .headers(requestHeaders())
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     // B5: Event not found → 404
     @Test
     void shouldReturn404WhenEventNotFound() {
-        ResponseEntity<EventResponse> response = restTemplate.getForEntity(
-                "/api/v1/events/{id}", EventResponse.class, UUID.randomUUID());
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/events/{id}", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }

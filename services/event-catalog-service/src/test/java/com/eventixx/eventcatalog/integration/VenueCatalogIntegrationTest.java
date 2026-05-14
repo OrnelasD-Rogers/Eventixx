@@ -6,10 +6,6 @@ import com.eventixx.eventcatalog.dto.venue.VenueResponse;
 import com.eventixx.eventcatalog.dto.venue.VenueSummaryResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
@@ -20,25 +16,29 @@ class VenueCatalogIntegrationTest extends CatalogIntegrationTestBase {
     @Test
     void shouldCreateVenue() {
         var request = new CreateVenueRequest("Arena", "123 St", "SP", "BR", 5000);
-        ResponseEntity<VenueResponse> response = restTemplate.exchange(
-                "/api/v1/venues", HttpMethod.POST,
-                new HttpEntity<>(request, authEntity().getHeaders()),
-                VenueResponse.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().name()).isEqualTo("Arena");
+        var created = restClient.post()
+                .uri("/api/v1/venues")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(VenueResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(created).isNotNull();
+        assertThat(created.name()).isEqualTo("Arena");
     }
 
     @Test
     void shouldGetVenueById() {
         var venue = createVenue();
 
-        ResponseEntity<VenueResponse> response = restTemplate.getForEntity(
-                "/api/v1/venues/{id}", VenueResponse.class, venue.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().name()).isEqualTo(venue.name());
+        var response = restClient.get()
+                .uri("/api/v1/venues/{id}", venue.id())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(VenueResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(response.name()).isEqualTo(venue.name());
     }
 
     @Test
@@ -46,12 +46,12 @@ class VenueCatalogIntegrationTest extends CatalogIntegrationTestBase {
         createVenue();
         createVenue();
 
-        var response = restTemplate.exchange(
-                "/api/v1/venues", HttpMethod.GET, null,
-                new ParameterizedTypeReference<RestPage<VenueSummaryResponse>>() { });
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().getContent())
+        var page = restClient.get()
+                .uri("/api/v1/venues")
+                .exchange()
+                .expectBody(new ParameterizedTypeReference<RestPage<VenueSummaryResponse>>() {})
+                .returnResult().getResponseBody();
+        assertThat(page.getContent())
                 .hasSize(2)
                 .allSatisfy(v -> assertThat(v.name()).isEqualTo("Test Venue"));
     }
@@ -61,32 +61,36 @@ class VenueCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var venue = createVenue();
         var update = new UpdateVenueRequest("Updated Arena", "456 New St", "New City", "New Country", 200);
 
-        ResponseEntity<VenueResponse> response = restTemplate.exchange(
-                "/api/v1/venues/{id}", HttpMethod.PUT,
-                new HttpEntity<>(update, authEntity().getHeaders()),
-                VenueResponse.class, venue.id());
-
-        assertThat(response.getBody().name()).isEqualTo("Updated Arena");
+        var updated = restClient.put()
+                .uri("/api/v1/venues/{id}", venue.id())
+                .headers(requestHeaders())
+                .body(update)
+                .exchange()
+                .expectBody(VenueResponse.class)
+                .returnResult().getResponseBody();
+        assertThat(updated.name()).isEqualTo("Updated Arena");
     }
 
     @Test
     void shouldReturn404AfterSoftDelete() {
         var venue = createVenue();
 
-        restTemplate.exchange("/api/v1/venues/{id}", HttpMethod.DELETE,
-                authEntity(), Void.class, venue.id());
+        restClient.delete()
+                .uri("/api/v1/venues/{id}", venue.id())
+                .headers(requestHeaders())
+                .exchange();
 
-        ResponseEntity<VenueResponse> response = restTemplate.getForEntity(
-                "/api/v1/venues/{id}", VenueResponse.class, venue.id());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/venues/{id}", venue.id())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
     void shouldReturn404WhenNotFound() {
-        ResponseEntity<VenueResponse> response = restTemplate.getForEntity(
-                "/api/v1/venues/{id}", VenueResponse.class, UUID.randomUUID());
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        restClient.get()
+                .uri("/api/v1/venues/{id}", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }
