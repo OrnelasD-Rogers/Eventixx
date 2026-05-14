@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -57,6 +58,19 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setType(ProblemType.BUSINESS_RULE);
         problem.setTitle(ProblemType.TITLE_BUSINESS_RULE);
+        return problem;
+    }
+
+    /**
+     * Handles missing required request headers with HTTP 400.
+     */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ProblemDetail handleMissingRequestHeader(MissingRequestHeaderException ex) {
+        log.warn("Missing required header: {}", ex.getHeaderName());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Required header '" + ex.getHeaderName() + "' is missing");
+        problem.setType(ProblemType.VALIDATION_ERROR);
+        problem.setTitle(ProblemType.TITLE_VALIDATION_ERROR);
         return problem;
     }
 

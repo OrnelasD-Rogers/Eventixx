@@ -6,6 +6,7 @@ import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ProblemDetail;
 
 import java.util.UUID;
 
@@ -51,7 +52,7 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
                 .uri("/api/v1/categories")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<RestPage<CategorySummaryResponse>>() {})
+                .expectBody(new ParameterizedTypeReference<RestPage<CategorySummaryResponse>>() { })
                 .returnResult().getResponseBody();
 
         assertThat(page).isNotNull();
@@ -98,5 +99,69 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
                 .uri("/api/v1/categories/{id}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
+    }
+
+    @Test
+    void shouldReturn400WhenNameIsBlank() {
+        var request = new CreateCategoryRequest("", "Description");
+
+        ProblemDetail problem = restClient.post()
+                .uri("/api/v1/categories")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ProblemDetail.class)
+                .returnResult().getResponseBody();
+
+        assertThat(problem).isNotNull();
+        assertThat(problem.getTitle()).isEqualTo("Validation Error");
+        assertThat(problem.getStatus()).isEqualTo(400);
+    }
+
+    @Test
+    void shouldReturn400WhenNameIsNull() {
+        var request = new CreateCategoryRequest(null, "Description");
+
+        ProblemDetail problem = restClient.post()
+                .uri("/api/v1/categories")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ProblemDetail.class)
+                .returnResult().getResponseBody();
+
+        assertThat(problem).isNotNull();
+        assertThat(problem.getTitle()).isEqualTo("Validation Error");
+        assertThat(problem.getStatus()).isEqualTo(400);
+    }
+
+    @Test
+    void shouldReturn400WhenMissingUserIdHeader() {
+        restClient.post()
+                .uri("/api/v1/categories")
+                .body(new CreateCategoryRequest("Music", "Description"))
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void shouldReturn409WhenDuplicateName() {
+        createCategory(1);
+
+        var request = new CreateCategoryRequest("Test Category_1", "Description");
+        ProblemDetail problem = restClient.post()
+                .uri("/api/v1/categories")
+                .headers(requestHeaders())
+                .body(request)
+                .exchange()
+                .expectStatus().isEqualTo(409)
+                .expectBody(ProblemDetail.class)
+                .returnResult().getResponseBody();
+
+        assertThat(problem).isNotNull();
+        assertThat(problem.getTitle()).isEqualTo("Conflict");
+        assertThat(problem.getDetail()).contains("Test Category_1");
     }
 }
