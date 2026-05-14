@@ -49,7 +49,7 @@ class VenueCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var page = restClient.get()
                 .uri("/api/v1/venues")
                 .exchange()
-                .expectBody(new ParameterizedTypeReference<RestPage<VenueSummaryResponse>>() {})
+                .expectBody(new ParameterizedTypeReference<RestPage<VenueSummaryResponse>>() { })
                 .returnResult().getResponseBody();
         assertThat(page.getContent())
                 .hasSize(2)

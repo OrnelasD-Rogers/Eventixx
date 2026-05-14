@@ -35,6 +35,10 @@ import java.util.Map;
 import java.util.UUID;
 
 
+/**
+ * Base class for catalog integration tests.
+ * Provides singleton Testcontainers (PostgreSQL + Kafka), {@link RestTestClient}, DB cleanup, and helper methods.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
 @ActiveProfiles("test")

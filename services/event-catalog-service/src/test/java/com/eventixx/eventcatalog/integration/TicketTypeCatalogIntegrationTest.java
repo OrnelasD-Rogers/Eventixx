@@ -80,7 +80,7 @@ class TicketTypeCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var ticketTypes = restClient.get()
                 .uri("/api/v1/events/{eventId}/ticket-types", event.id())
                 .exchange()
-                .expectBody(new ParameterizedTypeReference<List<TicketTypeResponse>>() {})
+                .expectBody(new ParameterizedTypeReference<List<TicketTypeResponse>>() { })
                 .returnResult().getResponseBody();
         assertThat(ticketTypes)
                 .extracting(TicketTypeResponse::name)

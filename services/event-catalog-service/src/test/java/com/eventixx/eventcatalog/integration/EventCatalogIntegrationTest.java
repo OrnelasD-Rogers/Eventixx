@@ -76,7 +76,7 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var draftPage = restClient.get()
                 .uri("/api/v1/events?status=DRAFT")
                 .exchange()
-                .expectBody(new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() {})
+                .expectBody(new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() { })
                 .returnResult().getResponseBody();
         assertThat(draftPage.getContent())
                 .extracting(EventSummaryResponse::title)
@@ -90,7 +90,7 @@ class EventCatalogIntegrationTest extends CatalogIntegrationTestBase {
         var publishedPage = restClient.get()
                 .uri("/api/v1/events?status=PUBLISHED")
                 .exchange()
-                .expectBody(new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() {})
+                .expectBody(new ParameterizedTypeReference<RestPage<EventSummaryResponse>>() { })
                 .returnResult().getResponseBody();
         assertThat(publishedPage.getContent())
                 .extracting(EventSummaryResponse::title)
