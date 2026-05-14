@@ -141,7 +141,7 @@
     - B3: Publish without ticket types → 400
     - B4: Ticket quantity exceeds capacity → 400
     - B5: Event not found → 404
-- **Verification:** `mvn verify -pl services/event-catalog-service` passes — 128 tests, 0 violations (SpotBugs, PMD, Checkstyle, ArchUnit).
+- **Verification:** `mvn verify -pl services/event-catalog-service` passes — 132 tests, 0 violations (Spotless, SpotBugs, PMD, Checkstyle, ArchUnit).
 
 ### Task 5: Documentation & Observability
 - **Status:** ☐ Pending
@@ -178,7 +178,7 @@
 | T1   | ☑ Completed | 2026-04-30 | Created Maven module, Dockerfile, application.yml. Configured MapStruct processor with Lombok ordering in root POM. Created `V1__init.sql` with 4 tables (soft delete, triggers, partial indexes, CHECK constraints). Schema documented in `data-model.md`. |
 | T2   | ☑ Completed | 2026-04-30 | Refactored to Anemic Model + **package-by-layer** structure (`controllers/`, `services/`, `repositories/`, `entities/`, `dto/`, `exceptions/`, `config/`). Added `EventValidator` component for publish/update/cancel rules. Services use private `findXxxOrThrow()` helpers and `Optional.ifPresent()` for updates. Added `POST /{id}/cancel` endpoint. Kafka event published directly from Service (no AggregateRoot/domainEvents list). Build SUCCESS. |
 | T3   | ☐ Pending |      |       |
-| T4   | ☑ Completed | 2026-05-13 | 128 tests: 48 unit, 33 web (`@WebMvcTest`), 8 repository (`@DataJpaTest` + Testcontainers PostgreSQL), 30 integration (`@SpringBootTest` + Testcontainers PostgreSQL + Kafka), 9 ArchUnit. Build SUCCESS with 0 violations (SpotBugs, PMD, Checkstyle, ArchUnit). Integration tests split into 4 controller-specific classes covering Event, Venue, Category, and TicketType CRUD lifecycles with Kafka payload verification via Awaitility and error paths. Containers managed via `static { start(); }` (not `@Container`) for suite-wide sharing. |
+| T4   | ☑ Completed | 2026-05-14 | 132 tests: 48 unit, 33 web (`@WebMvcTest`), 8 repository (`@DataJpaTest` + Testcontainers PostgreSQL), 34 integration (`@SpringBootTest` + Testcontainers PostgreSQL + Kafka), 9 ArchUnit. Build SUCCESS with 0 violations (Spotless, SpotBugs, PMD, Checkstyle, ArchUnit). Added Spotless (google-java-format) — removed 14 formatting rules from Checkstyle (whitespace, braces, modifiers, misc). Formatting auto-corrected via `mvn spotless:apply` across 108 files. `spotless:check` runs at `process-classes` phase, before all other quality tools. |
 | T5   | ☐ Pending |      |       |
 
 ---

@@ -29,7 +29,10 @@ Guide for AI agents working in this repository.
 # Run only ArchUnit tests
 ./mvnw test -pl services/event-catalog-service -Dtest=ArchitectureTest
 
-# Full verification (tests + SpotBugs + PMD + Checkstyle + ArchUnit)
+# Auto-format all Java source files (Google Java Style)
+./mvnw spotless:apply
+
+# Full verification (Spotless + tests + SpotBugs + PMD + Checkstyle + ArchUnit)
 ./mvnw verify -pl services/event-catalog-service
 
 # Static analysis only (skip tests)

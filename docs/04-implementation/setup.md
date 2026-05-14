@@ -112,7 +112,10 @@ MapStruct code generation is automatic during compilation. No manual step requir
 # Only web tests (@WebMvcTest)
 ./mvnw test -pl services/event-catalog-service -Dtest="com.eventixx.eventcatalog.web.*"
 
-# Full verification (tests + SpotBugs + PMD + Checkstyle)
+# Auto-format all Java source files
+./mvnw spotless:apply
+
+# Full verification (Spotless + tests + SpotBugs + PMD + Checkstyle)
 ./mvnw verify -pl services/event-catalog-service
 ```
 
@@ -123,7 +126,10 @@ Testcontainers containers are started automatically during integration tests. No
 All quality tools run automatically during `./mvnw verify`:
 
 ```bash
-# Run all quality checks (tests + SpotBugs + PMD + Checkstyle)
+# Auto-format all Java source files (Google Java Style)
+./mvnw spotless:apply
+
+# Run all quality checks (Spotless + tests + SpotBugs + PMD + Checkstyle)
 ./mvnw verify
 
 # Run only static analysis (skip tests)
@@ -139,10 +145,11 @@ All quality tools run automatically during `./mvnw verify`:
 ./mvnw verify -pl services/event-catalog-service
 ```
 
-Tools configured in the parent POM:
+Tools configured in the parent POM (executed in order during `verify`):
+- **Spotless (google-java-format)**: Auto-formats Java source code before static analysis (phase: `process-classes`). Run `mvn spotless:apply` to format all files. The `verify` phase runs `spotless:check` to enforce formatting before Checkstyle/PMD/SpotBugs.
 - **SpotBugs + FindSecBugs**: Bytecode-level bug and security vulnerability detection
 - **PMD + CPD**: Code smells, copy-paste detection, and best practice enforcement
-- **Checkstyle**: Google Java Style formatting with 120-character line length. Applies to **both main and test sources** (`includeTestSourceDirectory=true`). Violations are **errors** (block the build), not warnings. BDD-style test method names (with underscores like `shouldThrow_whenX`) are excluded via `SuppressionSingleFilter`.
+- **Checkstyle**: Naming conventions, import rules, coding best practices, design patterns, and Javadoc requirements. Formatting rules (whitespace, braces, modifiers) are delegated to Spotless. Applies to **both main and test sources** (`includeTestSourceDirectory=true`). Violations are **errors** (block the build), not warnings. BDD-style test method names (with underscores like `shouldThrow_whenX`) are excluded via `SuppressionSingleFilter`.
 - **ArchUnit**: Architecture rules (package cycles, layer independence, naming conventions, Spring proxy rules)
 
 > **SpotBugs + Lombok:** Lombok annotations (`@RequiredArgsConstructor`, `@Slf4j`, etc.) and MapStruct generate bytecode that SpotBugs misinterprets (e.g., `NP_UNWRITTEN_FIELD`, `CT_CONSTRUCTOR_THROW`). These false positives are suppressed via `build-tools/spotbugs/spotbugs-exclude.xml`. When adding a new Lombok-heavy module, ensure the exclude filter covers its patterns.
@@ -188,4 +195,5 @@ docker-compose down -v  # -v removes named volumes
 | Testcontainers dependency version missing | Use `testcontainers-*` artifact names (e.g., `testcontainers-postgresql`) |
 | Corrupted Spring Boot test JARs | Delete `~/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/` and re-run |
 | `MethodArgumentNotValidException` returns 500 | Add handler in `GlobalExceptionHandler` for validation errors |
+| `spotless:check` fails during `verify` | Run `mvn spotless:apply` to auto-format all files, then re-run `mvn verify` |
 
