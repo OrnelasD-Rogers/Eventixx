@@ -128,7 +128,7 @@ All entities use soft delete via `deleted_at TIMESTAMP`. Queries MUST always fil
 - `@MockBean` → use `@MockitoBean` (`org.springframework.test.context.bean.override.mockito`)
 - `@WebMvcTest` requires `spring-boot-starter-webmvc-test`
 - `@ServiceConnection` not used — always prefer `@DynamicPropertySource` with static singleton containers (avoids lifecycle issues with shared contexts)
-- `TestRestTemplate` moved from `spring-boot-starter-test` to `spring-boot-resttestclient` (test) + requires `spring-boot-restclient` (compile) + `@AutoConfigureTestRestTemplate`
+- `TestRestTemplate` → use `RestTestClient` (`org.springframework.test.web.servlet.client`) + `@AutoConfigureRestTestClient`. Dependencies: `spring-boot-resttestclient` (test) + `spring-boot-restclient` (compile).
 - `-parameters` flag already configured in parent POM (required for `@PathVariable`)
 
 ### Mapping
