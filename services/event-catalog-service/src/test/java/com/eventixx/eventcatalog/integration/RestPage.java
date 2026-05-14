@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
     value = {"pageable"})
 public class RestPage<T> extends PageImpl<T> {
 
+  private static final long serialVersionUID = 1L;
+
   @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
   public RestPage(
       @JsonProperty("content") List<T> content,

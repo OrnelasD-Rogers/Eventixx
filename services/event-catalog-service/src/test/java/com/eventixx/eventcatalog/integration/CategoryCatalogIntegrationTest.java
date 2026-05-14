@@ -7,6 +7,7 @@ import com.eventixx.eventcatalog.dto.category.CategorySummaryResponse;
 import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 import java.util.UUID;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ProblemDetail;
@@ -30,6 +31,76 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
             .getResponseBody();
     assertThat(created).isNotNull();
     assertThat(created.name()).isEqualTo("Music");
+    assertThat(created.description()).isEqualTo("Live music events");
+    assertThat(created.id()).isNotNull();
+    assertThat(created.createdAt()).isNotNull();
+    assertThat(created.updatedAt()).isNotNull();
+  }
+
+  @Test
+  void shouldCreateCategoryWithoutDescription() {
+    var request = new CreateCategoryRequest("Music", null);
+    var created =
+        restClient
+            .post()
+            .uri("/api/v1/categories")
+            .headers(requestHeaders())
+            .body(request)
+            .exchange()
+            .expectStatus()
+            .isCreated()
+            .expectBody(CategoryResponse.class)
+            .returnResult()
+            .getResponseBody();
+    assertThat(created).isNotNull();
+    assertThat(created.name()).isEqualTo("Music");
+    assertThat(created.description()).isNull();
+  }
+
+  @Test
+  void shouldReturn400WhenNameExceedsMaxLength() {
+    var request = new CreateCategoryRequest("a".repeat(101), "Description");
+
+    ProblemDetail problem =
+        restClient
+            .post()
+            .uri("/api/v1/categories")
+            .headers(requestHeaders())
+            .body(request)
+            .exchange()
+            .expectStatus()
+            .isBadRequest()
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+
+    assertThat(problem).isNotNull();
+    assertThat(problem.getStatus()).isEqualTo(400);
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getProperties()).containsKey("errors");
+  }
+
+  @Test
+  void shouldReturn400WhenDescriptionExceedsMaxLength() {
+    var request = new CreateCategoryRequest("Music", "a".repeat(501));
+
+    ProblemDetail problem =
+        restClient
+            .post()
+            .uri("/api/v1/categories")
+            .headers(requestHeaders())
+            .body(request)
+            .exchange()
+            .expectStatus()
+            .isBadRequest()
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+
+    assertThat(problem).isNotNull();
+    assertThat(problem.getStatus()).isEqualTo(400);
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getProperties()).containsKey("errors");
   }
 
   @Test
@@ -138,8 +209,13 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
             .getResponseBody();
 
     assertThat(problem).isNotNull();
-    assertThat(problem.getTitle()).isEqualTo("Validation Error");
     assertThat(problem.getStatus()).isEqualTo(400);
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getType()).hasToString("tag:eventixx.com,2026:problem:validation-error");
+    assertThat(problem.getProperties())
+        .extractingByKey("errors")
+        .asInstanceOf(InstanceOfAssertFactories.LIST)
+        .anyMatch(e -> e.toString().contains("/name"));
   }
 
   @Test
@@ -160,8 +236,13 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
             .getResponseBody();
 
     assertThat(problem).isNotNull();
-    assertThat(problem.getTitle()).isEqualTo("Validation Error");
     assertThat(problem.getStatus()).isEqualTo(400);
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getType()).hasToString("tag:eventixx.com,2026:problem:validation-error");
+    assertThat(problem.getProperties())
+        .extractingByKey("errors")
+        .asInstanceOf(InstanceOfAssertFactories.LIST)
+        .anyMatch(e -> e.toString().contains("/name"));
   }
 
   @Test
