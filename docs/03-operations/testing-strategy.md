@@ -442,7 +442,43 @@ var ticketTypes = restClient.get()
         .returnResult().getResponseBody();
 ```
 
+### ProblemDetail Validation Pattern
+
+When testing validation and error handling, verify the structured ProblemDetail response:
+
+```java
+@Test
+void shouldReturn400WhenNameIsBlank() {
+    var request = new CreateCategoryRequest("", "Description");
+
+    ProblemDetail problem = restClient
+            .post().uri("/api/v1/categories")
+            .headers(requestHeaders()).body(request)
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(ProblemDetail.class)
+            .returnResult().getResponseBody();
+
+    assertThat(problem).isNotNull();
+    assertThat(problem.getStatus()).isEqualTo(400);
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getType()).hasToString("tag:eventixx.com,2026:problem:validation-error");
+    assertThat(problem.getProperties())
+            .extractingByKey("errors")
+            .asInstanceOf(InstanceOfAssertFactories.LIST)
+            .anyMatch(e -> e.toString().contains("/name"));
+}
+```
+
+Always verify:
+- **`type`** — custom URI identifying the problem category (not `about:blank`)
+- **`title`** — human-readable summary
+- **`status`** — HTTP status code
+- **`errors`** array (for validation failures) — field pointer and message per error
+
 ---
+
+
 
 ## 8. Quality Gates
 

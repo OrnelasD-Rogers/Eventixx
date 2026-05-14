@@ -84,7 +84,7 @@ http://localhost:8080/swagger-ui.html
 ### MapStruct + Lombok
 MapStruct code generation is automatic during compilation. No manual step required. The `maven-compiler-plugin` in the root POM configures annotation processors in the correct order (Lombok first, then MapStruct).
 
-> **Spring Boot 4 Note:** The compiler requires two flags in the root POM `maven-compiler-plugin`: (a) `-parameters` to retain parameter names at runtime (mandatory for `@PathVariable`/`@RequestParam`); (b) `-Xlint:all,-processing` with `failOnWarning=true` for zero-warning enforcement on main sources. Test sources use `-Xlint:all,-processing,-rawtypes,-unchecked` (warnings shown but non-blocking).
+> **Spring Boot 4 Note:** The compiler requires two flags in the root POM `maven-compiler-plugin`: (a) `-parameters` to retain parameter names at runtime (mandatory for `@PathVariable`/`@RequestParam`); (b) `-Xlint:all,-processing` with `failOnWarning=true` for zero-warning enforcement on main sources. Test sources use `-Xlint:all,-processing,-rawtypes,-unchecked` with `failOnWarning=true` (warnings treated as errors).
 
 ### Adding a New Service
 1. Create `services/<service-name>/pom.xml` with parent `eventixx-parent`
