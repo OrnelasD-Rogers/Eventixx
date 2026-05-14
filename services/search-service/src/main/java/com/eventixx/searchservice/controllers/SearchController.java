@@ -29,6 +29,7 @@ public class SearchController {
   @GetMapping("/events")
   @Operation(summary = "Search events")
   @ApiResponse(responseCode = "200", description = "Search results returned successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid search parameters")
   @SuppressWarnings("PMD.ExcessiveParameterList")
   public SearchResult searchEvents(
       @RequestParam(required = false) String q,

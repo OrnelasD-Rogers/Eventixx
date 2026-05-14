@@ -38,6 +38,7 @@ public class EventController {
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create a new event")
   @ApiResponse(responseCode = "201", description = "Event created successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
   public EventResponse create(
       @Valid @RequestBody CreateEventRequest request, @RequestHeader("X-User-Id") String userId) {
     return eventService.create(request);
@@ -45,6 +46,8 @@ public class EventController {
 
   @GetMapping("/{id}")
   @Operation(summary = "Get event by ID")
+  @ApiResponse(responseCode = "200", description = "Event found")
+  @ApiResponse(responseCode = "404", description = "Event not found")
   public EventResponse getById(@PathVariable UUID id) {
     return eventService.findById(id);
   }
@@ -58,6 +61,7 @@ public class EventController {
    */
   @GetMapping
   @Operation(summary = "List events")
+  @ApiResponse(responseCode = "200", description = "List of events")
   public Page<EventSummaryResponse> list(
       Pageable pageable, @RequestParam(required = false) String status) {
     if (status != null && !status.isBlank()) {
@@ -76,6 +80,9 @@ public class EventController {
    */
   @PutMapping("/{id}")
   @Operation(summary = "Update event")
+  @ApiResponse(responseCode = "200", description = "Event updated")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
+  @ApiResponse(responseCode = "404", description = "Event not found")
   public EventResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody UpdateEventRequest request,
@@ -102,6 +109,8 @@ public class EventController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete event")
+  @ApiResponse(responseCode = "204", description = "Event deleted")
+  @ApiResponse(responseCode = "404", description = "Event not found")
   public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
     eventService.delete(id);
   }

@@ -37,6 +37,8 @@ public class CategoryController {
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create a new category")
   @ApiResponse(responseCode = "201", description = "Category created successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid input or missing header")
+  @ApiResponse(responseCode = "409", description = "Category with the same name already exists")
   public CategoryResponse create(
       @Valid @RequestBody CreateCategoryRequest request,
       @RequestHeader("X-User-Id") String userId) {
@@ -45,18 +47,24 @@ public class CategoryController {
 
   @GetMapping("/{id}")
   @Operation(summary = "Get category by ID")
+  @ApiResponse(responseCode = "200", description = "Category found")
+  @ApiResponse(responseCode = "404", description = "Category not found")
   public CategoryResponse getById(@PathVariable UUID id) {
     return categoryService.findById(id);
   }
 
   @GetMapping
   @Operation(summary = "List all categories")
+  @ApiResponse(responseCode = "200", description = "List of categories")
   public Page<CategorySummaryResponse> list(Pageable pageable) {
     return categoryService.findAll(pageable);
   }
 
   @PutMapping("/{id}")
   @Operation(summary = "Update category")
+  @ApiResponse(responseCode = "200", description = "Category updated")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
+  @ApiResponse(responseCode = "404", description = "Category not found")
   public CategoryResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody UpdateCategoryRequest request,
@@ -67,6 +75,8 @@ public class CategoryController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete category")
+  @ApiResponse(responseCode = "204", description = "Category deleted")
+  @ApiResponse(responseCode = "404", description = "Category not found")
   public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
     categoryService.delete(id);
   }

@@ -37,6 +37,7 @@ public class VenueController {
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create a new venue")
   @ApiResponse(responseCode = "201", description = "Venue created successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
   public VenueResponse create(
       @Valid @RequestBody CreateVenueRequest request, @RequestHeader("X-User-Id") String userId) {
     return venueService.create(request);
@@ -44,18 +45,24 @@ public class VenueController {
 
   @GetMapping("/{id}")
   @Operation(summary = "Get venue by ID")
+  @ApiResponse(responseCode = "200", description = "Venue found")
+  @ApiResponse(responseCode = "404", description = "Venue not found")
   public VenueResponse getById(@PathVariable UUID id) {
     return venueService.findById(id);
   }
 
   @GetMapping
   @Operation(summary = "List all venues")
+  @ApiResponse(responseCode = "200", description = "List of venues")
   public Page<VenueSummaryResponse> list(Pageable pageable) {
     return venueService.findAll(pageable);
   }
 
   @PutMapping("/{id}")
   @Operation(summary = "Update venue")
+  @ApiResponse(responseCode = "200", description = "Venue updated")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
+  @ApiResponse(responseCode = "404", description = "Venue not found")
   public VenueResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody UpdateVenueRequest request,
@@ -66,6 +73,8 @@ public class VenueController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete venue")
+  @ApiResponse(responseCode = "204", description = "Venue deleted")
+  @ApiResponse(responseCode = "404", description = "Venue not found")
   public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
     venueService.delete(id);
   }

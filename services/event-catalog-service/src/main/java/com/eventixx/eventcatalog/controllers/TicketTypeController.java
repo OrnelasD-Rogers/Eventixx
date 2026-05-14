@@ -5,6 +5,7 @@ import com.eventixx.eventcatalog.dto.tickettype.TicketTypeResponse;
 import com.eventixx.eventcatalog.dto.tickettype.UpdateTicketTypeRequest;
 import com.eventixx.eventcatalog.services.tickettype.TicketTypeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -33,6 +34,9 @@ public class TicketTypeController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create ticket type for event")
+  @ApiResponse(responseCode = "201", description = "Ticket type created")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
+  @ApiResponse(responseCode = "404", description = "Event not found")
   public TicketTypeResponse create(
       @PathVariable UUID eventId,
       @Valid @RequestBody CreateTicketTypeRequest request,
@@ -42,18 +46,24 @@ public class TicketTypeController {
 
   @GetMapping("/{id}")
   @Operation(summary = "Get ticket type by ID")
+  @ApiResponse(responseCode = "200", description = "Ticket type found")
+  @ApiResponse(responseCode = "404", description = "Ticket type not found")
   public TicketTypeResponse getById(@PathVariable UUID eventId, @PathVariable UUID id) {
     return ticketTypeService.findById(id);
   }
 
   @GetMapping
   @Operation(summary = "List ticket types for event")
+  @ApiResponse(responseCode = "200", description = "List of ticket types")
   public List<TicketTypeResponse> list(@PathVariable UUID eventId) {
     return ticketTypeService.findAllByEventId(eventId);
   }
 
   @PutMapping("/{id}")
   @Operation(summary = "Update ticket type")
+  @ApiResponse(responseCode = "200", description = "Ticket type updated")
+  @ApiResponse(responseCode = "400", description = "Invalid input")
+  @ApiResponse(responseCode = "404", description = "Ticket type not found")
   public TicketTypeResponse update(
       @PathVariable UUID eventId,
       @PathVariable UUID id,
@@ -65,6 +75,8 @@ public class TicketTypeController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete ticket type")
+  @ApiResponse(responseCode = "204", description = "Ticket type deleted")
+  @ApiResponse(responseCode = "404", description = "Ticket type not found")
   public void delete(
       @PathVariable UUID eventId,
       @PathVariable UUID id,
