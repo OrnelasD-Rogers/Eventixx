@@ -71,7 +71,7 @@ class CategoryServiceTest {
     when(categoryRepository.saveAndFlush(newCategory)).thenReturn(newCategory);
     when(categoryMapper.toResponse(newCategory)).thenReturn(categoryResponse);
 
-    CategoryResponse result = categoryService.create(request);
+    CategoryResponse result = categoryService.create(request, "user-123");
 
     assertThat(result).isEqualTo(categoryResponse);
   }
@@ -117,7 +117,7 @@ class CategoryServiceTest {
     when(categoryRepository.saveAndFlush(category)).thenReturn(category);
     when(categoryMapper.toResponse(category)).thenReturn(categoryResponse);
 
-    CategoryResponse result = categoryService.update(category.getId(), request);
+    CategoryResponse result = categoryService.update(category.getId(), request, "user-123");
 
     assertThat(result).isEqualTo(categoryResponse);
     verify(categoryMapper).updateEntity(request, category);
@@ -130,7 +130,7 @@ class CategoryServiceTest {
 
     when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> categoryService.update(id, request))
+    assertThatThrownBy(() -> categoryService.update(id, request, "user-123"))
         .isInstanceOf(ResourceNotFoundException.class)
         .hasMessageContaining("Category with id");
   }
@@ -142,7 +142,7 @@ class CategoryServiceTest {
     when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
     when(categoryRepository.existsByName("Existing Category")).thenReturn(true);
 
-    assertThatThrownBy(() -> categoryService.update(category.getId(), request))
+    assertThatThrownBy(() -> categoryService.update(category.getId(), request, "user-123"))
         .isInstanceOf(ConflictException.class)
         .hasMessageContaining("Existing Category");
   }
@@ -151,7 +151,7 @@ class CategoryServiceTest {
   void shouldDeleteCategory() {
     when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
 
-    categoryService.delete(category.getId());
+    categoryService.delete(category.getId(), "user-123");
 
     verify(categoryRepository).delete(category);
   }
@@ -164,7 +164,7 @@ class CategoryServiceTest {
     when(categoryRepository.saveAndFlush(any()))
         .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"));
 
-    assertThatThrownBy(() -> categoryService.create(request))
+    assertThatThrownBy(() -> categoryService.create(request, "user-123"))
         .isInstanceOf(ConflictException.class)
         .hasMessageContaining("already exists");
   }
@@ -175,7 +175,7 @@ class CategoryServiceTest {
 
     when(categoryRepository.existsByName("ExistingName")).thenReturn(true);
 
-    assertThatThrownBy(() -> categoryService.create(request))
+    assertThatThrownBy(() -> categoryService.create(request, "user-123"))
         .isInstanceOf(ConflictException.class)
         .hasMessageContaining("already exists");
   }

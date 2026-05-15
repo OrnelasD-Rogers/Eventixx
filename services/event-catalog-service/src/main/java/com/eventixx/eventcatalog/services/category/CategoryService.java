@@ -35,13 +35,14 @@ public class CategoryService {
    * {@link DataIntegrityViolationException} as a safety net for concurrent duplicate inserts.</p>
    */
   @Transactional
-  public CategoryResponse create(CreateCategoryRequest request) {
+  public CategoryResponse create(CreateCategoryRequest request, String userId) {
     if (categoryRepository.existsByName(request.name())) {
       throw new ConflictException("Category with name '" + request.name() + "' already exists");
     }
     Category category = categoryMapper.toEntity(request);
     try {
       Category saved = categoryRepository.saveAndFlush(category);
+      log.info("Category {} created by user {}", saved.getId(), userId);
       return categoryMapper.toResponse(saved);
     } catch (DataIntegrityViolationException e) {
       throw new ConflictException("Category with name '" + request.name() + "' already exists", e);
@@ -63,16 +64,16 @@ public class CategoryService {
    * Handles {@link ObjectOptimisticLockingFailureException} when {@code @Version} detects a conflict.</p>
    */
   @Transactional
-  public CategoryResponse update(UUID id, UpdateCategoryRequest request) {
+  public CategoryResponse update(UUID id, UpdateCategoryRequest request, String userId) {
     Category category = findCategoryOrThrow(id);
-    if (request.name() != null
-        && !request.name().equals(category.getName())
+    if (!request.name().equals(category.getName())
         && categoryRepository.existsByName(request.name())) {
       throw new ConflictException("Category with name '" + request.name() + "' already exists");
     }
     categoryMapper.updateEntity(request, category);
     try {
       Category saved = categoryRepository.saveAndFlush(category);
+      log.info("Category {} updated by user {}", id, userId);
       return categoryMapper.toResponse(saved);
     } catch (DataIntegrityViolationException e) {
       throw new ConflictException("Category with name '" + request.name() + "' already exists", e);
@@ -89,13 +90,20 @@ public class CategoryService {
    * instead of a generic 500 constraint violation.</p>
    */
   @Transactional
-  public void delete(UUID id) {
+  public void delete(UUID id, String userId) {
     Category category = findCategoryOrThrow(id);
     if (eventRepository.existsByCategoryId(id)) {
       throw new ConflictException(
           "Category '" + category.getName() + "' has events linked to it and cannot be deleted");
     }
-    categoryRepository.delete(category);
+    try {
+      categoryRepository.delete(category);
+      log.info("Category {} deleted by user {}", id, userId);
+    } catch (ObjectOptimisticLockingFailureException e) {
+      log.warn("Optimistic lock conflict on category {}: {}", id, e.getMessage());
+      throw new ConflictException(
+          "Category was updated by another user. Please reload and try again.", e);
+    }
   }
 
   private Category findCategoryOrThrow(UUID id) {

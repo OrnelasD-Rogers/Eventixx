@@ -43,7 +43,7 @@ public class CategoryController {
   public CategoryResponse create(
       @Valid @RequestBody CreateCategoryRequest request,
       @RequestHeader("X-User-Id") String userId) {
-    return categoryService.create(request);
+    return categoryService.create(request, userId);
   }
 
   @GetMapping("/{id}")
@@ -70,7 +70,7 @@ public class CategoryController {
       @PathVariable UUID id,
       @Valid @RequestBody UpdateCategoryRequest request,
       @RequestHeader("X-User-Id") String userId) {
-    return categoryService.update(id, request);
+    return categoryService.update(id, request, userId);
   }
 
   @DeleteMapping("/{id}")
@@ -79,6 +79,6 @@ public class CategoryController {
   @ApiResponse(responseCode = "204", description = "Category deleted")
   @ApiResponse(responseCode = "404", description = "Category not found")
   public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
-    categoryService.delete(id);
+    categoryService.delete(id, userId);
   }
 }

@@ -47,7 +47,7 @@ class CategoryControllerWebTest {
     CategoryResponse response =
         new CategoryResponse(
             categoryId, "Music", "Live music events", Instant.now(), Instant.now());
-    when(categoryService.create(any())).thenReturn(response);
+    when(categoryService.create(any(), any())).thenReturn(response);
 
     mockMvc
         .perform(
@@ -110,7 +110,7 @@ class CategoryControllerWebTest {
     UpdateCategoryRequest request = new UpdateCategoryRequest("Updated Music", null);
     CategoryResponse response =
         new CategoryResponse(categoryId, "Updated Music", "Desc", Instant.now(), Instant.now());
-    when(categoryService.update(eq(categoryId), any())).thenReturn(response);
+    when(categoryService.update(eq(categoryId), any(), any())).thenReturn(response);
 
     mockMvc
         .perform(
@@ -125,7 +125,7 @@ class CategoryControllerWebTest {
   @Test
   void shouldReturn404_whenUpdatingNonExistentCategory() throws Exception {
     UpdateCategoryRequest request = new UpdateCategoryRequest("Updated", null);
-    when(categoryService.update(eq(categoryId), any()))
+    when(categoryService.update(eq(categoryId), any(), any()))
         .thenThrow(new ResourceNotFoundException("Category not found"));
 
     mockMvc
