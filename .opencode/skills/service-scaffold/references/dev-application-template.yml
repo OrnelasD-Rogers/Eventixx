@@ -1,0 +1,21 @@
+# TEMPLATE — Replace __PLACEHOLDERS__ before use
+# Dev profile overrides for local development (no Docker)
+
+# __IF_KAFKA__
+spring.kafka.bootstrap-servers: localhost:9092
+# __END_IF__
+
+# __IF_POSTGRESQL__
+spring.datasource.url: jdbc:postgresql://localhost:__DB_PORT__/eventixx
+spring.jpa.show-sql: true
+# __END_IF__
+
+# __IF_ELASTICSEARCH__
+spring.elasticsearch.uris: http://localhost:9200
+# __END_IF__
+
+# __IF_EUREKA__
+eureka.client.enabled: false
+# __END_IF__
+
+logging.level.com.eventixx.__FLAT_PACKAGE__: DEBUG

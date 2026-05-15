@@ -1,0 +1,66 @@
+{
+  "skill_name": "service-scaffold",
+  "evals": [
+    {
+      "id": 1,
+      "name": "create-reservation-service",
+      "prompt": "I need to create a new reservation-service microservice. Bounded context: Reservation. Database: PostgreSQL. HTTP port: 8083. DB port: 5434. Consumes topics: 'payment.confirmed', 'payment.refunded'. Produces topics: 'reservation.confirmed', 'reservation.cancelled'. Has REST controllers, Eureka client, Flyway migrations.",
+      "expected_output": "services/reservation-service/ created with pom.xml, Dockerfile, application.yml, application-dev.yml, OpenApiConfig, SecurityConfig, MapStructConfig, exception classes, Kafka consumer+producer config, ArchitectureTest, PostgresRepositoryTest. Registered in parent pom.xml <modules> and AGENTS.md service table. Build compiles successfully.",
+      "files": [
+        "services/reservation-service/pom.xml",
+        "services/reservation-service/Dockerfile",
+        "services/reservation-service/src/main/resources/application.yml",
+        "services/reservation-service/src/main/resources/application-dev.yml",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/ReservationServiceApplication.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/config/OpenApiConfig.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/config/SecurityConfig.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/config/MapStructConfig.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/config/KafkaConsumerConfig.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/exceptions/ResourceNotFoundException.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/exceptions/ConflictException.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/exceptions/BusinessException.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/exceptions/ProblemType.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/exceptions/ValidationErrorDetail.java",
+        "services/reservation-service/src/main/java/com/eventixx/reservationservice/exceptions/GlobalExceptionHandler.java",
+        "services/reservation-service/src/test/java/com/eventixx/reservationservice/arch/ArchitectureTest.java",
+        "services/reservation-service/src/test/java/com/eventixx/reservationservice/repository/PostgresRepositoryTest.java"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "create-event-only-service",
+      "prompt": "Create a notification-service. No database, no REST controllers. HTTP port: 8086. Consumes 'reservation.confirmed'. Produces 'notification.send'. Eureka enabled.",
+      "expected_output": "services/notification-service/ created with minimal pom.xml (no JPA/Flyway/PostgreSQL deps), Dockerfile, application.yml (no datasource config), application-dev.yml, Kafka consumer config only (no producer). No controllers directory. No PostgresRepositoryTest. No docker-compose.yml for DB. No Flyway directory. Build compiles successfully.",
+      "files": [
+        "services/notification-service/pom.xml",
+        "services/notification-service/Dockerfile",
+        "services/notification-service/src/main/resources/application.yml",
+        "services/notification-service/src/main/java/com/eventixx/notificationservice/NotificationServiceApplication.java",
+        "services/notification-service/src/main/java/com/eventixx/notificationservice/config/KafkaConsumerConfig.java",
+        "services/notification-service/src/test/java/com/eventixx/notificationservice/arch/ArchitectureTest.java"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "reject-existing-service",
+      "prompt": "Create the event-catalog-service because it doesn't exist yet",
+      "expected_output": "The skill must detect that services/event-catalog-service/ already exists and refuse to overwrite it. It should inform the user that the service already exists and suggest they check the existing implementation instead.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "No files overwritten",
+          "description": "No existing event-catalog-service files are modified or overwritten",
+          "assertion_type": "file_exists",
+          "expected": false,
+          "file": "services/event-catalog-service/pom.xml"
+        },
+        {
+          "name": "User notified of existing service",
+          "description": "The output must inform the user that event-catalog-service already exists",
+          "assertion_type": "output_contains",
+          "expected": "already exists"
+        }
+      ]
+    }
+  ]
+}
