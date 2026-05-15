@@ -1,5 +1,6 @@
 package com.eventixx.eventcatalog.services.messaging;
 
+import com.eventixx.eventcatalog.exceptions.EventSerializationException;
 import com.eventixx.eventcatalog.services.DomainEvent;
 import com.eventixx.eventcatalog.services.DomainEventPublisher;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,7 +32,8 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
           key);
       kafkaTemplate.send(topic, key, payload);
     } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed to serialize domain event: " + event.getEventType(), e);
+      throw new EventSerializationException(
+          "Failed to serialize domain event: " + event.getEventType(), e);
     }
   }
 }
