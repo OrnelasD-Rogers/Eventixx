@@ -229,3 +229,41 @@ Short messages in Portuguese or English, describing **what** and **why**:
 - `refactor X` — refactoring with no behavior change
 - `test X` — test addition/modification
 - `docs X` — documentation
+
+---
+
+## MCP Tools
+
+This project has **JARP-MCP** configured as an MCP server (`jarp-mcp`). Use its tools whenever you need to resolve uncertainty about library classes, API signatures, or dependency internals.
+
+### JARP-MCP Tools
+
+| Tool | When to Use |
+|------|-------------|
+| `jarp-mcp_scan_dependencies` | Once per session (or after dependency changes) to index all JARs |
+| `jarp-mcp_analyze_class` | Before importing a library class — discover its qualified name, methods, fields |
+| `jarp-mcp_decompile_class` | When a class API is unclear — decompile to see full source code |
+
+### Workflow
+
+**Don't guess.** Before writing code that depends on a library class:
+
+1. `scan_dependencies` — builds class→JAR index for the project
+2. `analyze_class` — inspects structure (methods, fields, annotations) without pulling full source
+3. `decompile_class` — reads the actual implementation when deep understanding is needed
+
+**Typical triggers:**
+- Compilation errors (`cannot find symbol`, `incompatible types`, `package does not exist`)
+- Uncertain API signatures (parameter types, return types, exceptions)
+- Annotation introspection (what attributes/values does `@EnableKafka` or `@Retryable` accept?)
+- Finding the correct fully-qualified name for an import statement
+
+---
+
+## Memory Search
+
+- Always use `memory_search` with queries in **English** only, regardless of the conversation language. This ensures consistent cross-session retrieval since embeddings are optimized for English.
+
+### Memory Search
+
+When using `mem_search`, always search in **English**. This ensures consistent cross-session retrieval regardless of the project's primary language.
