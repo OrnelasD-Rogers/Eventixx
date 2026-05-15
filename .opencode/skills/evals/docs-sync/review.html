@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "docs-sync", "runs": [{"id": "eval-1-sync-new-entity-with_skill", "prompt": "I just added a new entity 'TicketType' with fields: id UUID, name VARCHAR(100), price DECIMAL(10,2), event_id FK to events.id. Also added GET /api/v1/ticket-types/{id} and POST /api/v1/ticket-types endpoints in EventController. Git diff shows: entities/TicketType.java, controllers/EventController.java, dto/TicketTypeRequest.java, dto/TicketTypeResponse.java. Which docs need updating and what exactly should change?", "eval_id": 1, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Docs Sync Analysis \u2014 TicketType Entity & Endpoints\n\n## Step 0: Load Lessons Learned\n\nLoaded from `<skill-path>/lessons.md` (2026-05-14). Key guidance applied:\n\n- **Lesson #1:** \"This project uses OpenAPI annotations on controllers as the source of truth for API docs rather than standalone api-contracts/*.md files.\" \u2192 No api-contracts files to create or update.\n- **Lesson #4:** \"Integration test count changes should be tracked in UC-001-event-catalog.md Task 4 and the Execution Log.\" \u2192 Track test additions if present.\n- **Lesson #5:** \"The ProblemDetail assertion pattern (verifying type, title, status, and errors array) is novel enough to warrant its own subsection in testing-strategy.md.\" \u2192 Not applicable here (no new test pattern).\n\n---\n\n## Step 1: Analyze Code Changes\n\n### Files Changed (from developer description)\n\n| File | Change Type | Category |\n|------|-------------|----------|\n| `entities/TicketType.java` | NEW | `entity` |\n| `controllers/EventController.java` | MODIFIED (added ticket-type endpoints) | `endpoint` |\n| `dto/TicketTypeRequest.java` | NEW | `dto` |\n| `dto/TicketTypeResponse.java` | NEW | `dto` |\n\n### Validation Checkpoint\nEvery changed file categorized. No file matches multiple categories.\n\n---\n\n## Step 2: Map to Documentation\n\n### Category: `entity` \u2192 `docs/02-specs/data-model.md`\n\n**Table to check:** `ticket_types`\n\n**Current state:** The `ticket_types` table is already fully documented at `data-model.md:99-113`:\n\n| Column | Type | Constraints | Notes |\n|--------|------|-------------|-------|\n| `id` | `UUID` | PK, `uuid_generate_v4()` | |\n| `event_id` | `UUID` | NOT NULL, FK \u2192 events(id), ON DELETE RESTRICT | |\n| `name` | `VARCHAR(100)` | NOT NULL | e.g. \"General Admission\", \"VIP\" |\n| `price` | `DECIMAL(10,2)` | NOT NULL, CHECK >= 0 | |\n| `quantity_available` | `INTEGER` | NOT NULL, CHECK >= 0 | |\n| `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT now() | |\n| `updated_at` | `TIMESTAMP` | NOT NULL, DEFAULT now() | Auto-updated by trigger |\n| `deleted_at` | `TIMESTAMP` | | Soft delete marker |\n\n**Index:** `idx_ticket_types_event_id` (partial, `deleted_at IS NULL`)\n\nThe developer's described fields (`id UUID`, `name VARCHAR(100)`, `price DECIMAL(10,2)`, `event_id FK`) are a subset. The data-model is more complete (includes `quantity_available` and audit columns). The ER diagram at `data-model.md:15-31` also already includes `ticket_types` with matching columns.\n\n**Decision:** NO CHANGE \u2014 table already documented with all columns. Verify the `TicketType.java` entity matches the documented schema (it does: `quantityAvailable` maps to `quantity_available` via `@Column(name = \"quantity_available\")`).\n\n---\n\n### Category: `endpoint` + `dto` \u2192 `docs/02-specs/api-contracts/`\n\n**Current state:** No files exist under `docs/02-specs/api-contracts/` (glob returned 0 results).\n\n**Per Lesson #1:** \"This project uses OpenAPI annotations on controllers as the source of truth for API docs rather than standalone api-contracts/*.md files. When adding @ApiResponse annotations, no separate contract doc update is needed.\"\n\nThe new top-level endpoints in `EventController`:\n- `GET /api/v1/ticket-types/{id}` \u2014 Get ticket type by ID\n- `POST /api/v1/ticket-types` \u2014 Create ticket type\n\nThese must include `@Operation` and `@ApiResponse` annotations following the existing EventController pattern (lines 37-116), e.g.:\n```java\n@Operation(summary = \"Get ticket type by ID\")\n@ApiResponse(responseCode = \"200\", description = \"Ticket type found\")\n@ApiResponse(responseCode = \"404\", description = \"Ticket type not found\")\n```\n\n**Decision:** NO doc file change needed. Developer must add OpenAPI annotations on the new endpoints in code.\n\n---\n\n### Category: New domain term \u2192 `docs/02-specs/glossary.md`\n\n**Current state:** Glossary file exists but is nearly empty (header only, 3 lines, no entries).\n\n**Decision:** ADD entry for \"Ticket Type\" \u2014 it is a core domain term used throughout UC-001 and the entity design.\n\n**Recommended entry:**\n> **Ticket Type:** A category of admission within an event, defined by name, price, and available quantity. Belongs to exactly one event via FK (`event_id`). Examples: \"General Admission\", \"VIP\", \"Student\".\n\n---\n\n### Category: New feature/scenario \u2192 `docs/02-specs/use-cases/UC-001-event-catalog.md`\n\n**Current state:**\n- Main flow step 3 already says: \"Organizer defines ticket types for the event (name, price, quantity available).\"\n- Task 2 (Core Implementation) already includes TicketType CRUD, marked \u2611 Completed\n- Task 4 (Conformance Tests) includes `TicketTypeServiceTest` (7 cases), `TicketTypeControllerWebTest` (7 cases), `TicketTypeRepositorySoftDeleteTest` (2 cases), `TicketTypeCatalogIntegrationTest` (TicketType CRUD lifecycle)\n\nThe new top-level endpoints extend an already-completed task. The acceptance criterion \"[x] Event CRUD works; event can be linked to venue and ticket types\" already covers ticket type management.\n\n**Decision:** No structural change to UC-001. If this represents new implementation work (vs. refactoring), optionally add an Execution Log entry:\n> | T2   | \u2611 Completed | 2026-05-15 | Added top-level ticket-type endpoints `GET/POST /api/v1/ticket-types` on EventController. Entity and DTOs follow existing patterns. |\n\n---\n\n### Category: `endpoint` (testing impact) \u2192 `docs/03-operations/testing-strategy.md`\n\n**Current state:**\n- \u00a74 Test Package Structure lists `TicketTypeControllerWebTest` (nested under `/api/v1/events/{eventId}/ticket-types`)\n- \u00a74 lists `TicketTypeCatalogIntegrationTest` (TicketType CRUD lifecycle)\n\nThe new top-level endpoints on EventController would need new test cases or additions to `EventControllerWebTest`. If tests were added, update \u00a74 to list them.\n\n**Decision:** No change unless new test files accompany the code change. If `EventControllerWebTest` was extended with ticket-type test cases, update the test count (currently 12 \u2192 likely 14-16 cases).\n\n---\n\n## Step 3-4: Apply Updates Summary\n\n| Doc | Action | Status |\n|-----|--------|--------|\n| `docs/02-specs/data-model.md` | Verify existing `ticket_types` table \u2014 already complete | \u2705 No change |\n| `docs/02-specs/api-contracts/` | No standalone files exist; OpenAPI annotations suffice | \u2705 No change |\n| `docs/02-specs/glossary.md` | Add \"Ticket Type\" definition | \ud83d\udd32 See proposed-edits.md |\n| `docs/02-specs/use-cases/UC-001-event-catalog.md` | Already covers ticket types; optional Execution Log entry | \u2705 No change |\n| `docs/03-operations/testing-strategy.md` | Test structure already listed; update only if new tests added | \u2705 No change |\n\n## Step 4: Verify Consistency\n\n| Check | Result |\n|-------|--------|\n| `AGENTS.md` versions vs `setup.md` | No dependency changes \u2014 already consistent |\n| `AGENTS.md` service table vs `PROJECT_CHARTER.md` | Unaffected \u2014 no new service |\n| UC-001 cross-refs | Main flow step 3, Task 2, and acceptance criteria already cover ticket types from the start. No inconsistency from adding this new entity. |\n| Dead links | `data-model.md` references to `ticket_types` table and ER diagram are valid. No new cross-references added. |\n\n## Step 5: Lessons Learned\n\nSee `lessons.md` entry below.\n"}, {"name": "proposed-edits.md", "type": "text", "content": "# Proposed Doc Edits \u2014 TicketType Entity & Endpoints\n\n## Edit 1: `docs/02-specs/glossary.md` \u2014 Add \"Ticket Type\" entry\n\n**Location:** Append after the existing header (line 3).\n\n**Old content (lines 1-3):**\n```markdown\n# Glossary\n\n> Domain-specific terminology and ubiquitous language.\n```\n\n**New content:**\n```markdown\n# Glossary\n\n> Domain-specific terminology and ubiquitous language.\n\n## Terms\n\n| Term | Definition |\n|------|------------|\n| Ticket Type | A category of admission within an event, defined by name (`VARCHAR(100)`), price (`DECIMAL(10,2)`), and available quantity (`INTEGER`). Each ticket type belongs to exactly one event via foreign key (`event_id \u2192 events.id`). Examples: \"General Admission\", \"VIP\", \"Student\". |\n```\n\n---\n\n## Edit 2: `docs/02-specs/use-cases/UC-001-event-catalog.md` \u2014 Optional Execution Log Entry\n\n**Location:** Execution Log table at line 176.\n\n**Old content (line 178):**\n```\n| T1   | \u2611 Completed | 2026-04-30 | Created Maven module, Dockerfile, application.yml. ... |\n```\n\n**New content \u2014 insert after T4 row (after line 181):**\n```\n| T2   | \u2611 Completed | 2026-05-15 | Added top-level `GET /api/v1/ticket-types/{id}` and `POST /api/v1/ticket-types` endpoints on EventController. New entity `TicketType.java`, request DTO `TicketTypeRequest.java`, and response DTO `TicketTypeResponse.java` follow existing patterns. MapStruct mappers updated. |\n```\n\n*Note: Only add if these endpoints represent new work not already tracked in T2's original implementation. If they were part of the original T2 scope, no log entry is needed.*\n\n---\n\n## Edit 3: `docs/03-operations/testing-strategy.md` \u2014 Conditional Test File Update\n\n**Condition:** Only apply if new web/integration tests were added for the top-level ticket-type endpoints.\n\n**Location:** \u00a74 Test Package Structure, `web/` subsection (lines 150-154).\n\n**Current:**\n```\n\u251c\u2500\u2500 web/                            # Controller tests (@WebMvcTest)\n\u2502   \u251c\u2500\u2500 EventControllerWebTest.java\n\u2502   \u251c\u2500\u2500 VenueControllerWebTest.java\n\u2502   \u251c\u2500\u2500 CategoryControllerWebTest.java\n\u2502   \u2514\u2500\u2500 TicketTypeControllerWebTest.java\n```\n\n**If `EventControllerWebTest` was extended with ticket-type test cases (no new file needed):**\n\u2014 No structural change; test count note in UC-001 Execution Log suffices.\n\n**If a new test file was created (e.g., `TicketTypeControllerWebTest2.java`):**\n```\n\u251c\u2500\u2500 web/                            # Controller tests (@WebMvcTest)\n\u2502   \u251c\u2500\u2500 EventControllerWebTest.java\n\u2502   \u251c\u2500\u2500 VenueControllerWebTest.java\n\u2502   \u251c\u2500\u2500 CategoryControllerWebTest.java\n\u2502   \u251c\u2500\u2500 TicketTypeControllerWebTest.java\n\u2502   \u2514\u2500\u2500 TicketTypeStandaloneControllerWebTest.java\n```\n\n*Current assessment: Developer mentioned no test files in the diff. Skip this edit.*\n\n---\n\n## Edit 4: `docs/02-specs/data-model.md` \u2014 Verification (No Change)\n\n**Location:** Lines 99-113 (ticket_types table) and lines 18-31 (ER diagram).\n\n**Verification result:** ALREADY COMPLETE. The existing documentation matches the entity:\n\n| Entity field | Table column in data-model.md | Match? |\n|--------------|------------------------------|--------|\n| `id UUID` | `id UUID PK` | \u2705 |\n| `name VARCHAR(100)` | `name VARCHAR(100) NOT NULL` | \u2705 |\n| `price DECIMAL(10,2)` | `price DECIMAL(10,2) NOT NULL, CHECK >= 0` | \u2705 |\n| `event_id FK \u2192 events.id` | `event_id UUID NOT NULL, FK \u2192 events(id)` | \u2705 |\n| `quantityAvailable` | `quantity_available INTEGER NOT NULL, CHECK >= 0` | \u2705 (extra \u2014 entity has it too) |\n\n**No edit needed.**\n\n---\n\n## Summary Table\n\n| # | Doc | Edit | Surgical Change | Applied |\n|---|-----|------|-----------------|---------|\n| 1 | `docs/02-specs/glossary.md` | Add \"Ticket Type\" term + definition | Append table after header | \ud83d\udd32 |\n| 2 | `docs/02-specs/use-cases/UC-001-event-catalog.md` | Optional: add Execution Log entry | Insert row after T4 in table | \ud83d\udd32 (optional) |\n| 3 | `docs/03-operations/testing-strategy.md` | Only if new test files exist | Update \u00a74 file listing | \ud83d\udd32 (conditional) |\n| 4 | `docs/02-specs/data-model.md` | Verify only \u2014 no change | None | \u2705 |\n| 5 | `docs/02-specs/api-contracts/` | No action \u2014 OpenAPI annotations suffice | None | \u2705 |\n"}], "grading": null}, {"id": "eval-1-sync-new-entity-without_skill", "prompt": "I just added a new entity 'TicketType' with fields: id UUID, name VARCHAR(100), price DECIMAL(10,2), event_id FK to events.id. Also added GET /api/v1/ticket-types/{id} and POST /api/v1/ticket-types endpoints in EventController. Git diff shows: entities/TicketType.java, controllers/EventController.java, dto/TicketTypeRequest.java, dto/TicketTypeResponse.java. Which docs need updating and what exactly should change?", "eval_id": 1, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Docs Impact Analysis \u2014 New TicketType Entity & Endpoints\n\n**Scenario:** Developer added `TicketType` entity (id UUID, name VARCHAR(100), price DECIMAL(10,2), event_id FK) + `GET /api/v1/ticket-types/{id}` and `POST /api/v1/ticket-types` in `EventController`.\n\n## Changed Files & Categorization\n\n| Changed File | Type | Layer |\n|---|---|---|\n| `entities/TicketType.java` | Entity (JPA) | Data Model |\n| `controllers/EventController.java` | Controller (modified) | API Contract |\n| `dto/TicketTypeRequest.java` | DTO (new) | API Contract |\n| `dto/TicketTypeResponse.java` | DTO (new) | API Contract |\n\n---\n\n## Affected Documentation\n\n### 1. `docs/02-specs/data-model.md` \u2014 UPDATE needed\n\n**Why:** This file defines all database schemas. A new entity `ticket_types` must be documented.\n\n**Specific changes:**\n- Add a `ticket_types` table section under \"Event Catalog Service\" with columns:\n\n  | Column | Type | Constraints | Notes |\n  |---|---|---|---|\n  | `id` | `UUID` | PK, `uuid_generate_v4()` | |\n  | `event_id` | `UUID` | NOT NULL, FK \u2192 events(id), ON DELETE RESTRICT | |\n  | `name` | `VARCHAR(100)` | NOT NULL | e.g. \"General Admission\", \"VIP\" |\n  | `price` | `DECIMAL(10,2)` | NOT NULL, CHECK >= 0 | |\n  | `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT now() | |\n  | `updated_at` | `TIMESTAMP` | NOT NULL, DEFAULT now() | Auto-updated by trigger |\n  | `deleted_at` | `TIMESTAMP` | | Soft delete marker |\n\n- Add index: `idx_ticket_types_event_id` (partial, `deleted_at IS NULL`)\n- Add FK arrow in ER diagram: `ticket_types.event_id` \u2192 `events.id`\n- Update \"Shared Patterns\" section (soft delete / auto-update) to mention 4 \u2192 5 tables\n\n**Note:** The scenario entity omits `quantity_available`, `created_at`, `updated_at`, `deleted_at`. The data-model should reflect the *actual* entity state. If these fields are intentionally absent, the data-model matches the code; if they were forgotten, this is a code gap, not a docs gap.\n\n### 2. `docs/02-specs/api-contracts/` \u2014 CREATE needed\n\n**Why:** Charter principle \u00a74.5 (\"API-First Design\") requires OpenAPI specs. The `api-contracts/` directory exists but is empty.\n\n**Specific changes:**\n- Create `docs/02-specs/api-contracts/event-catalog-service.yaml` (or extend if one exists)\n- Add paths:\n  - `GET /api/v1/ticket-types/{id}` \u2014 returns `TicketTypeResponse`\n  - `POST /api/v1/ticket-types` \u2014 accepts `TicketTypeRequest`, returns `TicketTypeResponse`\n- Add schemas:\n  - `TicketTypeRequest` \u2014 properties: `name` (string, max 100), `price` (number, >= 0), `eventId` (UUID)\n  - `TicketTypeResponse` \u2014 properties: `id` (UUID), `name`, `price`, `eventId`\n- Add `404` response to GET (ticket type not found)\n- Add `400` response to POST (validation error)\n- Tag as \"Ticket Types\"\n\n### 3. `docs/02-specs/use-cases/UC-001-event-catalog.md` \u2014 UPDATE needed\n\n**Why:** This use case describes the event catalog flow. It already mentions \"Organizer defines ticket types\" in step 3 and lists `TicketTypeControllerWebTest` in Task 4. But the new endpoints are inside `EventController`, not a separate controller, which may affect naming/coverage.\n\n**Specific changes:**\n- Verify step 3 still reflects the API shape (was `/api/v1/events/{eventId}/ticket-types`, now `/api/v1/ticket-types`). If the path changed, update step 3.\n- In Task 2 artifacts list: note that ticket type endpoints were added to `EventController` rather than a standalone `TicketTypeController` (if the scenario departs from original plan).\n- In Task 4 test list: update to reflect which controller class tests ticket type endpoints. If `TicketTypeControllerWebTest.java` no longer exists, update the test count and references.\n- If the entity has no `quantity_available`, update the validation exception table (remove \"Ticket quantity exceeds venue capacity\" row).\n\n### 4. `docs/02-specs/glossary.md` \u2014 UPDATE needed\n\n**Why:** A new domain concept was introduced.\n\n**Specific changes:**\n- Add entry: **Ticket Type** \u2014 A category of admission for an event (e.g., \"General Admission\", \"VIP\"). Defines price and name.\n\n### 5. `docs/03-operations/testing-strategy.md` \u2014 UPDATE needed\n\n**Why:** This file lists every test class per entity. Adding TicketType requires new tests.\n\n**Specific changes:**\n- Add `unit/TicketTypeServiceTest.java` under unit tests section\n- Add `web/TicketTypeControllerWebTest.java` (or note these are covered by `EventControllerWebTest` if endpoints live in EventController)\n- Add `repository/TicketTypeRepositorySoftDeleteTest.java` under repository tests\n- Add `integration/TicketTypeIntegrationTest.java` under integration tests\n- Update target counts: +1 unit, +1 web, +1 repository, +1 integration\n- Update test package structure diagram\n\n### 6. `docs/01-decisions/ADR-001-service-boundaries.md` \u2014 REVIEW (likely no change)\n\n**Why:** ADR-001 already lists `ticket_types` as part of Event Catalog Service's data ownership (line 57). No change needed unless the table name differs.\n\n### 7. `docs/04-implementation/setup.md` \u2014 UPDATE needed (minor)\n\n**Why:** The \"Expected tables\" list in the database verification step (line 60) should be checked.\n\n**Specific changes:**\n- If `ticket_types` was not previously listed, add it. But looking at the current file, it's already there. If the entity is truly new, ensure this list includes `ticket_types` with a note about when it appears.\n\n### 8. `docs/03-operations/security-guide.md` \u2014 REVIEW (likely no change)\n\n**Why:** The new endpoints follow the same auth pattern (`@RequestHeader(\"X-User-Id\")` for writes, public reads). No new auth rules needed.\n\n### 9. `docs/02-specs/sequence-diagrams.md` \u2014 UPDATE needed (optional)\n\n**Why:** If ticket type creation is part of a multi-step flow involving other services, a sequence diagram may help.\n\n**Specific changes:**\n- Add sequence diagram for \"Organizer creates ticket types for event\" showing: Client \u2192 EventController \u2192 TicketTypeService \u2192 EventRepository (verify event exists) \u2192 TicketTypeRepository (save) \u2192 response.\n\n### 10. `docs/00-charter/PROJECT_CHARTER.md` \u2014 No change needed\n\n**Why:** The charter talks about \"Event Catalog Management \u2014 CRUD for events, venues, categories, and ticket types\" at a high level. Adding a TicketType entity is within scope. No charter change needed.\n\n---\n\n## Summary\n\n| Doc | Action | Priority |\n|---|---|---|\n| `data-model.md` | Add `ticket_types` table section | **High** |\n| `api-contracts/` | Create OpenAPI spec for new endpoints | **High** (mandatory per \u00a74.5) |\n| `UC-001-event-catalog.md` | Update API path references, test artifact lists | **Medium** |\n| `glossary.md` | Add \"Ticket Type\" definition | **Medium** |\n| `testing-strategy.md` | Add test class entries & update counts | **Medium** |\n| `setup.md` | Verify expected tables list | **Low** |\n| `sequence-diagrams.md` | Add ticket type creation diagram (optional) | **Low** |\n| `ADR-001-service-boundaries.md` | No change | \u2014 |\n| `PROJECT_CHARTER.md` | No change | \u2014 |\n| `security-guide.md` | No change | \u2014 |\n| `deployment.md` | No change | \u2014 |\n"}], "grading": null}, {"id": "eval-2-sync-dependency-with_skill", "prompt": "I updated the MapStruct version in pom.xml from 1.6.0 to 1.7.0. Git diff shows only pom.xml changed. What docs need updating and what exactly should change?", "eval_id": 2, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Docs Sync Analysis \u2014 MapStruct 1.6.0 \u2192 1.7.0\n\n## Step 0: Load Lessons Learned\n\n**File:** `<skill-path>/lessons.md` \u2014 exists and was read.\n\nRelevant prior lessons:\n- **2026-05-14, lesson 5:** \"Build config changes (`failOnWarning`, compiler flags) must be reflected in `setup.md` 'Spring Boot 4 Note'.\" \u2014 Confirms that `pom.xml` changes (build config) map to `setup.md`.\n- **2026-05-14, lesson 6:** No doc update needed unless the actual schema changes (DTO validation context). Analogous here: a pure version bump with no behavioral change may require minimal doc updates.\n\nNo lesson says \"skip version bumps\" \u2014 proceed with normal workflow.\n\n---\n\n## Step 1: Analyze Code Changes\n\n### Input\nDeveloper reports: only `pom.xml` changed (MapStruct version 1.6.0 \u2192 1.7.0).\n\n### Categorization\n\n| Changed File | Category | Rationale |\n|---|---|---|\n| `pom.xml` | `dependency` | Version change of a build dependency in the Maven POM |\n\nThe file fits category `dependency` exclusively (not entity, endpoint, dto, service, repository, mapper, config, test, infra, security, or docs).\n\n---\n\n## Step 2: Map to Documentation\n\n### Mapping Decision\n\nPer the skill's mapping table:\n\n| Category Found | Doc to Update | Action |\n|---|---|---|\n| `dependency` | `docs/04-implementation/setup.md` | Update versions, build commands, new plugins |\n| `dependency` | `AGENTS.md` | Update versions, build commands, new plugins |\n\n### Docs Analysis\n\n#### Doc #1: `AGENTS.md`\n\n**Location:** `/home/ornelas/Documentos/repositorios/Eventixx/AGENTS.md`\n\n**Current content (line 204):**\n```\n| MapStruct | 1.6.0 |\n```\n\n**Needed change:** Update the version in the \"Key Versions\" table:\n```\n| MapStruct | 1.7.0 |\n```\n\n**Rationale:** The \"Key Versions\" table is the project's single source of truth for dependency versions used by AI agents. An outdated version here would cause agents to reference the wrong version in future code generation or documentation. No other section in `AGENTS.md` mentions the MapStruct version explicitly (the \"Mapping\" section at line 131 describes it by name only, no version).\n\n#### Doc #2: `docs/04-implementation/setup.md`\n\n**Location:** `/home/ornelas/Documentos/repositorios/Eventixx/docs/04-implementation/setup.md`\n\n**Current relevant content (lines 84-86):**\n```\n### MapStruct + Lombok\nMapStruct code generation is automatic during compilation. No manual step required. The `maven-compiler-plugin` in the root POM configures annotation processors in the correct order (Lombok first, then MapStruct).\n```\n\n**Needed change:** **No change required**.\n\n**Rationale:**\n1. `setup.md` does not contain a \"Key Versions\" table \u2014 version numbers are centralized in `AGENTS.md` only.\n2. The \"MapStruct + Lombok\" section describes the *workflow* (annotation processing order, compilation behavior), which is unchanged by a minor version bump.\n3. The \"Spring Boot 4 Note\" (line 87) covers compiler flags (`-parameters`, `-Xlint`, `failOnWarning`), not MapStruct version.\n4. The troubleshooting entry \"MapStruct mapper not found\" (line 190) is about build lifecycle awareness (`mvnw clean compile`), not version-specific.\n5. The tools list (lines 149-154) does not mention MapStruct \u2014 MapStruct is a compile-time annotation processor, not a static analysis tool in the `verify` pipeline.\n\n**Conclusion:** `setup.md` has *no MapStruct version string* to update. The skill's mapping table suggests updating \"versions\" here, but there is no such content in the current file.\n\n#### No Other Docs Affected\n\n| Doc | Reason No Change |\n|---|---|\n| `docs/00-charter/PROJECT_CHARTER.md` | A minor version bump of a compile-time dependency does not alter project vision, scope, or principles |\n| `docs/01-decisions/ADR-*.md` | MapStruct 1.6.0 \u2192 1.7.0 is a routine minor upgrade with no architectural trade-off (no breaking changes, no new patterns). No ADR needed |\n| `docs/02-specs/use-cases/UC-*.md` | No implementation behavior changed. No task status or execution log update needed |\n| `docs/02-specs/data-model.md` | MapStruct is a mapping library with no effect on data model, entities, or schema |\n| `docs/02-specs/api-contracts/*.md` | No endpoint or DTO changed |\n| `docs/02-specs/glossary.md` | No new domain terms introduced |\n| `docs/02-specs/sequence-diagrams.md` | No cross-service flow changed |\n| `docs/03-operations/deployment.md` | No Docker, infra, or deployment config changed |\n| `docs/03-operations/security-guide.md` | MapStruct has no security implications |\n| `docs/03-operations/testing-strategy.md` | MapStruct is compile-time only; test patterns, framework, and coverage unchanged |\n\n---\n\n## Step 3: Apply Updates\n\n### Edit #1: `AGENTS.md` \u2014 Key Versions table\n\n**Target:** Line 204\n\n**Current:**\n```\n| MapStruct | 1.6.0 |\n```\n\n**Proposed:**\n```\n| MapStruct | 1.7.0 |\n```\n\n**Surgical edit:** Replace the single version string \u2014 no surrounding content changes needed. The table remains otherwise identical (column alignment, spacing, other rows unchanged).\n\n---\n\n## Step 4: Verify Consistency\n\nAfter the edit, verify:\n\n| Cross-reference Check | Result |\n|---|---|\n| `AGENTS.md` Key Versions \u2194 `setup.md` | `setup.md` has no version table. No inconsistency. The \"MapStruct + Lombok\" section in `setup.md` does not reference a version number, so it cannot be out of sync |\n| `AGENTS.md` Key Versions \u2194 charter (`PROJECT_CHARTER.md`) | Charter has no version table. Consistently, the version table is only in `AGENTS.md` |\n| `AGENTS.md` Key Versions \u2194 any `docs/01-decisions/ADR-*.md` | No ADR references MapStruct version. No inconsistency |\n| All internal links | No links were added or removed. Existing link structure unchanged |\n| Other versions in table | All other dependencies remain at their current versions. No cascading updates needed |\n\n**Result:** No consistency issues found.\n\n---\n\n## Step 5: Save Lessons Learned\n\nNew lesson to append to `<skill-path>/lessons.md`:\n\n```markdown\n## 2026-05-15\n\n- Pure dependency version bumps (e.g., MapStruct 1.6.0 \u2192 1.7.0) may affect only `AGENTS.md` when `setup.md` does not contain a version table. The mapping table suggests `setup.md` always needs updating for `dependency` category, but a read-before-edit check confirms no content to change \u2014 `setup.md` documents workflows, not version numbers. This is a valid \"no-op\" scenario that should not trigger a spurious edit.\n- A minor version bump (1.6.x \u2192 1.7.x) of a compile-time annotation processor (MapStruct) does not warrant an ADR. The skill's mapping table does not have a specific \"minor dependency version bump\" row, but following the existing logic: no trade-off, no ADR.\n```\n\n---\n\n## Summary\n\n| Doc | Action | Status |\n|---|---|---|\n| `AGENTS.md` | Update MapStruct version: `1.6.0` \u2192 `1.7.0` | \u2705 Proposed |\n| `docs/04-implementation/setup.md` | No MapStruct version string to update | \u23ed\ufe0f Skipped |\n| All other docs | Not affected | \u23ed\ufe0f Skipped |\n"}, {"name": "proposed-edits.md", "type": "text", "content": "# Proposed Edits \u2014 MapStruct 1.6.0 \u2192 1.7.0\n\nOnly one edit is needed across the entire docs tree.\n\n---\n\n## Edit 1: AGENTS.md \u2014 Key Versions Table\n\n### File\n`/home/ornelas/Documentos/repositorios/Eventixx/AGENTS.md`\n\n### Location\nLine 204 (within the \"Key Versions\" table, at the end)\n\n### Current Content\n```\n| MapStruct | 1.6.0 |\n```\n\n### Proposed Content\n```\n| MapStruct | 1.7.0 |\n```\n\n### Edit Command\n```xml\n<edit>\n  <filePath>/home/ornelas/Documentos/repositorios/Eventixx/AGENTS.md</filePath>\n  <oldString>| MapStruct | 1.6.0 |</oldString>\n  <newString>| MapStruct | 1.7.0 |</newString>\n</edit>\n```\n\n### Context (surrounding lines)\n```markdown\n| SpotBugs | 4.9.8 |\n| PMD | 7.24.0 |\n| Checkstyle | 10.23.0 |\n| ArchUnit | 1.4.0 |\n| MapStruct | 1.6.0 |        \u2190 this line changes\n| Lombok | 1.18.36 |\n```\n\n### Verification\nAfter edit, the full table reads:\n```markdown\n| Dependency | Version |\n|------------|---------|\n| Java | 21 |\n| Spring Boot | 4.0.6 |\n| Spring Cloud | 2025.1.0 |\n| Kafka | KRaft (no Zookeeper) |\n| PostgreSQL | 16-alpine |\n| SpotBugs | 4.9.8 |\n| PMD | 7.24.0 |\n| Checkstyle | 10.23.0 |\n| ArchUnit | 1.4.0 |\n| MapStruct | 1.7.0 |\n| Lombok | 1.18.36 |\n```\n\n---\n\n## No Edits Needed: docs/04-implementation/setup.md\n\n`setup.md` has no MapStruct version number to update. The \"MapStruct + Lombok\" section describes the compilation workflow (annotation processor ordering), which is invariant across minor version bumps. The troubleshooting table references \"MapStruct mapper not found\" as a build lifecycle issue, version-independent.\n\n---\n\n## Verification Checklist\n\nAfter applying the proposed edit:\n\n- [x] `AGENTS.md` Key Versions table shows `MapStruct | 1.7.0`\n- [x] `setup.md` unchanged (no version string to update)\n- [x] No dead links introduced\n- [x] No consistency issues with other docs\n- [x] Table column alignment preserved (same pipe spacing)\n"}], "grading": null}, {"id": "eval-2-sync-dependency-without_skill", "prompt": "I updated the MapStruct version in pom.xml from 1.6.0 to 1.7.0. Git diff shows only pom.xml changed. What docs need updating and what exactly should change?", "eval_id": 2, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Analysis: MapStruct version bump (1.6.0 \u2192 1.7.0)\n\n**Trigger:** `pom.xml` line 30 changed `<mapstruct.version>1.6.0</mapstruct.version>` \u2192 `1.7.0`\n\n---\n\n## Files requiring updates\n\n### 1. `AGENTS.md` \u2014 MUST update\n\n**Location:** Line 204, Key Versions table\n\n**Current:**\n```markdown\n| MapStruct | 1.6.0 |\n```\n\n**Change to:**\n```markdown\n| MapStruct | 1.7.0 |\n```\n\n**Why:** This table is the single source of truth for dependency versions used by AI agents and developers. A stale version here directly causes incorrect code generation and confusion.\n\n---\n\n## Files verified \u2014 NO change needed\n\n| File | Reason |\n|------|--------|\n| `docs/04-implementation/setup.md` | References MapStruct conceptually (annotation processor ordering, troubleshooting) but does not mention a specific version number. No update needed. |\n| `docs/02-specs/use-cases/UC-001-event-catalog.md` | Mentions MapStruct as a required dependency for the event catalog service but does not pin a version. No update needed. |\n| `.opencode/instructions/coding-rules.md` | Documents MapStruct coding conventions (`@Mapper(config = MapStructConfig.class)`) \u2014 no version reference. No update needed. |\n| `.opencode/skills/docs-sync/SKILL.md` | Documents the docs-sync pattern for new dependencies but contains no hardcoded version. No update needed. |\n| `.opencode/skills/service-scaffold/SKILL.md` | References `MapStructConfig.java` pattern only. No version reference. No update needed. |\n| `KAFKA_GUIA_ESTUDO.md` | Mentions `EventDocumentMapper` class name only. No version reference. No update needed. |\n\n---\n\n## Summary\n\n**1 file must change** \u2014 only `AGENTS.md`.\n\nThe version lives in exactly two places: `pom.xml` (the changed file) and the Key Versions table in `AGENTS.md`. All other documentation references MapStruct conceptually without pinning a version, so they remain correct.\n"}], "grading": null}, {"id": "eval-3-no-doc-needed-with_skill", "prompt": "I added a private helper method in EventService to normalize event names. Git diff shows only services/EventService.java changed. Do any docs need updating?", "eval_id": 3, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Docs Sync Analysis \u2014 Eval 3 (No Doc Needed)\n\n**Date:** 2026-05-15\n\n**Task:** A developer added a private helper method in EventService to normalize event names. Git diff shows only `services/EventService.java` changed.\n\n---\n\n## Step 0: Load Lessons Learned\n\nLoaded `/home/ornelas/Documentos/repositorios/Eventixx/.opencode/skills/docs-sync/lessons.md`.\n\nRelevant lessons:\n- Service changes map to use case docs (UC-*.md) for Execution Log / task status updates\n- Internal refactoring patterns (like private methods) were not covered in prior lessons, so no specific guidance applies\n\n**Validation checkpoint:** \u2705 Lessons loaded before analysis.\n\n---\n\n## Step 1: Analyze Code Changes\n\n### git diff output (hypothetical)\n\nThe only changed file is `services/EventService.java` \u2014 a private helper method was added:\n\n```java\nprivate String normalizeEventName(String name) {\n    return name.trim().replaceAll(\"\\\\s+\", \" \");\n}\n```\n\n### Categorization\n\n| File | Category | Rationale |\n|------|----------|-----------|\n| `services/EventService.java` | `service` | Matches `services/**/*.java` in the categorization table |\n\nNo other files were changed. No untracked files.\n\n**Validation checkpoint:** \u2705 Every changed file categorized.\n\n---\n\n## Step 2: Map to Documentation\n\n### Mapping Table Lookup\n\n| Category Found | Doc to Update (per table) | What to Update (per table) |\n|----------------|---------------------------|----------------------------|\n| `service` | `docs/02-specs/use-cases/UC-*.md` | Update Execution Log, Lessons Learned, task status |\n\n### Impact Assessment\n\nThe mapping table says `service` \u2192 `UC-*.md` \u2192 Execution Log / task status. However, this default mapping must be evaluated against the **nature** of the change:\n\n1. **Private method** \u2014 invisible to all external consumers. No public API surface changed.\n2. **Internal refactoring** \u2014 no endpoint behavior changed from the client's perspective.\n3. **No use case flow altered** \u2014 the steps a user takes to create/search/view events remain identical.\n4. **No task advancement** \u2014 the normalization is incidental cleanup, not the completion of a documented task.\n5. **No new domain concept** \u2014 \"event name normalization\" is an implementation detail, not a new glossary term.\n\n### Decision\n\n**No documentation update is needed.**\n\n**Rationale:** A private helper method is an implementation detail with zero external visibility. It does not:\n- Alter any endpoint request/response\n- Change the data model (no new columns, entities, or constraints)\n- Introduce a new domain term\n- Modify any use case flow\n- Complete or advance any tracked task\n- Change infrastructure, dependencies, or configuration\n\nThe mapping table's `service \u2192 UC-*.md` rule is intended for changes that add, remove, or modify **public** service methods that alter observable system behavior. A private normalization utility does not meet this threshold.\n\n**Validation checkpoint:** \u2705 Every category has a mapping decision. Decision: no doc update needed.\n\n---\n\n## Step 3: Apply Updates\n\nNo updates to apply. Skipping.\n\n**Validation checkpoint:** \u2705 No edits needed.\n\n---\n\n## Step 4: Verify Consistency\n\nNo docs were modified, so no cross-referencing is required. The existing documentation remains accurate.\n\n**Validation checkpoint:** \u2705 No inconsistencies introduced.\n\n---\n\n## Step 5: Save Lessons Learned\n\nAppending to `/home/ornelas/Documentos/repositorios/Eventixx/.opencode/skills/docs-sync/lessons.md`:\n\n```markdown\n## 2026-05-15\n\n- A private helper method added to a service class does **not** trigger a doc update. The `service \u2192 UC-*.md` mapping only applies to changes in public methods that alter observable behavior, API contracts, or use case flows.\n```\n\n**Validation checkpoint:** \u2705 Lessons saved.\n\n---\n\n## Summary\n\n| Doc | Action | Status |\n|-----|--------|--------|\n| (none) | No docs need updating | \u2705 |\n\n**Why no docs need updating:** The change is a private helper method (`normalizeEventName`) in `EventService.java`. Private methods are implementation details invisible to all external consumers \u2014 they do not change API contracts, data models, use case flows, task status, infrastructure, or domain vocabulary. The docs-sync skill's default `service \u2192 UC-*.md` mapping is only meaningful for public method changes that alter observable system behavior.\n\n**Lessons saved to:** `<skill-path>/lessons.md`\n"}], "grading": null}, {"id": "eval-3-no-doc-needed-without_skill", "prompt": "I added a private helper method in EventService to normalize event names. Git diff shows only services/EventService.java changed. Do any docs need updating?", "eval_id": 3, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Analysis: Private Helper Method in EventService\n\n**Change:** Added a private helper method in `EventService.java` to normalize event names.\n**Scope:** Only `services/event-catalog-service/src/main/java/.../EventService.java` changed.\n**Verdict: No documentation update needed.**\n\n## Reasoning\n\n### 1. The change is purely internal \u2014 no external contract is affected\n\n| Concern | Why unaffected |\n|---------|---------------|\n| REST API | No new endpoint, no changed signature, no new response field. Existing endpoints remain identical. |\n| Kafka events | The normalization happens inside `EventService` before persistence. The `EventPublished` domain event schema is unchanged. |\n| Database schema | No migration, no new column, no changed constraint. Input values are normalized before hitting JPA. |\n| Configuration | No new property, no changed YAML/application config. |\n| OpenAPI spec | No API change \u2014 no endpoint added, removed, or modified. |\n\n### 2. Existing documentation already covers this case generically\n\n- **UC-001-event-catalog.md** (Task 2, execution log): States *\"Services use private `findXxxOrThrow()` helpers\"* as a general pattern. Adding one more private helper (for normalization) is consistent with the documented pattern \u2014 no new pattern to document.\n- **testing-strategy.md** (Quality Gates): Already mandates *\"\u2265 80% line coverage on Service classes\"*. Unit tests for the normalization helper fall implicitly under this existing gate. No new testing strategy is needed.\n- **data-model.md**: Describes tables and columns, not Java-level processing logic.\n\n### 3. What would warrant documentation\n\nThis change is best described as **internal refactoring**. Documentation would be warranted if:\n\n- The normalization algorithm were a domain rule complex enough to be defined in the **glossary** (e.g., \"Event names must be PascalCase with no leading/trailing whitespace\").\n- The normalization were exposed via a new API parameter (it is not \u2014 it is applied transparently).\n- The normalization changed which data reaches Kafka or Elasticsearch (it does not \u2014 same data, just cleaned).\n- A new configuration flag were added to enable/disable normalization (none added).\n\nNone of these conditions apply.\n\n### 4. Conclusion\n\n| Documentation | Needs update? | Reason |\n|---------------|:-------------:|--------|\n| `00-charter/PROJECT_CHARTER.md` | No | Vision/scope unchanged |\n| `01-decisions/ADR-*.md` | No | No architecture decision altered |\n| `02-specs/data-model.md` | No | No database schema change |\n| `02-specs/glossary.md` | No | No new domain term introduced |\n| `02-specs/use-cases/UC-001-event-catalog.md` | No | No flow or acceptance criterion changed |\n| `02-specs/sequence-diagrams.md` | No | No async interaction changed |\n| `03-operations/deployment.md` | No | No infrastructure change |\n| `03-operations/security-guide.md` | No | No auth/authorization change |\n| `03-operations/testing-strategy.md` | No | Existing coverage gate already applies |\n| `04-implementation/setup.md` | No | No new dependency or tooling |\n| `GUIDELINES.md` | No | No documentation framework change |\n\n**A private helper method is an internal implementation detail. It changes no contract visible to other services, API consumers, or infrastructure. Zero documentation files need updating.**\n"}], "grading": null}, {"id": "eval-4-sync-security-with_skill", "prompt": "I added a new security filter chain that requires 2FA for all POST/PUT/DELETE endpoints under /api/v1/admin/. Git diff shows only config/SecurityConfig.java changed. What docs need updating and what exactly should change?", "eval_id": 4, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Docs Sync Analysis \u2014 Eval 4: 2FA Security Filter\n\n**Date:** 2026-05-15\n**Skill version:** 1.1.0\n**Task:** A developer added a new `SecurityFilterChain` requiring 2FA for all POST/PUT/DELETE endpoints under `/api/v1/admin/`. Only `config/SecurityConfig.java` changed.\n\n---\n\n## Step 0: Lessons Learned\n\nLoaded from `<skill-path>/lessons.md`. Relevant guidance:\n- **Security filter changes \u2192 update security-guide.md** (from Reference Guide decision table: \"Security filter added \u2192 Update security-guide.md\")\n- **Glossary updates are easy to forget** \u2014 every new security mechanism that introduces a domain term should trigger a glossary check\n- **UC inline decisions** \u2014 UC-001 has a relevant inline decision (\"Write operations require JWT\") that may need synchronizing\n- **Do not rewrite docs** \u2014 surgical edits only\n\n---\n\n## Step 1: Analyze Code Changes\n\n### Changed Files\n\n| File | Status | Categories |\n|------|--------|-----------|\n| `services/event-catalog-service/src/main/java/com/eventixx/eventcatalog/config/SecurityConfig.java` | Modified | `config`, `security` |\n\n### What Changed (Reconstructed from Scenario)\n\nThe existing `SecurityConfig.java` has a single `SecurityFilterChain` bean that permits all requests (no authentication). The change adds a **second** `@Ordered` `SecurityFilterChain` bean that:\n\n1. Matches paths `/api/v1/admin/**`\n2. Requires 2FA (Two-Factor Authentication) for `POST`/`PUT`/`DELETE` HTTP methods\n3. Continues to permit `GET` requests (for listing/admin reads)\n4. The original filter chain continues to handle all other paths as before\n\nThis is a **dual-category** change: `config` (because it's in the `config/` package) and `security` (because it introduces SecurityFilterChain rules for authentication).\n\n### Validation Checkpoint\n\nEvery changed file categorized: \u2705 `config/SecurityConfig.java` \u2192 [`config`, `security`]\n\n---\n\n## Step 2: Map to Documentation\n\n### Category-to-Doc Mapping\n\n| Category | Doc to Update | What to Update |\n|----------|---------------|---------------|\n| `security` | `docs/03-operations/security-guide.md` | Currently empty (3 lines, header only). Must document the 2FA filter chain, endpoint-level rules, and general security architecture |\n| `security` | `docs/02-specs/glossary.md` | Currently empty (3 lines, header only). Add \"2FA (Two-Factor Authentication)\" definition |\n| `security` | `docs/02-specs/use-cases/UC-001-event-catalog.md` | Update inline decision \"Write operations require JWT\" to mention that admin mutating operations additionally require 2FA |\n| `config` | No direct doc. The config change is a security concern, covered by security-guide.md | \u2014 |\n\n### Docs NOT Needing Updates (and why)\n\n| Doc | Reason |\n|-----|--------|\n| `docs/00-charter/PROJECT_CHARTER.md` | Charter already lists \"Security: Spring Security, JWT\". 2FA is an extension of existing security, not a new principle or scope change |\n| `docs/01-decisions/ADR-*.md` | No new ADR needed \u2014 adding 2FA to admin endpoints is an inline enhancement to an existing security mechanism, not a new architectural trade-off with reversibility concerns. If the implementation were a significant architectural decision (e.g., replacing JWT with OAuth2), an ADR would be warranted |\n| `docs/04-implementation/setup.md` | No new dependencies added (only SecurityConfig.java changed). No new setup steps |\n| `docs/02-specs/data-model.md` | No new entity or column added. 2FA state (if persisted) would be in the User Service's database, not event-catalog's |\n| `docs/02-specs/api-contracts/` | No new endpoints added. The `/api/v1/admin/*` endpoints already existed; only security constraints changed |\n| `docs/03-operations/deployment.md` | No infra changes |\n| `docs/03-operations/testing-strategy.md` | No test pattern changed (unless new tests for 2FA filter were added, but scenario says only SecurityConfig.java changed) |\n| `docs/02-specs/sequence-diagrams.md` | No cross-service flow changed |\n| `AGENTS.md` | No new build commands, dependencies, or service entries |\n\n### Validation Checkpoint\n\nEvery category has a mapping decision: \u2705\n- `security` \u2192 security-guide.md, glossary.md, UC-001-event-catalog.md\n- `config` \u2192 no doc update needed (covered by security mapping)\n\n---\n\n## Step 3: Proposed Edits\n\n### Doc 1: `docs/03-operations/security-guide.md`\n\n**Action:** Populate file with security architecture description (currently empty).\n\n**Sections to add:**\n- Overview of authentication model (JWT + 2FA)\n- Filter chain architecture (two chains: general + admin-2FA)\n- Endpoint security matrix table\n- 2FA verification flow description\n\n**See `proposed-edits.md` for exact content.**\n\n### Doc 2: `docs/02-specs/glossary.md`\n\n**Action:** Add new glossary entry.\n\n**Change:**\n- Insert after existing header:\n  ```markdown\n  | Term | Definition |\n  |------|------------|\n  | 2FA (Two-Factor Authentication) | Authentication method requiring two distinct verification factors. In Eventixx, 2FA is enforced on all mutating operations under `/api/v1/admin/` (POST, PUT, DELETE) as an additional security layer beyond JWT authentication. |\n  ```\n\n### Doc 3: `docs/02-specs/use-cases/UC-001-event-catalog.md`\n\n**Action:** Update existing inline decision.\n\n**Current text (line 45):**\n```\n- **Write operations require JWT:** Only authenticated organizers can create/modify events.\n```\n\n**Proposed text:**\n```\n- **Write operations require JWT; admin operations require 2FA:** Authenticated organizers can create/modify events via standard endpoints. Mutating operations under `/api/v1/admin/` additionally require Two-Factor Authentication (2FA) verification for elevated security.\n```\n\n---\n\n## Step 4: Verify Consistency\n\nNo cross-reference concerns identified:\n- `AGENTS.md` base build commands unchanged\n- `PROJECT_CHARTER.md` security section already accurate (\"Spring Security, JWT\")\n- `setup.md` dependency list unchanged\n- No dead links introduced (no new doc files created)\n\n---\n\n## Summary\n\n| Doc | Action | Status |\n|-----|--------|--------|\n| `docs/03-operations/security-guide.md` | Populate with security architecture | \ud83d\udd32 Proposed |\n| `docs/02-specs/glossary.md` | Add \"2FA\" term | \ud83d\udd32 Proposed |\n| `docs/02-specs/use-cases/UC-001-event-catalog.md` | Update inline decision | \ud83d\udd32 Proposed |\n| `docs/00-charter/PROJECT_CHARTER.md` | No change needed | \u2705 |\n| `docs/04-implementation/setup.md` | No change needed | \u2705 |\n| `docs/02-specs/data-model.md` | No change needed | \u2705 |\n| `docs/03-operations/deployment.md` | No change needed | \u2705 |\n| `docs/03-operations/testing-strategy.md` | No change needed | \u2705 |\n| `docs/01-decisions/ADR-*.md` | No change needed | \u2705 |\n| `docs/02-specs/sequence-diagrams.md` | No change needed | \u2705 |\n"}, {"name": "proposed-edits.md", "type": "text", "content": "# Proposed Edits \u2014 Eval 4: 2FA Security Filter\n\n**Date:** 2026-05-15\n**Skill version:** 1.1.0\n\n---\n\n## Edit 1: `docs/03-operations/security-guide.md`\n\n**Action:** Rewrite empty file with security architecture content.\n\n**Current content (3 lines):**\n```markdown\n# Security Guide\n\n> Authentication, authorization, and data protection.\n```\n\n**Proposed content:**\n\n```markdown\n# Security Guide\n\n> Authentication, authorization, and data protection.\n\n## Authentication Model\n\nEventixx uses a multi-layered authentication model:\n\n1. **JWT Authentication** \u2014 Stateless bearer tokens issued by the User Service. Required for all authenticated requests.\n2. **Two-Factor Authentication (2FA)** \u2014 Additional verification factor required for sensitive admin operations.\n\n## Filter Chain Architecture\n\nEach service configures Spring Security `SecurityFilterChain` beans. The event-catalog-service defines two filter chains:\n\n### Chain 1: General Filter Chain (default)\n\n| Property | Value |\n|----------|-------|\n| Order | Default (lowest priority) |\n| Matcher | All requests not matched by Chain 2 |\n| GET endpoints | Public (`/api/v1/events/**`, `/api/v1/venues/**`, `/api/v1/categories/**`) |\n| Swagger/Actuator | Public (`/swagger-ui/**`, `/v3/api-docs/**`, `/actuator/**`) |\n| All other requests | Permitted (no auth) |\n\n### Chain 2: Admin 2FA Filter Chain\n\n| Property | Value |\n|----------|-------|\n| Order | Higher priority (e.g., `@Order(1)`) |\n| Matcher | `/api/v1/admin/**` |\n| GET requests | Permitted (read-only admin views) |\n| POST/PUT/DELETE requests | **2FA required** \u2014 caller must present a valid 2FA token in addition to JWT |\n| 2FA verification | Enforced via a custom `OncePerRequestFilter` added to the filter chain that validates the 2FA code/header before allowing the request to proceed |\n\n## Endpoint Security Matrix\n\n| Method | Path Pattern | Authentication | 2FA Required |\n|--------|-------------|---------------|--------------|\n| GET | `/api/v1/events/**` | None | No |\n| GET | `/api/v1/venues/**` | None | No |\n| GET | `/api/v1/categories/**` | None | No |\n| POST/PUT/DELETE | `/api/v1/events/**` | JWT | No |\n| POST/PUT/DELETE | `/api/v1/venues/**` | JWT | No |\n| POST/PUT/DELETE | `/api/v1/categories/**` | JWT | No |\n| GET | `/api/v1/admin/**` | JWT | No |\n| POST/PUT/DELETE | `/api/v1/admin/**` | JWT | **Yes** |\n| GET | `/actuator/**` | None | No |\n| GET | `/swagger-ui/**`, `/v3/api-docs/**` | None | No |\n\n## 2FA Verification Flow\n\n1. Client authenticates with JWT as usual\n2. For mutating operations on `/api/v1/admin/**`, the Admin 2FA Filter intercepts the request\n3. Client must provide a valid 2FA token (e.g., via `X-2FA-Code` request header)\n4. The filter validates the token against the stored 2FA secret (associated with the user's account in the User Service)\n5. If valid: request proceeds to the controller\n6. If invalid/missing: respond with `401 Unauthorized`\n\n## Security Configuration (event-catalog-service)\n\n```java\n@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Bean\n    @Order(1)\n    public SecurityFilterChain admin2faFilterChain(HttpSecurity http) throws Exception {\n        http.securityMatcher(\"/api/v1/admin/**\")\n            .csrf(AbstractHttpConfigurer::disable)\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(HttpMethod.GET).permitAll()\n                .anyRequest().authenticated())\n            .addFilterBefore(new Admin2faFilter(), BasicAuthenticationFilter.class);\n        return http.build();\n    }\n\n    @Bean\n    public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {\n        http.csrf(AbstractHttpConfigurer::disable)\n            .formLogin(AbstractHttpConfigurer::disable)\n            .httpBasic(AbstractHttpConfigurer::disable)\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\"/actuator/**\").permitAll()\n                .requestMatchers(\"/swagger-ui/**\", \"/v3/api-docs/**\").permitAll()\n                .requestMatchers(HttpMethod.GET, \"/api/v1/events/**\").permitAll()\n                .requestMatchers(HttpMethod.GET, \"/api/v1/venues/**\").permitAll()\n                .requestMatchers(HttpMethod.GET, \"/api/v1/categories/**\").permitAll()\n                .anyRequest().permitAll());\n        return http.build();\n    }\n}\n```\n\n---\n\n## Edit 2: `docs/02-specs/glossary.md`\n\n**Action:** Add \"2FA\" entry.\n\n**Current content (3 lines):**\n```markdown\n# Glossary\n\n> Domain-specific terminology and ubiquitous language.\n```\n\n**Edit:** Append after the existing content:\n\n```markdown\n| Term | Definition |\n|------|------------|\n| 2FA (Two-Factor Authentication) | Authentication method requiring two distinct verification factors. In Eventixx, 2FA is enforced on all mutating operations under `/api/v1/admin/` (POST, PUT, DELETE) as an additional security layer beyond JWT authentication. |\n```\n\n---\n\n## Edit 3: `docs/02-specs/use-cases/UC-001-event-catalog.md`\n\n**Action:** Update inline decision on line 45.\n\n**Old text (line 43-45):**\n```\n### Inline Decisions (no ADR needed)\n- **Public read access:** `GET /api/v1/events/**` requires no authentication to simulate a real ticketing platform.\n- **Write operations require JWT:** Only authenticated organizers can create/modify events.\n```\n\n**New text:**\n```\n### Inline Decisions (no ADR needed)\n- **Public read access:** `GET /api/v1/events/**` requires no authentication to simulate a real ticketing platform.\n- **Write operations require JWT; admin operations require 2FA:** Authenticated organizers can create/modify events via standard endpoints. Mutating operations under `/api/v1/admin/` additionally require Two-Factor Authentication (2FA) verification for elevated security.\n```\n\n---\n\n## Lessons Learned\n\nAfter executing this sync, append to `<skill-path>/lessons.md`:\n\n```markdown\n## 2026-05-15\n\n- Security-only changes (only `config/SecurityConfig.java` modified) map to 3 docs: `security-guide.md`, `glossary.md`, and the relevant UC inline decisions. Do not over-update `setup.md` or `data-model.md` if no dependencies or entities changed.\n- An empty `security-guide.md` should be populated rather than just patched \u2014 the first security change becomes the foundation for future ones.\n- Adding 2FA is an inline decision enhancement, not an ADR-worthy trade-off, unless the implementation changes the auth provider (e.g., JWT \u2192 OAuth2) or introduces a new infrastructure dependency.\n```\n"}], "grading": null}, {"id": "eval-4-sync-security-without_skill", "prompt": "I added a new security filter chain that requires 2FA for all POST/PUT/DELETE endpoints under /api/v1/admin/. Git diff shows only config/SecurityConfig.java changed. What docs need updating and what exactly should change?", "eval_id": 4, "outputs": [{"name": "analysis.md", "type": "text", "content": "# Analysis: 2FA Security Filter Chain for Admin Endpoints\n\n**Change:** New `SecurityFilterChain` requiring 2FA for all POST/PUT/DELETE under `/api/v1/admin/`.\n**Git diff scope:** `services/event-catalog-service/src/main/java/com/eventixx/eventcatalog/config/SecurityConfig.java` (only file changed).\n\n---\n\n## Summary\n\n| Layer | File | Must update? | Impact |\n|-------|------|-------------|--------|\n| **Security** | `docs/03-operations/security-guide.md` | **YES** | Currently empty (3 lines). Needs full 2FA + admin endpoint documentation. |\n| **Charter** | `docs/00-charter/PROJECT_CHARTER.md` | **YES** | Security stack entry must mention 2FA; admin operations are now gated. |\n| **Use Case** | `docs/02-specs/use-cases/UC-001-event-catalog.md` | **YES** | Inline decision about write auth needs updating; acceptance criteria out of date. |\n| **Testing** | `docs/03-operations/testing-strategy.md` | **YES** | New test patterns needed for 2FA scenarios. |\n| **Glossary** | `docs/02-specs/glossary.md` | Optional | Add \"2FA\" definition. |\n| **Setup** | `docs/04-implementation/setup.md` | Optional | If 2FA requires env vars or external authenticator service. |\n| **Deployment** | `docs/03-operations/deployment.md` | No | Pure code change \u2014 no infra impact. |\n| **Data Model** | `docs/02-specs/data-model.md` | No | No schema change. |\n| **Sequence Diagrams** | `docs/02-specs/sequence-diagrams.md` | No | Flow is a single-service concern. |\n| **ADRs** | `docs/01-decisions/ADR-*.md` | No (borderline) | Change is localized, uses existing Spring Security pattern \u2192 inline decision, not an ADR. |\n\n---\n\n## Detailed Changes Required\n\n### 1. `docs/03-operations/security-guide.md` \u2014 FULL UPDATE (high priority)\n\nCurrently a 3-line placeholder. Must be expanded to document:\n\n#### 1.1 Authentication Model\n- JWT-based authentication for all endpoints (existing)\n- **New:** 2FA enforced on `/api/v1/admin/**` for POST/PUT/DELETE\n\n#### 1.2 Filter Chain Architecture\n- **SecurityFilterChain #1** (default): applies to all endpoints\n  - `GET /api/v1/events/**`, `GET /api/v1/venues/**`, `GET /api/v1/categories/**` \u2192 permitAll\n  - `GET /api/v1/admin/**` \u2192 requires `SCOPE_admin` or equivalent role\n  - Mutating endpoints outside `/admin/` \u2192 requires JWT (existing)\n- **SecurityFilterChain #2** (admin-2fa): new chain ordered before default\n  - Path: `/api/v1/admin/**`\n  - Methods: POST, PUT, DELETE\n  - Requires: valid JWT **AND** 2FA code verification\n\n#### 1.3 2FA Verification Flow\n1. Client authenticates with JWT (username/password \u2192 token)\n2. For admin write ops, client sends `X-2FA-Code` header or `X-2FA-Token` header\n3. `SecurityFilterChain` extracts the 2FA code from the header\n4. Code is verified against a TOTP-based authenticator (or mock for development)\n5. On success: request proceeds; on failure: `401 Unauthorized` with `X-2FA-Required: true`\n\n#### 1.4 Endpoint Matrix\n\n| Path Pattern | Methods | Auth Required | 2FA Required |\n|---|---|---|---|\n| `/actuator/**` | ALL | None | No |\n| `/swagger-ui/**`, `/v3/api-docs/**` | GET | None | No |\n| `/api/v1/events/**` | GET | None | No |\n| `/api/v1/venues/**` | GET | None | No |\n| `/api/v1/categories/**` | GET | None | No |\n| `/api/v1/admin/**` | POST, PUT, DELETE | JWT | **Yes** |\n| `/api/v1/admin/**` | GET | JWT | No |\n| Any other request | ALL | JWT | No |\n\n#### 1.5 Development vs Production\n- **Dev:** 2FA can be bypassed via `application-dev.yml` flag or always-valid mock code\n- **Prod:** TOTP-based (Google Authenticator, Authy) with per-user secret stored in User Service\n\n---\n\n### 2. `docs/00-charter/PROJECT_CHARTER.md` \u2014 Section 2.2 (tech stack)\n\n**Line 56** currently reads:\n```markdown\n- **Security:** Spring Security, JWT (io.jsonwebtoken)\n```\n\nMust be updated to:\n```markdown\n- **Security:** Spring Security, JWT (io.jsonwebtoken), 2FA (TOTP-based authenticator)\n```\n\n---\n\n### 3. `docs/02-specs/use-cases/UC-001-event-catalog.md` \u2014 Multiple sections\n\n#### 3.1 Inline Decisions (lines 43-49)\nThe existing entry at line 45:\n```markdown\n- **Write operations require JWT:** Only authenticated organizers can create/modify events.\n```\nMust be updated to:\n```markdown\n- **Write operations require JWT:** Only authenticated organizers can create/modify events.\n- **Admin write operations require 2FA:** POST/PUT/DELETE under `/api/v1/admin/**` require\n  both JWT authentication and a valid 2FA code (TOTP). Implemented as a dedicated\n  `SecurityFilterChain` in `SecurityConfig.java`, ordered before the default chain.\n  The 2FA code is passed via `X-2FA-Code` request header. In dev mode, 2FA can be\n  disabled via spring profile flag.\n```\n\n#### 3.2 Exceptions table (lines 17-25)\nAdd new row:\n```markdown\n| 2FA code missing or invalid | 401 | 2FA code is required for admin write operations |\n```\n\n#### 3.3 Acceptance Criteria (lines 159-171)\nAdd:\n```markdown\n- [ ] Admin write endpoints require 2FA code; missing/invalid code returns 401\n```\n\n#### 3.4 Architecture Decisions section\nAdd reference to the 2FA filter chain decision. This could be an inline decision (since it's localized, uses existing Spring Security pattern) \u2014 no ADR needed per GUIDELINES criteria.\n\n---\n\n### 4. `docs/03-operations/testing-strategy.md` \u2014 New test patterns\n\n#### 4.1 Test Package Updates (section 4)\nAdd new test categories:\n\n```\nweb/\n\u251c\u2500\u2500 SecurityConfigWebTest.java       # Tests for 2FA filter chain\n\u251c\u2500\u2500 AdminControllerWebTest.java      # Tests for admin endpoints (if applicable)\n```\n\n```\nintegration/\n\u251c\u2500\u2500 SecurityIntegrationTest.java     # 2FA challenge-response flow\n```\n\n#### 4.2 New 2FA Test Patterns (section 7)\nAdd test examples:\n\n```java\n// Web test \u2014 2FA required for admin POST\n@WebMvcTest(AdminController.class)\nclass SecurityConfigWebTest {\n    @Autowired private MockMvc mockMvc;\n    @MockitoBean private TwoFactorService twoFactorService;\n\n    @Test\n    void shouldRejectAdminPostWithout2FA() throws Exception {\n        mockMvc.perform(post(\"/api/v1/admin/events\")\n                .header(\"X-User-Id\", \"admin-1\"))\n            .andExpect(status().isUnauthorized())\n            .andExpect(header().string(\"X-2FA-Required\", \"true\"));\n    }\n\n    @Test\n    void shouldAllowAdminPostWithValid2FA() throws Exception {\n        when(twoFactorService.verify(anyString(), anyString())).thenReturn(true);\n        mockMvc.perform(post(\"/api/v1/admin/events\")\n                .header(\"X-User-Id\", \"admin-1\")\n                .header(\"X-2FA-Code\", \"123456\"))\n            .andExpect(status().isCreated());\n    }\n}\n```\n\n#### 4.3 Quality Gates (section 8)\nAdd:\n| Gate | Criteria |\n|------|----------|\n| **Security** | All admin write endpoints tested with missing/invalid/valid 2FA; public GETs still pass without 2FA |\n\n---\n\n### 5. `docs/02-specs/glossary.md` \u2014 Optional\n\nAdd entry:\n```markdown\n**2FA (Two-Factor Authentication):** Authentication method requiring both a JWT token (something you\nhave) and a time-based one-time password (TOTP, something you know). Enforced on all POST/PUT/DELETE\noperations under `/api/v1/admin/**`.\n```\n\n---\n\n### 6. `docs/04-implementation/setup.md` \u2014 Conditional\n\nOnly update if the 2FA implementation introduces:\n- New environment variables (e.g., `APP_2FA_ENABLED=true`)\n- New external dependency (e.g., TOTP library like `com.eatthepath:java-otp`)\n- New Docker service (e.g., authenticator app \u2014 unlikely for a filter-level change)\n\nIf none of the above, no setup.md changes needed.\n\n---\n\n## Files NOT Affected (with rationale)\n\n| File | Why not affected |\n|------|-----------------|\n| `docs/02-specs/data-model.md` | No database schema changes \u2014 2FA is a filter-level concern, not persisted in event-catalog-db |\n| `docs/03-operations/deployment.md` | No infrastructure changes \u2014 filter chain runs in-process |\n| `docs/02-specs/sequence-diagrams.md` | Single-service security concern \u2014 no multi-service flow |\n| `docs/01-decisions/ADR-*.md` | Per GUIDELINES section 3 (UC Does NOT Trigger ADR): change is localized to one config file, uses existing Spring Security pattern. Document as inline decision in UC-001 instead. |\n\n---\n\n## Potential Issues & Risks\n\n1. **Backward compatibility:** Existing clients hitting `/api/v1/admin/**` will break if they don't send 2FA codes. Migration strategy needed \u2014 could phase in via `X-2FA-Required: true` response header warning before enforcing.\n2. **Dev experience:** Developers need a way to bypass 2FA locally (profile flag or mock). Must be documented in both `security-guide.md` and `setup.md`.\n3. **Test isolation:** 2FA filter chain must not interfere with existing public GET endpoints. Integration tests must verify public endpoints remain accessible without any auth headers.\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "docs-sync", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-15T12:24:45Z", "evals_run": [1, 2, 3, 4], "runs_per_configuration": 3}, "runs": [{"eval_id": 1, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 4, "failed": 0, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "data-model-updated", "passed": true, "evidence": "Output states: 'The ticket_types table is already fully documented at data-model.md:99-113' \u2014 explicitly references ticket_types in data-model context"}, {"text": "api-contracts-updated", "passed": true, "evidence": "Output states: 'Category: endpoint + dto \u2192 docs/02-specs/api-contracts/' \u2014 correctly identifies api-contracts as relevant, but concludes OpenAPI annotations suffice (Lesson #1)"}, {"text": "edits-are-surgical", "passed": true, "evidence": "Created proposed-edits.md with specific surgical changes. Output references 'surgical edit' and specific line-level changes"}, {"text": "categorizes-all-files", "passed": true, "evidence": "Step 1 table categorizes all 4 files: entities/TicketType.java \u2192 entity, controllers/EventController.java \u2192 endpoint, dto/TicketTypeRequest.java \u2192 dto, dto/TicketTypeResponse.java \u2192 dto"}], "notes": []}, {"eval_id": 2, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 4, "failed": 0, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "setup-md-identified", "passed": true, "evidence": "Output analyzes setup.md (Doc #2) and concludes 'No change required' after reading current content \u2014 maps dependency category to setup.md per skill table"}, {"text": "agents-md-identified", "passed": true, "evidence": "Output states: 'Doc #1: AGENTS.md \u2014 Update MapStruct version: 1.6.0 \u2192 1.7.0' with specific line reference (line 204)"}, {"text": "mentions-cross-reference", "passed": true, "evidence": "Step 4 Verify Consistency checks cross-references between AGENTS.md and setup.md with a dedicated table"}, {"text": "only-dependency-category", "passed": true, "evidence": "Output states: 'Categorization: pom.xml \u2192 dependency' and 'The file fits category dependency exclusively'"}], "notes": []}, {"eval_id": 3, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 0.75, "passed": 3, "failed": 1, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "no-doc-update", "passed": true, "evidence": "Output states: 'No documentation update is needed' and summary table shows '(none)'"}, {"text": "private-method-reason", "passed": true, "evidence": "Output states: 'Private method \u2014 invisible to all external consumers. No public API surface changed.'"}, {"text": "service-category", "passed": true, "evidence": "Output categorizes as 'service' in Step 1 table: 'services/EventService.java \u2192 service'"}, {"text": "no-false-positives", "passed": false, "evidence": "Output references .md files (e.g., 'docs/02-specs/use-cases/UC-*.md') in the analysis to explain why they don't need updating. Assertion too strict \u2014 references to .md are necessary when explaining why docs don't need changes"}], "notes": []}, {"eval_id": 4, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 4, "failed": 0, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "security-guide-identified", "passed": true, "evidence": "Output states: 'security \u2192 docs/03-operations/security-guide.md' and proposes full content for the file in proposed-edits.md"}, {"text": "reads-before-editing", "passed": true, "evidence": "Lesson #3 applied: 'Read the current file first'. Output reads and displays current content of security-guide.md (3 lines) before proposing edits"}, {"text": "security-category", "passed": true, "evidence": "Output categorizes as '[config, security]' in Step 1 table: 'config/SecurityConfig.java \u2192 [config, security]'"}, {"text": "admin-endpoints-mentioned", "passed": true, "evidence": "Output repeatedly references '/api/v1/admin/' \u2014 'Admin 2FA Filter Chain', 'admin endpoints', 'mutating operations under /api/v1/admin/'"}], "notes": []}, {"eval_id": 1, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.75, "passed": 3, "failed": 1, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "data-model-updated", "passed": true, "evidence": "Output states: '1. docs/02-specs/data-model.md \u2014 UPDATE needed' with full table definition including ticket_types columns"}, {"text": "api-contracts-updated", "passed": true, "evidence": "Output states: '2. docs/02-specs/api-contracts/ \u2014 CREATE needed' with paths and schemas for GET/POST endpoints"}, {"text": "edits-are-surgical", "passed": false, "evidence": "Output recommends creating new files and full sections but does not use the word 'edit' or reference surgical changes"}, {"text": "categorizes-all-files", "passed": true, "evidence": "Initial table categorizes all 4 files: entities/TicketType.java \u2192 'Entity (JPA)', controllers/EventController.java \u2192 'Controller (modified)', DTOs \u2192 'API Contract'"}], "notes": []}, {"eval_id": 2, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.5, "passed": 2, "failed": 2, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "setup-md-identified", "passed": true, "evidence": "Output mentions 'docs/04-implementation/setup.md' and correctly concludes no version string exists to update"}, {"text": "agents-md-identified", "passed": true, "evidence": "Output states: '1. AGENTS.md \u2014 MUST update' with specific line (line 204) and version change"}, {"text": "mentions-cross-reference", "passed": false, "evidence": "No explicit cross-referencing step. Output lists files independently without a cross-reference check"}, {"text": "only-dependency-category", "passed": false, "evidence": "No formal categorization step. Output lists files but does not categorize the change as 'dependency' type"}], "notes": []}, {"eval_id": 3, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.5, "passed": 2, "failed": 2, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "no-doc-update", "passed": true, "evidence": "Output states: 'Verdict: No documentation update needed' and 'Zero documentation files need updating'"}, {"text": "private-method-reason", "passed": true, "evidence": "Output states: 'The change is purely internal \u2014 no external contract is affected' and 'A private helper method is an internal implementation detail'"}, {"text": "service-category", "passed": false, "evidence": "No formal categorization step. Output mentions file path containing 'services/' but does not explicitly categorize as 'service' type"}, {"text": "no-false-positives", "passed": false, "evidence": "Output references .md files (e.g., '00-charter/PROJECT_CHARTER.md', '01-decisions/ADR-*.md') in the analysis table. Assertion too strict \u2014 references to .md are necessary when explaining why docs don't need changes"}], "notes": []}, {"eval_id": 4, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.75, "passed": 3, "failed": 1, "total": 4, "time_seconds": 0.0, "tokens": 0, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "security-guide-identified", "passed": true, "evidence": "Output states: 'docs/03-operations/security-guide.md \u2014 FULL UPDATE' with detailed proposed content"}, {"text": "reads-before-editing", "passed": false, "evidence": "Output proposes full rewrite but does not explicitly state reading the current file first. Assumes current content is a placeholder without verification step"}, {"text": "security-category", "passed": true, "evidence": "Output groups analysis by 'Security' layer and categorizes the change under 'Security' \u2014 implicitly a security categorization"}, {"text": "admin-endpoints-mentioned", "passed": true, "evidence": "Output repeatedly references '/api/v1/admin/', 'admin write operations', 'admin endpoints' with specific path patterns"}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 0.9375, "stddev": 0.125, "min": 0.75, "max": 1.0}, "time_seconds": {"mean": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0}, "tokens": {"mean": 0.0, "stddev": 0.0, "min": 0, "max": 0}}, "without_skill": {"pass_rate": {"mean": 0.625, "stddev": 0.1443, "min": 0.5, "max": 0.75}, "time_seconds": {"mean": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0}, "tokens": {"mean": 0.0, "stddev": 0.0, "min": 0, "max": 0}}, "delta": {"pass_rate": "+0.31", "time_seconds": "+0.0", "tokens": "+0"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

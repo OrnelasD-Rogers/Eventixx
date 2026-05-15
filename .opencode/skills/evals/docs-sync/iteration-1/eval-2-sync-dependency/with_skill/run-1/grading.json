@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-2-with_skill",
+  "eval_name": "sync-dependency",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "setup-md-identified",
+      "passed": true,
+      "evidence": "Output analyzes setup.md (Doc #2) and concludes 'No change required' after reading current content \u2014 maps dependency category to setup.md per skill table"
+    },
+    {
+      "text": "agents-md-identified",
+      "passed": true,
+      "evidence": "Output states: 'Doc #1: AGENTS.md \u2014 Update MapStruct version: 1.6.0 \u2192 1.7.0' with specific line reference (line 204)"
+    },
+    {
+      "text": "mentions-cross-reference",
+      "passed": true,
+      "evidence": "Step 4 Verify Consistency checks cross-references between AGENTS.md and setup.md with a dedicated table"
+    },
+    {
+      "text": "only-dependency-category",
+      "passed": true,
+      "evidence": "Output states: 'Categorization: pom.xml \u2192 dependency' and 'The file fits category dependency exclusively'"
+    }
+  ],
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 4,
+    "failed": 0,
+    "total": 4
+  }
+}

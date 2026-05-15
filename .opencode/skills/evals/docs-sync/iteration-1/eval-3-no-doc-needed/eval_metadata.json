@@ -1,0 +1,32 @@
+{
+  "eval_id": 3,
+  "eval_name": "no-doc-needed",
+  "prompt": "I added a private helper method in EventService to normalize event names. Git diff shows only services/EventService.java changed. Do any docs need updating?",
+  "expected_output": "Concludes no documentation needs updating. Returns an empty or minimal summary. Does NOT suggest creating or modifying any documentation files.",
+  "assertions": [
+    {
+      "name": "no-doc-update",
+      "description": "Concludes no documentation needs updating",
+      "assertion_type": "output_contains",
+      "expected": "no"
+    },
+    {
+      "name": "private-method-reason",
+      "description": "Explains reason: private method doesn't affect public API",
+      "assertion_type": "output_contains",
+      "expected": "private"
+    },
+    {
+      "name": "service-category",
+      "description": "Categorizes the change as service type",
+      "assertion_type": "output_contains",
+      "expected": "service"
+    },
+    {
+      "name": "no-false-positives",
+      "description": "Does NOT suggest updating any specific doc file",
+      "assertion_type": "output_not_contains",
+      "expected": ".md"
+    }
+  ]
+}

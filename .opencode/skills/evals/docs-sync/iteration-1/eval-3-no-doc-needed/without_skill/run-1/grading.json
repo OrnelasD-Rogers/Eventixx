@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-3-without_skill",
+  "eval_name": "no-doc-needed",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "no-doc-update",
+      "passed": true,
+      "evidence": "Output states: 'Verdict: No documentation update needed' and 'Zero documentation files need updating'"
+    },
+    {
+      "text": "private-method-reason",
+      "passed": true,
+      "evidence": "Output states: 'The change is purely internal \u2014 no external contract is affected' and 'A private helper method is an internal implementation detail'"
+    },
+    {
+      "text": "service-category",
+      "passed": false,
+      "evidence": "No formal categorization step. Output mentions file path containing 'services/' but does not explicitly categorize as 'service' type"
+    },
+    {
+      "text": "no-false-positives",
+      "passed": false,
+      "evidence": "Output references .md files (e.g., '00-charter/PROJECT_CHARTER.md', '01-decisions/ADR-*.md') in the analysis table. Assertion too strict \u2014 references to .md are necessary when explaining why docs don't need changes"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.5,
+    "passed": 2,
+    "failed": 2,
+    "total": 4
+  }
+}

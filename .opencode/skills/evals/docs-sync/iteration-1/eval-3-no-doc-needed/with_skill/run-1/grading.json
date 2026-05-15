@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-3-with_skill",
+  "eval_name": "no-doc-needed",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "no-doc-update",
+      "passed": true,
+      "evidence": "Output states: 'No documentation update is needed' and summary table shows '(none)'"
+    },
+    {
+      "text": "private-method-reason",
+      "passed": true,
+      "evidence": "Output states: 'Private method \u2014 invisible to all external consumers. No public API surface changed.'"
+    },
+    {
+      "text": "service-category",
+      "passed": true,
+      "evidence": "Output categorizes as 'service' in Step 1 table: 'services/EventService.java \u2192 service'"
+    },
+    {
+      "text": "no-false-positives",
+      "passed": false,
+      "evidence": "Output references .md files (e.g., 'docs/02-specs/use-cases/UC-*.md') in the analysis to explain why they don't need updating. Assertion too strict \u2014 references to .md are necessary when explaining why docs don't need changes"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.75,
+    "passed": 3,
+    "failed": 1,
+    "total": 4
+  }
+}

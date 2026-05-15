@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-1-without_skill",
+  "eval_name": "sync-new-entity",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "data-model-updated",
+      "passed": true,
+      "evidence": "Output states: '1. docs/02-specs/data-model.md \u2014 UPDATE needed' with full table definition including ticket_types columns"
+    },
+    {
+      "text": "api-contracts-updated",
+      "passed": true,
+      "evidence": "Output states: '2. docs/02-specs/api-contracts/ \u2014 CREATE needed' with paths and schemas for GET/POST endpoints"
+    },
+    {
+      "text": "edits-are-surgical",
+      "passed": false,
+      "evidence": "Output recommends creating new files and full sections but does not use the word 'edit' or reference surgical changes"
+    },
+    {
+      "text": "categorizes-all-files",
+      "passed": true,
+      "evidence": "Initial table categorizes all 4 files: entities/TicketType.java \u2192 'Entity (JPA)', controllers/EventController.java \u2192 'Controller (modified)', DTOs \u2192 'API Contract'"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.75,
+    "passed": 3,
+    "failed": 1,
+    "total": 4
+  }
+}

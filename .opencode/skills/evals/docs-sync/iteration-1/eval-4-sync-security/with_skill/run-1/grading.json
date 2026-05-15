@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-4-with_skill",
+  "eval_name": "sync-security",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "security-guide-identified",
+      "passed": true,
+      "evidence": "Output states: 'security \u2192 docs/03-operations/security-guide.md' and proposes full content for the file in proposed-edits.md"
+    },
+    {
+      "text": "reads-before-editing",
+      "passed": true,
+      "evidence": "Lesson #3 applied: 'Read the current file first'. Output reads and displays current content of security-guide.md (3 lines) before proposing edits"
+    },
+    {
+      "text": "security-category",
+      "passed": true,
+      "evidence": "Output categorizes as '[config, security]' in Step 1 table: 'config/SecurityConfig.java \u2192 [config, security]'"
+    },
+    {
+      "text": "admin-endpoints-mentioned",
+      "passed": true,
+      "evidence": "Output repeatedly references '/api/v1/admin/' \u2014 'Admin 2FA Filter Chain', 'admin endpoints', 'mutating operations under /api/v1/admin/'"
+    }
+  ],
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 4,
+    "failed": 0,
+    "total": 4
+  }
+}

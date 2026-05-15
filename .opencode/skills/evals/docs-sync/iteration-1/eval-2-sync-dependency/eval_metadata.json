@@ -1,0 +1,32 @@
+{
+  "eval_id": 2,
+  "eval_name": "sync-dependency",
+  "prompt": "I updated the MapStruct version in pom.xml from 1.6.0 to 1.7.0. Git diff shows only pom.xml changed. What docs need updating and what exactly should change?",
+  "expected_output": "Identifies that setup.md and AGENTS.md need MapStruct version updated. Cross-references both files after edit to ensure consistency.",
+  "assertions": [
+    {
+      "name": "setup-md-identified",
+      "description": "Identifies setup.md needs version update",
+      "assertion_type": "output_contains",
+      "expected": "setup.md"
+    },
+    {
+      "name": "agents-md-identified",
+      "description": "Identifies AGENTS.md needs version update",
+      "assertion_type": "output_contains",
+      "expected": "AGENTS.md"
+    },
+    {
+      "name": "mentions-cross-reference",
+      "description": "Cross-references versions between setup.md and AGENTS.md",
+      "assertion_type": "output_contains",
+      "expected": "cross"
+    },
+    {
+      "name": "only-dependency-category",
+      "description": "Correctly categorizes the change as dependency type only",
+      "assertion_type": "output_contains",
+      "expected": "dependency"
+    }
+  ]
+}

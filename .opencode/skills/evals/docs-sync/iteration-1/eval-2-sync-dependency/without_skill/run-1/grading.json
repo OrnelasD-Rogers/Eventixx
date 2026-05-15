@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-2-without_skill",
+  "eval_name": "sync-dependency",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "setup-md-identified",
+      "passed": true,
+      "evidence": "Output mentions 'docs/04-implementation/setup.md' and correctly concludes no version string exists to update"
+    },
+    {
+      "text": "agents-md-identified",
+      "passed": true,
+      "evidence": "Output states: '1. AGENTS.md \u2014 MUST update' with specific line (line 204) and version change"
+    },
+    {
+      "text": "mentions-cross-reference",
+      "passed": false,
+      "evidence": "No explicit cross-referencing step. Output lists files independently without a cross-reference check"
+    },
+    {
+      "text": "only-dependency-category",
+      "passed": false,
+      "evidence": "No formal categorization step. Output lists files but does not categorize the change as 'dependency' type"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.5,
+    "passed": 2,
+    "failed": 2,
+    "total": 4
+  }
+}

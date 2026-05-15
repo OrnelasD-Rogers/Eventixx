@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-1-with_skill",
+  "eval_name": "sync-new-entity",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "data-model-updated",
+      "passed": true,
+      "evidence": "Output states: 'The ticket_types table is already fully documented at data-model.md:99-113' \u2014 explicitly references ticket_types in data-model context"
+    },
+    {
+      "text": "api-contracts-updated",
+      "passed": true,
+      "evidence": "Output states: 'Category: endpoint + dto \u2192 docs/02-specs/api-contracts/' \u2014 correctly identifies api-contracts as relevant, but concludes OpenAPI annotations suffice (Lesson #1)"
+    },
+    {
+      "text": "edits-are-surgical",
+      "passed": true,
+      "evidence": "Created proposed-edits.md with specific surgical changes. Output references 'surgical edit' and specific line-level changes"
+    },
+    {
+      "text": "categorizes-all-files",
+      "passed": true,
+      "evidence": "Step 1 table categorizes all 4 files: entities/TicketType.java \u2192 entity, controllers/EventController.java \u2192 endpoint, dto/TicketTypeRequest.java \u2192 dto, dto/TicketTypeResponse.java \u2192 dto"
+    }
+  ],
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 4,
+    "failed": 0,
+    "total": 4
+  }
+}

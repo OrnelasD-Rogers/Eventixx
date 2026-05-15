@@ -1,0 +1,32 @@
+{
+  "eval_id": 4,
+  "eval_name": "sync-security",
+  "prompt": "I added a new security filter chain that requires 2FA for all POST/PUT/DELETE endpoints under /api/v1/admin/. Git diff shows only config/SecurityConfig.java changed. What docs need updating and what exactly should change?",
+  "expected_output": "Identifies security-guide.md needs updating with new auth flow rule for admin endpoints. Reads security-guide.md first, then makes surgical edits.",
+  "assertions": [
+    {
+      "name": "security-guide-identified",
+      "description": "Identifies that security-guide.md needs updating",
+      "assertion_type": "output_contains",
+      "expected": "security-guide"
+    },
+    {
+      "name": "reads-before-editing",
+      "description": "States the need to read the current file before editing",
+      "assertion_type": "output_contains",
+      "expected": "read"
+    },
+    {
+      "name": "security-category",
+      "description": "Categorizes the change as security type",
+      "assertion_type": "output_contains",
+      "expected": "security"
+    },
+    {
+      "name": "admin-endpoints-mentioned",
+      "description": "Specifically mentions /api/v1/admin/ endpoints needing documentation",
+      "assertion_type": "output_contains",
+      "expected": "admin"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "eval_id": 1,
+  "eval_name": "sync-new-entity",
+  "prompt": "I just added a new entity 'TicketType' with fields: id UUID, name VARCHAR(100), price DECIMAL(10,2), event_id FK to events.id. Also added GET /api/v1/ticket-types/{id} and POST /api/v1/ticket-types endpoints in EventController. Git diff shows: entities/TicketType.java, controllers/EventController.java, dto/TicketTypeRequest.java, dto/TicketTypeResponse.java. Which docs need updating and what exactly should change?",
+  "expected_output": "Identifies data-model.md needs ticket_types table definition with FK to events. Identifies api-contracts/events.md needs new endpoint contracts. Makes surgical edits to both files.",
+  "assertions": [
+    {
+      "name": "data-model-updated",
+      "description": "Identifies that data-model.md needs a ticket_types table with FK constraint",
+      "assertion_type": "output_contains",
+      "expected": "ticket_types"
+    },
+    {
+      "name": "api-contracts-updated",
+      "description": "Identifies that api-contracts files need GET/POST endpoints for ticket-types",
+      "assertion_type": "output_contains",
+      "expected": "api-contracts"
+    },
+    {
+      "name": "edits-are-surgical",
+      "description": "Recommends surgical edits, not full rewrites",
+      "assertion_type": "output_contains",
+      "expected": "edit"
+    },
+    {
+      "name": "categorizes-all-files",
+      "description": "Categorizes every changed file (entity, endpoint, dto)",
+      "assertion_type": "output_contains",
+      "expected": "entity"
+    }
+  ]
+}

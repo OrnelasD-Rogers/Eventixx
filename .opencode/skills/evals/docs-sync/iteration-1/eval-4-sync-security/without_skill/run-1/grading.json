@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-4-without_skill",
+  "eval_name": "sync-security",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "security-guide-identified",
+      "passed": true,
+      "evidence": "Output states: 'docs/03-operations/security-guide.md \u2014 FULL UPDATE' with detailed proposed content"
+    },
+    {
+      "text": "reads-before-editing",
+      "passed": false,
+      "evidence": "Output proposes full rewrite but does not explicitly state reading the current file first. Assumes current content is a placeholder without verification step"
+    },
+    {
+      "text": "security-category",
+      "passed": true,
+      "evidence": "Output groups analysis by 'Security' layer and categorizes the change under 'Security' \u2014 implicitly a security categorization"
+    },
+    {
+      "text": "admin-endpoints-mentioned",
+      "passed": true,
+      "evidence": "Output repeatedly references '/api/v1/admin/', 'admin write operations', 'admin endpoints' with specific path patterns"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.75,
+    "passed": 3,
+    "failed": 1,
+    "total": 4
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "metadata": {
+    "skill_name": "docs-sync",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-15T12:24:45Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "data-model-updated",
+          "passed": true,
+          "evidence": "Output states: 'The ticket_types table is already fully documented at data-model.md:99-113' \u2014 explicitly references ticket_types in data-model context"
+        },
+        {
+          "text": "api-contracts-updated",
+          "passed": true,
+          "evidence": "Output states: 'Category: endpoint + dto \u2192 docs/02-specs/api-contracts/' \u2014 correctly identifies api-contracts as relevant, but concludes OpenAPI annotations suffice (Lesson #1)"
+        },
+        {
+          "text": "edits-are-surgical",
+          "passed": true,
+          "evidence": "Created proposed-edits.md with specific surgical changes. Output references 'surgical edit' and specific line-level changes"
+        },
+        {
+          "text": "categorizes-all-files",
+          "passed": true,
+          "evidence": "Step 1 table categorizes all 4 files: entities/TicketType.java \u2192 entity, controllers/EventController.java \u2192 endpoint, dto/TicketTypeRequest.java \u2192 dto, dto/TicketTypeResponse.java \u2192 dto"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "setup-md-identified",
+          "passed": true,
+          "evidence": "Output analyzes setup.md (Doc #2) and concludes 'No change required' after reading current content \u2014 maps dependency category to setup.md per skill table"
+        },
+        {
+          "text": "agents-md-identified",
+          "passed": true,
+          "evidence": "Output states: 'Doc #1: AGENTS.md \u2014 Update MapStruct version: 1.6.0 \u2192 1.7.0' with specific line reference (line 204)"
+        },
+        {
+          "text": "mentions-cross-reference",
+          "passed": true,
+          "evidence": "Step 4 Verify Consistency checks cross-references between AGENTS.md and setup.md with a dedicated table"
+        },
+        {
+          "text": "only-dependency-category",
+          "passed": true,
+          "evidence": "Output states: 'Categorization: pom.xml \u2192 dependency' and 'The file fits category dependency exclusively'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "no-doc-update",
+          "passed": true,
+          "evidence": "Output states: 'No documentation update is needed' and summary table shows '(none)'"
+        },
+        {
+          "text": "private-method-reason",
+          "passed": true,
+          "evidence": "Output states: 'Private method \u2014 invisible to all external consumers. No public API surface changed.'"
+        },
+        {
+          "text": "service-category",
+          "passed": true,
+          "evidence": "Output categorizes as 'service' in Step 1 table: 'services/EventService.java \u2192 service'"
+        },
+        {
+          "text": "no-false-positives",
+          "passed": false,
+          "evidence": "Output references .md files (e.g., 'docs/02-specs/use-cases/UC-*.md') in the analysis to explain why they don't need updating. Assertion too strict \u2014 references to .md are necessary when explaining why docs don't need changes"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "security-guide-identified",
+          "passed": true,
+          "evidence": "Output states: 'security \u2192 docs/03-operations/security-guide.md' and proposes full content for the file in proposed-edits.md"
+        },
+        {
+          "text": "reads-before-editing",
+          "passed": true,
+          "evidence": "Lesson #3 applied: 'Read the current file first'. Output reads and displays current content of security-guide.md (3 lines) before proposing edits"
+        },
+        {
+          "text": "security-category",
+          "passed": true,
+          "evidence": "Output categorizes as '[config, security]' in Step 1 table: 'config/SecurityConfig.java \u2192 [config, security]'"
+        },
+        {
+          "text": "admin-endpoints-mentioned",
+          "passed": true,
+          "evidence": "Output repeatedly references '/api/v1/admin/' \u2014 'Admin 2FA Filter Chain', 'admin endpoints', 'mutating operations under /api/v1/admin/'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "data-model-updated",
+          "passed": true,
+          "evidence": "Output states: '1. docs/02-specs/data-model.md \u2014 UPDATE needed' with full table definition including ticket_types columns"
+        },
+        {
+          "text": "api-contracts-updated",
+          "passed": true,
+          "evidence": "Output states: '2. docs/02-specs/api-contracts/ \u2014 CREATE needed' with paths and schemas for GET/POST endpoints"
+        },
+        {
+          "text": "edits-are-surgical",
+          "passed": false,
+          "evidence": "Output recommends creating new files and full sections but does not use the word 'edit' or reference surgical changes"
+        },
+        {
+          "text": "categorizes-all-files",
+          "passed": true,
+          "evidence": "Initial table categorizes all 4 files: entities/TicketType.java \u2192 'Entity (JPA)', controllers/EventController.java \u2192 'Controller (modified)', DTOs \u2192 'API Contract'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "setup-md-identified",
+          "passed": true,
+          "evidence": "Output mentions 'docs/04-implementation/setup.md' and correctly concludes no version string exists to update"
+        },
+        {
+          "text": "agents-md-identified",
+          "passed": true,
+          "evidence": "Output states: '1. AGENTS.md \u2014 MUST update' with specific line (line 204) and version change"
+        },
+        {
+          "text": "mentions-cross-reference",
+          "passed": false,
+          "evidence": "No explicit cross-referencing step. Output lists files independently without a cross-reference check"
+        },
+        {
+          "text": "only-dependency-category",
+          "passed": false,
+          "evidence": "No formal categorization step. Output lists files but does not categorize the change as 'dependency' type"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "no-doc-update",
+          "passed": true,
+          "evidence": "Output states: 'Verdict: No documentation update needed' and 'Zero documentation files need updating'"
+        },
+        {
+          "text": "private-method-reason",
+          "passed": true,
+          "evidence": "Output states: 'The change is purely internal \u2014 no external contract is affected' and 'A private helper method is an internal implementation detail'"
+        },
+        {
+          "text": "service-category",
+          "passed": false,
+          "evidence": "No formal categorization step. Output mentions file path containing 'services/' but does not explicitly categorize as 'service' type"
+        },
+        {
+          "text": "no-false-positives",
+          "passed": false,
+          "evidence": "Output references .md files (e.g., '00-charter/PROJECT_CHARTER.md', '01-decisions/ADR-*.md') in the analysis table. Assertion too strict \u2014 references to .md are necessary when explaining why docs don't need changes"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "security-guide-identified",
+          "passed": true,
+          "evidence": "Output states: 'docs/03-operations/security-guide.md \u2014 FULL UPDATE' with detailed proposed content"
+        },
+        {
+          "text": "reads-before-editing",
+          "passed": false,
+          "evidence": "Output proposes full rewrite but does not explicitly state reading the current file first. Assumes current content is a placeholder without verification step"
+        },
+        {
+          "text": "security-category",
+          "passed": true,
+          "evidence": "Output groups analysis by 'Security' layer and categorizes the change under 'Security' \u2014 implicitly a security categorization"
+        },
+        {
+          "text": "admin-endpoints-mentioned",
+          "passed": true,
+          "evidence": "Output repeatedly references '/api/v1/admin/', 'admin write operations', 'admin endpoints' with specific path patterns"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.9375,
+        "stddev": 0.125,
+        "min": 0.75,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.625,
+        "stddev": 0.1443,
+        "min": 0.5,
+        "max": 0.75
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.31",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": []
+}
