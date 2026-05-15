@@ -2,6 +2,7 @@ package com.eventixx.eventcatalog.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,6 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "categories")
@@ -26,6 +29,7 @@ import org.hibernate.annotations.SQLRestriction;
         "UPDATE categories SET deleted_at = CURRENT_TIMESTAMP, version = version + 1 WHERE id = ?"
             + " AND version = ?")
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -47,9 +51,9 @@ public class Category {
   @Builder.Default
   private Instant createdAt = Instant.now();
 
+  @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  @Builder.Default
-  private Instant updatedAt = Instant.now();
+  private Instant updatedAt;
 
   @Column(name = "deleted_at")
   private Instant deletedAt;
