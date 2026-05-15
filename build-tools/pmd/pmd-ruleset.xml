@@ -53,10 +53,22 @@
         <exclude name="LoosePackageCoupling"/>
         <exclude name="LawOfDemeter"/> <!-- Spring services naturally violate this -->
         <exclude name="UseObjectForClearerAPI"/> <!-- DTOs with many params are common -->
-        <exclude name="TooManyMethods"/> <!-- Spring services often have many CRUD methods -->
         <exclude name="UseUtilityClass"/> <!-- Spring Boot Application class false positive -->
         <exclude name="SignatureDeclareThrowsException"/> <!-- Spring Security config throws Exception -->
-        <exclude name="AvoidThrowingRawExceptionTypes"/> <!-- RuntimeException wrapping is idiomatic -->
+    </rule>
+
+    <!-- TooManyMethods: re-enabled with threshold 20 (Spring services legitimately have ~12-15 public methods) -->
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="20"/>
+        </properties>
+    </rule>
+
+    <!-- ExcessiveParameterList: methods with > 6 parameters are hard to read -->
+    <rule ref="category/java/design.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="7"/>
+        </properties>
     </rule>
 
 </ruleset>
