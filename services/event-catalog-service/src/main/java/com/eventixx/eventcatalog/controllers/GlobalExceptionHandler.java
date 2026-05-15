@@ -8,13 +8,16 @@ import com.eventixx.eventcatalog.exceptions.ValidationErrorDetail;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * Global exception handler for the event catalog service.
@@ -96,6 +99,51 @@ public class GlobalExceptionHandler {
           new ValidationErrorDetail(fieldError.getDefaultMessage(), "/" + fieldError.getField()));
     }
     problem.setProperty("errors", errors);
+    return problem;
+  }
+
+  /**
+   * Handles invalid UUIDs and other type-mismatch errors with HTTP 400.
+   */
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ProblemDetail handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    log.warn("Type mismatch for parameter '{}': {}", ex.getName(), ex.getMessage());
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST,
+            "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'");
+    problem.setType(ProblemType.VALIDATION_ERROR);
+    problem.setTitle(ProblemType.TITLE_VALIDATION_ERROR);
+    return problem;
+  }
+
+  /**
+   * Handles invalid sort fields with HTTP 400.
+   */
+  @ExceptionHandler(PropertyReferenceException.class)
+  public ProblemDetail handlePropertyReferenceException(PropertyReferenceException ex) {
+    log.warn("Invalid sort field: {}", ex.getMessage());
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, "Invalid sort field '" + ex.getPropertyName() + "'");
+    problem.setType(ProblemType.VALIDATION_ERROR);
+    problem.setTitle(ProblemType.TITLE_VALIDATION_ERROR);
+    return problem;
+  }
+
+  /**
+   * Handles optimistic lock conflicts with HTTP 409.
+   */
+  @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+  public ProblemDetail handleObjectOptimisticLockingFailure(
+      ObjectOptimisticLockingFailureException ex) {
+    log.warn("Optimistic lock conflict: {}", ex.getMessage());
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.CONFLICT,
+            "Resource was updated by another user. Please reload and try again.");
+    problem.setType(ProblemType.CONFLICT);
+    problem.setTitle(ProblemType.TITLE_CONFLICT);
     return problem;
   }
 
