@@ -110,12 +110,12 @@
   - `unit/EventValidatorTest` — 15 cases covering publish/update/cancel rules
   - `unit/EventServiceTest` — 12 cases (create, find, update, publish, cancel, delete)
   - `unit/VenueServiceTest` — 6 cases
-  - `unit/CategoryServiceTest` — 6 cases
+   - `unit/CategoryServiceTest` — 8 cases (CRUD + 404/409 on update)
   - `unit/TicketTypeServiceTest` — 7 cases
   - `unit/KafkaDomainEventPublisherTest` — 2 cases (publish + serialization failure)
   - `web/EventControllerWebTest` — 12 cases (CRUD + publish/cancel + validation + error handling)
   - `web/VenueControllerWebTest` — 7 cases
-  - `web/CategoryControllerWebTest` — 7 cases
+   - `web/CategoryControllerWebTest` — 8 cases (CRUD + validation + 404 on update)
   - `web/TicketTypeControllerWebTest` — 7 cases
   - `arch/ArchitectureTest` — 9 ArchUnit rules (pre-existing)
   - `application-test.yml` — test profile with datasource and Kafka config
@@ -126,7 +126,7 @@
   - `repository/PostgresRepositoryTest` — base class with shared `@DynamicPropertySource` container
   - `integration/CatalogIntegrationTestBase` — `@SpringBootTest` + Testcontainers (PostgreSQL + Kafka) with `@DynamicPropertySource` via static initializer (not `@Container`)
   - `integration/VenueCatalogIntegrationTest` — Venue CRUD lifecycle (create, read, update, delete, 404)
-  - `integration/CategoryCatalogIntegrationTest` — Category CRUD lifecycle
+   - `integration/CategoryCatalogIntegrationTest` — 18 cases: Category CRUD lifecycle + validation errors (400/404/409) + soft delete + duplicate name on update + missing header
   - `integration/TicketTypeCatalogIntegrationTest` — TicketType CRUD lifecycle
   - `integration/EventCatalogIntegrationTest` — 12 cases:
     - A1: Publish event (happy path)
@@ -141,7 +141,7 @@
     - B3: Publish without ticket types → 400
     - B4: Ticket quantity exceeds capacity → 400
     - B5: Event not found → 404
-- **Verification:** `mvn verify -pl services/event-catalog-service` passes — 135 tests, 0 violations (Spotless, SpotBugs, PMD, Checkstyle, ArchUnit).
+- **Verification:** `mvn verify -pl services/event-catalog-service` passes — 144 tests, 0 violations (Spotless, SpotBugs, PMD, Checkstyle, ArchUnit).
 
 ### Task 5: Documentation & Observability
 - **Status:** ☐ Pending
@@ -179,6 +179,7 @@
 | T2   | ☑ Completed | 2026-04-30 | Refactored to Anemic Model + **package-by-layer** structure (`controllers/`, `services/`, `repositories/`, `entities/`, `dto/`, `exceptions/`, `config/`). Added `EventValidator` component for publish/update/cancel rules. Services use private `findXxxOrThrow()` helpers and `Optional.ifPresent()` for updates. Added `POST /{id}/cancel` endpoint. Kafka event published directly from Service (no AggregateRoot/domainEvents list). Build SUCCESS. |
 | T3   | ☐ Pending |      |       |
 | T4   | ☑ Completed | 2026-05-14 | 135 tests: 48 unit, 33 web (`@WebMvcTest`), 8 repository (`@DataJpaTest` + Testcontainers PostgreSQL), 37 integration (`@SpringBootTest` + Testcontainers PostgreSQL + Kafka), 9 ArchUnit. Build SUCCESS with 0 violations (Spotless, SpotBugs, PMD, Checkstyle, ArchUnit). Added Spotless (google-java-format) — removed 14 formatting rules from Checkstyle (whitespace, braces, modifiers, misc). Formatting auto-corrected via `mvn spotless:apply` across 108 files. `spotless:check` runs at `process-classes` phase, before all other quality tools. Added `@Size(max = N)` validation on all request DTOs to match entity `@Column(length = N)` constraints. Added `@ApiResponse` error documentation on all 23 controller endpoints. Added 3 new integration tests for validation edge cases and enhanced ProblemDetail assertions. Enabled `failOnWarning=true` for test compilation to catch deprecated API usage and other compiler warnings. |
+| T4.1 | ☑ Completed | 2026-05-15 | Fixed `CategoryService.update()` — added duplicate name check + `DataIntegrityViolationException` handling (was throwing 500 instead of 409). Added 10 new tests (2 unit, 1 web, 7 integration) covering 404/400/409 error paths on PUT. Total: 144 tests. Build SUCCESS with 0 violations. |
 | T5   | ☐ Pending |      |       |
 
 ---
