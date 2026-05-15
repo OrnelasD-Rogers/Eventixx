@@ -1,0 +1,41 @@
+{
+  "skill_name": "javap-inspector",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm adding a RestClient configuration to my Spring Boot 4 service (event-catalog-service). I need to create a bean that uses RestClientAutoConfiguration. But I'm getting compilation errors saying the package doesn't exist. Use javap to find the correct full package/class name for RestClientAutoConfiguration in Spring Boot 4 and then create the proper @Configuration class that exposes a RestClient.Builder bean.",
+      "expected_output": "A configuration class that imports the correct RestClientAutoConfiguration and exposes a RestClient.Builder bean",
+      "files": [],
+      "expectations": [
+        "The agent used javap -cp to inspect RestClientAutoConfiguration or searched for it in JARs",
+        "The agent ran mvn dependency:build-classpath to get the classpath",
+        "The generated code compiles (the import matches the actual package where the class lives)",
+        "The output includes a @Configuration class with a RestClient.Builder @Bean method"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to write a unit test for EventController in event-catalog-service using @WebMvcTest. In Spring Boot 4, I heard @MockBean was replaced by @MockitoBean. Before writing the test, verify that @MockitoBean actually exists in the classpath and check if @MockBean is deprecated. Then write the proper test class.",
+      "expected_output": "A test class using @WebMvcTest with the correct mocking annotation based on what javap reveals",
+      "files": [],
+      "expectations": [
+        "The agent used javap to inspect @MockitoBean or @MockBean before writing code",
+        "The agent checked for deprecated annotations on @MockBean using javap -verbose",
+        "The generated test uses the correct annotation (either @MockitoBean if it exists, or @MockBean if not)",
+        "The agent ran mvn compile after writing to verify the test compiles"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need to add a custom repository method in EventRepository (event-catalog-service) that searches events by category with pagination. Before writing the code, I need to verify what methods JpaRepository actually provides for this use case. Use javap to inspect JpaRepository and related interfaces (PagingAndSortingRepository, etc.), then implement the correct solution.",
+      "expected_output": "A correct repository interface/implementation using the proper JpaRepository methods",
+      "files": [],
+      "expectations": [
+        "The agent used javap to inspect JpaRepository and related interfaces before writing code",
+        "The agent's implementation uses actual methods confirmed via javap (not hallucinated ones)",
+        "The generated code compiles with mvn compile",
+        "The agent correctly handles pagination (Pageable/Page types)"
+      ]
+    }
+  ]
+}

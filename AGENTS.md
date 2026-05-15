@@ -218,6 +218,8 @@ After any code change, run:
 ./mvnw verify -pl services/<service>
 ```
 
+Before using any framework API, load the `javap-inspector` skill and inspect the actual class signatures first.
+
 ---
 
 ## Commit Message Conventions
@@ -232,30 +234,27 @@ Short messages in Portuguese or English, describing **what** and **why**:
 
 ---
 
-## MCP Tools
+## Code Inspection with javap
 
-This project has **JARP-MCP** configured as an MCP server (`jarp-mcp`). Use its tools whenever you need to resolve uncertainty about library classes, API signatures, or dependency internals.
+This project uses `javap` (JDK built-in, zero installation) instead of JARP-MCP for inspecting compiled classes. The full workflow is in `.opencode/skills/javap-inspector/`.
 
-### JARP-MCP Tools
+**Don't guess API signatures.** Before using any framework API, inspect the actual bytecode:
 
-| Tool | When to Use |
-|------|-------------|
-| `jarp-mcp_scan_dependencies` | Once per session (or after dependency changes) to index all JARs |
-| `jarp-mcp_analyze_class` | Before importing a library class — discover its qualified name, methods, fields |
-| `jarp-mcp_decompile_class` | When a class API is unclear — decompile to see full source code |
+```bash
+# 1. Get the classpath for your service
+mvn dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/cp.txt
+CP=$(cat /tmp/cp.txt)
 
-### Workflow
-
-**Don't guess.** Before writing code that depends on a library class:
-
-1. `scan_dependencies` — builds class→JAR index for the project
-2. `analyze_class` — inspects structure (methods, fields, annotations) without pulling full source
-3. `decompile_class` — reads the actual implementation when deep understanding is needed
+# 2. Inspect the class (flags: -p for all members, -verbose for deprecated, -s for internal signatures)
+javap -cp $CP <fully.qualified.ClassName>
+javap -cp $CP -verbose <ClassName> | grep -i deprecated
+javap -cp $CP -p <ClassName>
+```
 
 **Typical triggers:**
-- Compilation errors (`cannot find symbol`, `incompatible types`, `package does not exist`)
+- Compilation errors (`cannot find symbol`, `package does not exist`)
 - Uncertain API signatures (parameter types, return types, exceptions)
-- Annotation introspection (what attributes/values does `@EnableKafka` or `@Retryable` accept?)
+- Checking if an API is deprecated
 - Finding the correct fully-qualified name for an import statement
 
 ---

@@ -2,12 +2,5 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     ".opencode/instructions/coding-rules.md"
-  ],
-  "mcp": {
-    "jarp-mcp": {
-      "type": "local",
-      "command": ["npx", "-y", "jarp-mcp"],
-      "enabled": true
-    }
-  }
+  ]
 }
