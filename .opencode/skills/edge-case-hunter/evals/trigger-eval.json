@@ -1,0 +1,22 @@
+[
+  {"query": "encontre edge cases que ainda nao cobrimos no endpoint POST /api/v1/orders. Le o controller, service, entidade e repository e me diz o que ta faltando", "should_trigger": true},
+  {"query": "preciso de mais testes para o metodo createUser. O que pode quebrar? Gera os testes JUnit 5", "should_trigger": true},
+  {"query": "me ajuda a testar o endpoint PUT /api/v1/products/{id}. Quero saber todos os cenarios de borda possiveis", "should_trigger": true},
+  {"query": "analisar endpoint GET /api/v1/customers?page=0&size=20. Ve se tem alguma vulnerabilidade ou edge case faltando", "should_trigger": true},
+  {"query": "quais sao os cenarios de borda que faltam no DELETE /api/v1/users/{id}? Le o codigo e me mostra o que falta testar", "should_trigger": true},
+  {"query": "coverage gaps no controller de categorias. Preciso saber o que nao foi testado ainda", "should_trigger": true},
+  {"query": "o que pode quebrar se eu fizer duas requisicoes simultaneas no POST /api/v1/payments?", "should_trigger": true},
+  {"query": "teste de seguranca no endpoint PATCH /api/v1/accounts/{id}. Tem BOLA? Falta X-User-Id?", "should_trigger": true},
+  {"query": "preciso de um teste para validacao de dados no POST /api/v1/events. O DTO tem @NotBlank? E o @Valid?", "should_trigger": true},
+  {"query": "code review: endpoints de usuario. Foca nos edge cases de concorrencia e soft delete que podem estar faltando", "should_trigger": true},
+  {"query": "me ajuda a debugar um bug de concorrencia no servico de reservas. Duas reservas simultaneas estouraram o estoque", "should_trigger": false},
+  {"query": "como configurar o Spring Boot para usar PostgreSQL com Testcontainers nos testes de integracao?", "should_trigger": false},
+  {"query": "qual a diferenca entre @MockBean e @MockitoBean no Spring Boot 4?", "should_trigger": false},
+  {"query": "escreve um teste unitario para o servico de autenticacao usando JUnit 5 e Mockito", "should_trigger": false},
+  {"query": "refatora o servico de pedidos para usar o padrao Saga com Kafka", "should_trigger": false},
+  {"query": "me ajuda a configurar o Flyway para rodar migrations automaticamente no startup", "should_trigger": false},
+  {"query": "qual a melhor forma de implementar soft delete no JPA?", "should_trigger": false},
+  {"query": "como usar o RestTestClient do Spring Boot 4 para testar endpoints REST?", "should_trigger": false},
+  {"query": "explica como funciona o optimistic locking com @Version no Hibernate", "should_trigger": false},
+  {"query": "cria um Dockerfile e docker-compose para o novo microservico de notificacoes", "should_trigger": false}
+]
