@@ -13,6 +13,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,7 +57,7 @@ public class CategoryController {
   @GetMapping
   @Operation(summary = "List all categories")
   @ApiResponse(responseCode = "200", description = "List of categories")
-  public Page<CategorySummaryResponse> list(Pageable pageable) {
+  public Page<CategorySummaryResponse> list(@PageableDefault(size = 20) Pageable pageable) {
     return categoryService.findAll(pageable);
   }
 
