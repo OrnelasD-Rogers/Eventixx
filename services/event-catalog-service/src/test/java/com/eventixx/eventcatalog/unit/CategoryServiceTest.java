@@ -11,6 +11,7 @@ import com.eventixx.eventcatalog.dto.category.CategorySummaryResponse;
 import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 import com.eventixx.eventcatalog.entities.Category;
+import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
 import com.eventixx.eventcatalog.services.category.CategoryMapper;
@@ -111,12 +112,37 @@ class CategoryServiceTest {
     UpdateCategoryRequest request = new UpdateCategoryRequest("Updated Music", null);
 
     when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
+    when(categoryRepository.saveAndFlush(category)).thenReturn(category);
     when(categoryMapper.toResponse(category)).thenReturn(categoryResponse);
 
     CategoryResponse result = categoryService.update(category.getId(), request);
 
     assertThat(result).isEqualTo(categoryResponse);
     verify(categoryMapper).updateEntity(request, category);
+  }
+
+  @Test
+  void shouldThrow404WhenUpdatingNonExistentCategory() {
+    UUID id = UUID.randomUUID();
+    UpdateCategoryRequest request = new UpdateCategoryRequest("Updated", null);
+
+    when(categoryRepository.findById(id)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> categoryService.update(id, request))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessageContaining("Category with id");
+  }
+
+  @Test
+  void shouldThrow409WhenUpdatingToDuplicateName() {
+    UpdateCategoryRequest request = new UpdateCategoryRequest("Existing Category", null);
+
+    when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
+    when(categoryRepository.existsByName("Existing Category")).thenReturn(true);
+
+    assertThatThrownBy(() -> categoryService.update(category.getId(), request))
+        .isInstanceOf(ConflictException.class)
+        .hasMessageContaining("Existing Category");
   }
 
   @Test

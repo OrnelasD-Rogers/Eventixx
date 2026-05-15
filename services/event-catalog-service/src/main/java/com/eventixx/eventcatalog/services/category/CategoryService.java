@@ -53,12 +53,24 @@ public class CategoryService {
 
   /**
    * Updates an existing category.
+   * <p>Checks for duplicate name (excluding current entity) and catches
+   * {@link DataIntegrityViolationException} as a safety net for concurrent updates.</p>
    */
   @Transactional
   public CategoryResponse update(UUID id, UpdateCategoryRequest request) {
     Category category = findCategoryOrThrow(id);
+    if (request.name() != null
+        && !request.name().equals(category.getName())
+        && categoryRepository.existsByName(request.name())) {
+      throw new ConflictException("Category with name '" + request.name() + "' already exists");
+    }
     categoryMapper.updateEntity(request, category);
-    return categoryMapper.toResponse(category);
+    try {
+      Category saved = categoryRepository.saveAndFlush(category);
+      return categoryMapper.toResponse(saved);
+    } catch (DataIntegrityViolationException e) {
+      throw new ConflictException("Category with name '" + request.name() + "' already exists", e);
+    }
   }
 
   @Transactional

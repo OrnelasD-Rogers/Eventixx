@@ -257,6 +257,125 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
   }
 
   @Test
+  void shouldReturn404WhenUpdatingNonExistentCategory() {
+    var update = new UpdateCategoryRequest("Updated", "Desc");
+    ProblemDetail problem =
+        restClient
+            .put()
+            .uri("/api/v1/categories/{id}", UUID.randomUUID())
+            .headers(requestHeaders())
+            .body(update)
+            .exchange()
+            .expectStatus()
+            .isNotFound()
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.getTitle()).isEqualTo("Resource Not Found");
+  }
+
+  @Test
+  void shouldReturn400WhenUpdateNameExceedsMaxLength() {
+    var category = createCategory(1);
+    var update = new UpdateCategoryRequest("a".repeat(101), null);
+    ProblemDetail problem =
+        restClient
+            .put()
+            .uri("/api/v1/categories/{id}", category.id())
+            .headers(requestHeaders())
+            .body(update)
+            .exchange()
+            .expectStatus()
+            .isBadRequest()
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getProperties())
+        .extractingByKey("errors")
+        .asInstanceOf(InstanceOfAssertFactories.LIST)
+        .anyMatch(e -> e.toString().contains("/name"));
+  }
+
+  @Test
+  void shouldReturn400WhenUpdateDescriptionExceedsMaxLength() {
+    var category = createCategory(1);
+    var update = new UpdateCategoryRequest("Music", "a".repeat(501));
+    ProblemDetail problem =
+        restClient
+            .put()
+            .uri("/api/v1/categories/{id}", category.id())
+            .headers(requestHeaders())
+            .body(update)
+            .exchange()
+            .expectStatus()
+            .isBadRequest()
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.getTitle()).isEqualTo("Validation Error");
+    assertThat(problem.getProperties())
+        .extractingByKey("errors")
+        .asInstanceOf(InstanceOfAssertFactories.LIST)
+        .anyMatch(e -> e.toString().contains("/description"));
+  }
+
+  @Test
+  void shouldReturn400WhenMissingUserIdHeaderOnUpdate() {
+    var category = createCategory(1);
+    restClient
+        .put()
+        .uri("/api/v1/categories/{id}", category.id())
+        .body(new UpdateCategoryRequest("Updated", null))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
+  void shouldReturn404WhenUpdatingSoftDeletedCategory() {
+    var category = createCategory(1);
+    restClient
+        .delete()
+        .uri("/api/v1/categories/{id}", category.id())
+        .headers(requestHeaders())
+        .exchange();
+    restClient
+        .put()
+        .uri("/api/v1/categories/{id}", category.id())
+        .headers(requestHeaders())
+        .body(new UpdateCategoryRequest("Updated", null))
+        .exchange()
+        .expectStatus()
+        .isNotFound();
+  }
+
+  @Test
+  void shouldReturn409WhenUpdatingToDuplicateName() {
+    createCategory(1);
+    var category2 = createCategory(2);
+    var update = new UpdateCategoryRequest("Test Category_1", null);
+    ProblemDetail problem =
+        restClient
+            .put()
+            .uri("/api/v1/categories/{id}", category2.id())
+            .headers(requestHeaders())
+            .body(update)
+            .exchange()
+            .expectStatus()
+            .isEqualTo(409)
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.getTitle()).isEqualTo("Conflict");
+    assertThat(problem.getDetail()).contains("Test Category_1");
+  }
+
+  @Test
   void shouldReturn409WhenDuplicateName() {
     createCategory(1);
 

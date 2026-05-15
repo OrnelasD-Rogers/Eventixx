@@ -123,6 +123,21 @@ class CategoryControllerWebTest {
   }
 
   @Test
+  void shouldReturn404_whenUpdatingNonExistentCategory() throws Exception {
+    UpdateCategoryRequest request = new UpdateCategoryRequest("Updated", null);
+    when(categoryService.update(eq(categoryId), any()))
+        .thenThrow(new ResourceNotFoundException("Category not found"));
+
+    mockMvc
+        .perform(
+            put("/api/v1/categories/{id}", categoryId)
+                .header("X-User-Id", "user-123")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
   void shouldDeleteCategory() throws Exception {
     mockMvc
         .perform(delete("/api/v1/categories/{id}", categoryId).header("X-User-Id", "user-123"))
