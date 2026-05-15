@@ -1,0 +1,41 @@
+{
+  "skill_name": "docs-sync",
+  "evals": [
+    {
+      "id": 1,
+      "name": "sync-after-new-entity-and-endpoint",
+      "prompt": "I just added a new entity 'TicketType' with fields: id UUID, name VARCHAR(100), price DECIMAL(10,2), event_id FK to events.id. Also added GET /api/v1/ticket-types/{id} and POST /api/v1/ticket-types endpoints in EventController. Git diff shows: entities/TicketType.java, controllers/EventController.java, dto/TicketTypeRequest.java, dto/TicketTypeResponse.java. Which docs need updating?",
+      "expected_output": "Identifies data-model.md needs ticket_types table definition with columns and FK. Identifies api-contracts/events.md needs new endpoint contracts. Makes surgical edits to both files. Updates UC-001 execution log if relevant. Does NOT touch unrelated docs.",
+      "files": [
+        "docs/02-specs/data-model.md",
+        "docs/02-specs/api-contracts/events.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "sync-dependency-version-update",
+      "prompt": "I updated the MapStruct version in pom.xml from 1.6.0 to 1.7.0. Git diff shows only pom.xml changed. What docs need updating?",
+      "expected_output": "Identifies that setup.md version table and AGENTS.md Key Versions table both reference MapStruct 1.6.0 and need updating to 1.7.0. Cross-references both files after edit to ensure consistency. Verifies no other version references are stale.",
+      "files": [
+        "docs/04-implementation/setup.md",
+        "AGENTS.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "no-doc-needed-for-private-change",
+      "prompt": "I added a private helper method in EventService to normalize event names. Git diff shows: services/EventService.java. Do any docs need updating?",
+      "expected_output": "Concludes no documentation needs updating — private method doesn't affect public API, data schema, contracts, or configuration. Returns an empty summary table. Does NOT create or modify any documentation files.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "sync-security-config-change",
+      "prompt": "I added a new security filter chain that requires 2FA for all POST/PUT/DELETE endpoints under /api/v1/admin/. Git diff shows: config/SecurityConfig.java. What docs need updating?",
+      "expected_output": "Identifies security-guide.md needs updating with the new auth flow rule. Reads the current security-guide.md first, then makes surgical edits to add the 2FA requirement for admin endpoints. Updates the endpoint permission matrix if one exists.",
+      "files": [
+        "docs/03-operations/security-guide.md"
+      ]
+    }
+  ]
+}

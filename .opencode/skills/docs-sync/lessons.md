@@ -1,0 +1,22 @@
+# Docs Sync — Lessons Learned
+
+## 2026-05-14
+
+- This project uses OpenAPI annotations on controllers as the source of truth for API docs rather than standalone `api-contracts/*.md` files. When adding `@ApiResponse` annotations, no separate contract doc update is needed.
+- DTO `@Size(max = N)` validation is a code-level enforcement of existing `@Column(length = N)` constraints already documented in `data-model.md`. No doc update needed unless the actual DB schema changes.
+- Integration test count changes should be tracked in `UC-001-event-catalog.md` Task 4 and the Execution Log.
+- The ProblemDetail assertion pattern (verifying `type`, `title`, `status`, and `errors` array) is novel enough to warrant its own subsection in `testing-strategy.md`.
+- Build config changes (`failOnWarning`, compiler flags) must be reflected in `setup.md` "Spring Boot 4 Note". The sentence describing test compilation was out of date after enabling `failOnWarning=true`.
+- Code examples in `testing-strategy.md` must not use deprecated APIs (`.asList()`) since `failOnWarning=true` now enforces zero-warnings in test code too.
+
+## 2026-05-15
+
+- Private helper methods in service classes never require doc updates. They don't change the public API, add use case scenarios, introduce domain concepts, or alter architectural decisions. Only public/protected method changes that alter observable behavior warrant UC Execution Log updates.
+- The `service` category in the mapping table should be interpreted with scrutiny: a change to a service file does not automatically trigger a UC update — only when the change affects observable behavior (new public method, new use case flow, completed task). Pure refactoring (extract method, rename, inline) is invisible to docs.
+
+## 2026-05-15
+
+- An existing `data-model.md` entry does not automatically mean no doc update is needed — verify that the described fields match exactly. In this case `ticket_types` table was already complete, but the pattern of checking field-by-field should be followed every time.
+- When a new entity's fields are a subset of an existing documented table, the entity may have been implemented as a simplified version: check the actual entity class for extra columns (e.g., `quantityAvailable` + audit fields) before declaring a mismatch.
+- Top-level vs. nested endpoints (`/api/v1/ticket-types` vs. `/api/v1/events/{eventId}/ticket-types`) affect different controller files but both map to the `endpoint` category. The doc impact is identical — no need to differentiate in the mapping table.
+- Glossary updates are easy to forget. Every new entity that represents a core domain concept should trigger a glossary check, even when the entity name seems "obvious" from the existing UC text.
