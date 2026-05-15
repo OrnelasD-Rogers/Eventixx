@@ -7,6 +7,10 @@ import com.eventixx.eventcatalog.dto.category.CategorySummaryResponse;
 import com.eventixx.eventcatalog.dto.category.CreateCategoryRequest;
 import com.eventixx.eventcatalog.dto.category.UpdateCategoryRequest;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
@@ -396,5 +400,96 @@ class CategoryCatalogIntegrationTest extends CatalogIntegrationTestBase {
     assertThat(problem).isNotNull();
     assertThat(problem.getTitle()).isEqualTo("Conflict");
     assertThat(problem.getDetail()).contains("Test Category_1");
+  }
+
+  // --- Concurrency & FK edge cases ---
+
+  @Test
+  void shouldReturn409WhenDeletingCategoryWithActiveEvents() {
+    var category = createCategory(1);
+    var venue = createVenue();
+    var eventRequest = buildCreateRequest(venue.id(), category.id());
+    restClient
+        .post()
+        .uri("/api/v1/events")
+        .headers(requestHeaders())
+        .body(eventRequest)
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    var problem =
+        restClient
+            .delete()
+            .uri("/api/v1/categories/{id}", category.id())
+            .headers(requestHeaders())
+            .exchange()
+            .expectStatus()
+            .isEqualTo(409)
+            .expectBody(ProblemDetail.class)
+            .returnResult()
+            .getResponseBody();
+
+    assertThat(problem).isNotNull();
+    assertThat(problem.getTitle()).isEqualTo("Conflict");
+    assertThat(problem.getDetail()).contains("events");
+  }
+
+  @Test
+  void shouldReturn404WhenDeletingNonExistentCategory() {
+    restClient
+        .delete()
+        .uri("/api/v1/categories/{id}", UUID.randomUUID())
+        .headers(requestHeaders())
+        .exchange()
+        .expectStatus()
+        .isNotFound();
+  }
+
+  @Test
+  void shouldDeleteCategoryWithoutEvents() {
+    var category = createCategory(1);
+
+    restClient
+        .delete()
+        .uri("/api/v1/categories/{id}", category.id())
+        .headers(requestHeaders())
+        .exchange()
+        .expectStatus()
+        .isNoContent();
+  }
+
+  @Test
+  void shouldReturnOnlyOneCreatedWhenTwoConcurrentCreationsWithSameName() throws Exception {
+    var request = new CreateCategoryRequest("Concurrent-Race-Test", "Race condition test");
+    var created = new AtomicInteger(0);
+    var conflicts = new AtomicInteger(0);
+
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    for (int i = 0; i < 2; i++) {
+      executor.execute(
+          () -> {
+            var code =
+                restClient
+                    .post()
+                    .uri("/api/v1/categories")
+                    .headers(requestHeaders())
+                    .body(request)
+                    .exchange()
+                    .returnResult(Object.class)
+                    .getStatus()
+                    .value();
+            if (code == 201) {
+              created.incrementAndGet();
+            } else if (code == 409) {
+              conflicts.incrementAndGet();
+            }
+          });
+    }
+    executor.shutdown();
+    executor.awaitTermination(10, TimeUnit.SECONDS);
+
+    assertThat(created.get()).isEqualTo(1);
+    assertThat(conflicts.get()).isEqualTo(1);
   }
 }

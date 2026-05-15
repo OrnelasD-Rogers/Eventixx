@@ -143,4 +143,16 @@ class CategoryControllerWebTest {
         .perform(delete("/api/v1/categories/{id}", categoryId).header("X-User-Id", "user-123"))
         .andExpect(status().isNoContent());
   }
+
+  @Test
+  void shouldReturn400WhenCreateWithoutXUserId() throws Exception {
+    CreateCategoryRequest request = new CreateCategoryRequest("Music", "Description");
+
+    mockMvc
+        .perform(
+            post("/api/v1/categories")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+  }
 }
