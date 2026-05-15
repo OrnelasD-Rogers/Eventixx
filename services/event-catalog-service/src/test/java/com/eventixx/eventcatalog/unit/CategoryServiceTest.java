@@ -14,6 +14,7 @@ import com.eventixx.eventcatalog.entities.Category;
 import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
+import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.services.category.CategoryMapper;
 import com.eventixx.eventcatalog.services.category.CategoryService;
 import java.time.Instant;
@@ -36,6 +37,7 @@ class CategoryServiceTest {
 
   @Mock private CategoryRepository categoryRepository;
   @Mock private CategoryMapper categoryMapper;
+  @Mock private EventRepository eventRepository;
 
   @InjectMocks private CategoryService categoryService;
 
@@ -152,5 +154,29 @@ class CategoryServiceTest {
     categoryService.delete(category.getId());
 
     verify(categoryRepository).delete(category);
+  }
+
+  @Test
+  void shouldConvertDataIntegrityViolationToConflictOnCreate() {
+    var request = new CreateCategoryRequest("Music", "Description");
+
+    when(categoryMapper.toEntity(request)).thenReturn(category);
+    when(categoryRepository.saveAndFlush(any()))
+        .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"));
+
+    assertThatThrownBy(() -> categoryService.create(request))
+        .isInstanceOf(ConflictException.class)
+        .hasMessageContaining("already exists");
+  }
+
+  @Test
+  void shouldThrowConflictWhenExistsByNameOnCreate() {
+    var request = new CreateCategoryRequest("ExistingName", "Description");
+
+    when(categoryRepository.existsByName("ExistingName")).thenReturn(true);
+
+    assertThatThrownBy(() -> categoryService.create(request))
+        .isInstanceOf(ConflictException.class)
+        .hasMessageContaining("already exists");
   }
 }

@@ -8,14 +8,18 @@ import com.eventixx.eventcatalog.entities.Category;
 import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
+import com.eventixx.eventcatalog.repositories.EventRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,6 +27,7 @@ public class CategoryService {
 
   private final CategoryRepository categoryRepository;
   private final CategoryMapper categoryMapper;
+  private final EventRepository eventRepository;
 
   /**
    * Creates a new category, throwing {@link ConflictException} if the name already exists.
@@ -54,7 +59,8 @@ public class CategoryService {
   /**
    * Updates an existing category.
    * <p>Checks for duplicate name (excluding current entity) and catches
-   * {@link DataIntegrityViolationException} as a safety net for concurrent updates.</p>
+   * {@link DataIntegrityViolationException} as a safety net for concurrent updates.
+   * Handles {@link ObjectOptimisticLockingFailureException} when {@code @Version} detects a conflict.</p>
    */
   @Transactional
   public CategoryResponse update(UUID id, UpdateCategoryRequest request) {
@@ -70,12 +76,25 @@ public class CategoryService {
       return categoryMapper.toResponse(saved);
     } catch (DataIntegrityViolationException e) {
       throw new ConflictException("Category with name '" + request.name() + "' already exists", e);
+    } catch (ObjectOptimisticLockingFailureException e) {
+      log.warn("Optimistic lock conflict on category {}: {}", id, e.getMessage());
+      throw new ConflictException(
+          "Category was updated by another user. Please reload and try again.", e);
     }
   }
 
+  /**
+   * Soft-deletes a category. Throws {@link ConflictException} if there are events linked to it.
+   * <p>The DB enforces {@code ON DELETE RESTRICT}, but this check gives a clear 409 response
+   * instead of a generic 500 constraint violation.</p>
+   */
   @Transactional
   public void delete(UUID id) {
     Category category = findCategoryOrThrow(id);
+    if (eventRepository.existsByCategoryId(id)) {
+      throw new ConflictException(
+          "Category '" + category.getName() + "' has events linked to it and cannot be deleted");
+    }
     categoryRepository.delete(category);
   }
 

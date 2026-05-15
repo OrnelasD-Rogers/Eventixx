@@ -20,5 +20,7 @@ public interface EventRepository {
 
   Page<Event> findAllByStatus(EventStatus status, Pageable pageable);
 
+  boolean existsByCategoryId(UUID categoryId);
+
   void delete(Event event);
 }
