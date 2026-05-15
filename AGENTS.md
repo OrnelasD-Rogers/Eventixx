@@ -54,6 +54,7 @@ docker-compose up -d
 ## Commit Rules
 
 - Run `./mvnw verify -pl services/event-catalog-service` before committing. For multiple commits in a session, verify once on the full change set — splitting into atomic commits does not alter code. Re-verify after the last commit.
+- After any code implementation, load the `docs-sync` skill to verify documentation is up to date before committing.
 - All checks must pass (tests, SpotBugs, PMD, Checkstyle, ArchUnit). Zero compiler warnings in main sources.
 - Fix violations before committing. Never use `--no-verify`, `--no-gpg-sign`, etc.
 - Atomic commits with descriptive messages in Portuguese or English.

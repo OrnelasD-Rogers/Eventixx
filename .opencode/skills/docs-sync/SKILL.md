@@ -1,16 +1,20 @@
 ---
 name: docs-sync
-description: Synchronizes project documentation after code changes. Use this whenever code has been modified (controllers, entities, DTOs, services, config, pom.xml, tests, Docker, security) and documentation needs updating. Triggers on: git diff showing changes to Java files, "precisa alterar algo na documentação?", updating docs before/after commits, "docs sync", "sincronizar documentação", or when the user asks what documentation needs updating. Covers all doc-framework layers: charter, ADRs, use-cases, data-model, api-contracts, testing-strategy, setup, glossary, deployment, security-guide, and sequence-diagrams. Includes self-improvement via lessons learned. Don't let the user manually figure out which docs changed — run this skill to analyze every changed file against the doc tree.
+description: >-
+  !!! ALWAYS INVOKE THIS SKILL AFTER ANY CODE CHANGE, BEFORE COMMITTING !!!
+  Synchronizes project documentation after code changes. Use this whenever code has been modified (controllers, entities, DTOs, services, config, pom.xml, tests, Docker, security) and documentation needs updating. Triggers on: git diff showing changes to Java files, "precisa alterar algo na documentação?", updating docs before/after commits, "docs sync", "sincronizar documentação", or when the user asks what documentation needs updating. Covers all doc-framework layers: charter, ADRs, use-cases, data-model, api-contracts, testing-strategy, setup, glossary, deployment, security-guide, and sequence-diagrams. Includes self-improvement via lessons learned. Don't let the user manually figure out which docs changed — run this skill to analyze every changed file against the doc tree.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   domain: documentation
-  triggers: code changes, git diff, documentation update, docs sync, documentacao
+  triggers: after implementation, pre-commit, code changes, git diff, documentation update, docs sync, documentacao
   role: tech-writer
   related-skills: doc-framework
 ---
 
 # Docs Sync
+
+> **⚠️ MUST RUN AFTER EVERY CODE CHANGE — SEE "When to Use" BELOW**
 
 Synchronizes project documentation with code changes. Covers all 4 layers of the doc-framework.
 
