@@ -100,6 +100,17 @@ class ArchitectureTest {
   }
 
   @Test
+  void controllersMustNotReturnEntityTypes() {
+    noClasses()
+        .that()
+        .resideInAPackage("..controllers..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("..entities..")
+        .check(importedClasses);
+  }
+
+  @Test
   void transactionalMethodsMustNotBeFinal() {
     methods()
         .that()
