@@ -1,0 +1,57 @@
+{
+  "skill_name": "edge-case-hunter",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find edge cases for GET /api/v1/events/{id} in the event-catalog-service. The endpoint fetches an event by its UUID. Read the controller, service, entity, and repository files to find missing edge cases. Generate JUnit 5 test code for each uncovered scenario.",
+      "expected_output": "An edge case report listing missing scenarios for the GET by ID endpoint, with JUnit 5 test code for each missing scenario. Should include at least: UUID format validation, soft-delete handling (410 Gone), resource not found (404), and any other uncovered edge cases.",
+      "files": [],
+      "expectations": [
+        "The report identifies at least 3 missing edge cases for the GET endpoint",
+        "The report includes 'UUID format validation' as an edge case",
+        "The report checks whether soft-deleted resources return 404/410",
+        "Generated tests use MockMvc or RestTestClient (not TestRestTemplate)",
+        "Generated tests use @MockitoBean (not @MockBean)",
+        "Generated tests include @DisplayName annotations",
+        "Generated tests verify HTTP status codes with andExpect(status().isXxx())",
+        "The report checks whether integration tests exist for this endpoint with Testcontainers",
+        "The report checks whether lazy loading issues exist (entity returned directly with lazy relationships)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Find edge cases for POST /api/v1/events in the event-catalog-service. The endpoint creates a new event. Read the controller, service, entity, DTO, and repository files to find missing edge cases. Generate JUnit 5 test code for each uncovered scenario.",
+      "expected_output": "An edge case report listing missing scenarios for the POST create endpoint, with JUnit 5 test code for each missing scenario. Should include at least: missing @Valid on request body, missing field-level validation constraints, missing X-User-Id header, BOLA (object-level authorization), concurrency (duplicate creation), and any other uncovered edge cases.",
+      "files": [],
+      "expectations": [
+        "The report identifies at least 4 missing edge cases for the POST endpoint",
+        "The report checks whether @Valid is present on the request body parameter",
+        "The report checks for missing @NotBlank/@Size annotations on DTO fields",
+        "The report checks whether X-User-Id header is required",
+        "The report checks for BOLA vulnerabilities (ownership verification)",
+        "Generated tests use @MockitoBean (not @MockBean)",
+        "Generated tests verify 400 Bad Request for invalid input",
+        "Generated tests verify 401/403 for missing/wrong authorization",
+        "The report checks whether @Transactional + Kafka/event publish has rollback issues",
+        "The report checks for OSIV (open-in-view) configuration"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Find edge cases for GET /api/v1/events in the event-catalog-service. This endpoint lists events with pagination support (page, size, sort parameters). Read the controller, service, entity, and repository files to find missing edge cases. Generate JUnit 5 test code for each uncovered scenario.",
+      "expected_output": "An edge case report listing missing scenarios for the paginated list endpoint, with JUnit 5 test code for each missing scenario. Should include at least: maximum page size validation, negative page handling, sort field SQL injection, soft-delete filtering in paginated results, missing has_more flag, and any other uncovered edge cases.",
+      "files": [],
+      "expectations": [
+        "The report identifies at least 3 missing edge cases for the paginated endpoint",
+        "The report checks for a maximum page size cap (e.g. @Max)",
+        "The report checks whether negative page/size values are rejected",
+        "The report checks whether soft-deleted records are excluded from results",
+        "The report checks whether sort parameters allow SQL injection",
+        "Generated tests verify 400 for size=0 or size exceeding max",
+        "Generated tests verify has_more or equivalent pagination metadata",
+        "The report checks whether an integration test exists with Testcontainers for pagination",
+        "The report checks whether soft-delete is verified in integration tests (not just repository tests)"
+      ]
+    }
+  ]
+}
