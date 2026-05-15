@@ -23,7 +23,19 @@
     <!-- Also covers domain event records (e.g., EventPublished) in messaging sub-packages -->
     <Match>
         <Class name="~.*\.services\..*"/>
-        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,REC_CATCH_EXCEPTION"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- CategoryService: catches DataIntegrityViolationException and rethrows as ConflictException -->
+    <Match>
+        <Class name="~.*\.services\.category\.CategoryService"/>
+        <Bug pattern="REC_CATCH_EXCEPTION"/>
+    </Match>
+
+    <!-- EventService: catches exceptions during Kafka publishing and event operations -->
+    <Match>
+        <Class name="~.*\.services\.event\.EventService"/>
+        <Bug pattern="REC_CATCH_EXCEPTION"/>
     </Match>
 
     <!-- Spring Configuration classes -->
