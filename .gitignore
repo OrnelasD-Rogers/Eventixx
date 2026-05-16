@@ -10,3 +10,5 @@ skills-lock.json
 **/.factorypath
 **/.project
 **/.settings/
+.opencode/evals
+/estudos

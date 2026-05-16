@@ -294,8 +294,8 @@ Therefore, this plan lives as a standalone implementation document, not as a for
 - [PMD Rules](https://pmd.github.io/pmd/pmd_rules_java.html)
 - [Checkstyle Google Style](https://github.com/checkstyle/checkstyle/blob/master/src/main/resources/google_checks.xml)
 - [ArchUnit User Guide](https://www.archunit.org/userguide/html/000_Index.html)
-- [Eventixx Project Charter](docs/00-charter/PROJECT_CHARTER.md)
-- [Eventixx Documentation Guidelines](docs/GUIDELINES.md)
+- [Eventixx Project Charter](../docs/00-charter/PROJECT_CHARTER.md)
+- [Eventixx Documentation Guidelines](../docs/GUIDELINES.md)
 
 ---
 
