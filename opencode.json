@@ -2,5 +2,27 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     ".opencode/instructions/coding-rules.md"
-  ]
+  ],
+  "agent": {
+    "orchestrator": {
+      "mode": "primary",
+      "permission": {
+        "task": {
+          "*": "deny",
+          "explore": "allow",
+          "librarian": "allow",
+          "code-writer": "allow",
+          "quality-runner": "allow",
+          "docs-updater": "allow",
+          "trace-collector": "allow"
+        },
+        "skill": {
+          "orchestrator": "allow",
+          "edge-case-hunter": "allow",
+          "docs-sync": "allow",
+          "javap-inspector": "allow"
+        }
+      }
+    }
+  }
 }
