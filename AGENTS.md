@@ -271,3 +271,47 @@ javap -cp $CP -p <ClassName>
 ### Memory Search
 
 When using `mem_search`, always search in **English**. This ensures consistent cross-session retrieval regardless of the project's primary language.
+
+---
+
+## Trace Infrastructure
+
+Every agent execution generates structured traces stored in `.opencode/evals/traces/`.
+
+### Trace Collection
+
+Subagents include a `## Trace` section in their reports. The orchestrator aggregates
+these and delegates to `trace-collector` (Phase 3) to write JSONL trace files.
+
+### Eval Suite
+
+Located at `.opencode/evals/`:
+
+| Script | Purpose |
+|--------|---------|
+| `trace.sh` | Append a validated trace line to a dated JSONL file |
+| `collect-traces.sh` | Aggregate, summarize, and generate R_geral reliability reports |
+| `run-eval.sh` | Execute individual eval scenarios (QR-* automated, ORC/CW/LIB/DU manual) |
+
+### Running Evals
+
+```bash
+# List all available scenarios
+.opencode/evals/run-eval.sh --list
+
+# Run all automated scenarios (Quality Runner)
+.opencode/evals/run-eval.sh --all
+
+# Run a specific scenario
+.opencode/evals/run-eval.sh QR-01
+
+# Generate reliability report
+.opencode/evals/collect-traces.sh --session eval-qr --report
+```
+
+### Full Documentation
+
+Detailed docs at `.opencode/agents-docs-eval/`:
+- `01-agents/` — Agent definitions and workflows
+- `02-evaluation/` — Metrics framework, eval suite, trace format, dashboard
+- `03-troubleshooting/` — Common failures and resolutions
