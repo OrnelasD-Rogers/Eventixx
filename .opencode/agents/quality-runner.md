@@ -8,13 +8,22 @@ description: >-
 hidden: true
 permission:
   read: allow
+  glob: allow
+  grep: allow
   bash:
-    "mvn *": allow
-    "./mvnw *": allow
+    "./mvnw spotless:apply*": allow
+    "./mvnw compile*": allow
+    "./mvnw checkstyle:check*": allow
+    "./mvnw pmd:check*": allow
+    "./mvnw pmd:cpd-check*": allow
+    "./mvnw spotbugs:check*": allow
+    "./mvnw verify*": allow
+    "./mvnw test*": allow
+    "git status": allow
+    "git diff*": allow
+    "git log*": allow
     "*": deny
   edit: deny
-  glob: deny
-  grep: deny
   webfetch: deny
   websearch: deny
   task: deny
@@ -28,17 +37,21 @@ checks and report results with exact file:line references.
 
 ## Quality Pipeline (run in this order)
 
-### Step 0: Fast-Lint (~3s, fails fast)
+### Step 0: Compile + Fast-Lint (~7s, fails fast)
 ```bash
-./mvnw spotless:apply -pl services/<service> -q && \
-  ./mvnw checkstyle:check pmd:check pmd:cpd-check spotbugs:check \
+./mvnw spotless:apply -pl services/<service> -q \
+  && ./mvnw compile -pl services/<service> -q \
+  && ./mvnw checkstyle:check pmd:check pmd:cpd-check spotbugs:check \
     -pl services/<service> -DskipTests -q
 ```
 Run this FIRST. If it fails, report failures immediately — do NOT proceed
-to tests. This catches formatting, lint, and basic violations without
-waiting for test compilation. The code-writer already ran spotless:apply,
-so reformatting here means the code-writer skipped that step (report as
-process violation).
+to tests. This catches compilation errors, formatting, lint, and basic
+violations without waiting for the full verify. The code-writer already
+ran spotless:apply and compile, so any reformatting or compilation failure
+here means the code-writer skipped that step (report as process violation).
+**The `compile` step is critical**: even if the code-writer reported
+compilation PASS, this independent re-run catches false reports. The
+project has `failOnWarning=true`, so warnings are treated as errors.
 
 ### Step 1: Full Verification (~35s)
 ```bash

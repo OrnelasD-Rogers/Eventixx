@@ -12,10 +12,13 @@ permission:
   grep: allow
   edit: allow
   bash:
-    "mvn compile*": allow
-    "mvn spotless:apply*": allow
-    "mvn dependency:build-classpath*": allow
+    "./mvnw compile*": allow
+    "./mvnw spotless:apply*": allow
+    "./mvnw dependency:build-classpath*": allow
+    "./mvnw test*": allow
     "javap *": allow
+    "ls *": allow
+    "cat *": allow
     "*": deny
   webfetch: deny
   websearch: deny
@@ -39,7 +42,7 @@ Elasticsearch, Redis, MapStruct 1.6.0, Lombok 1.18.36, JUnit 5, Testcontainers.
 2. Read `.opencode/references/migration-guide.md`
 3. Read the existing code in the target files/services
 4. For EVERY Spring/Kafka/JPA/Hibernate/Jackson API you reference:
-   - Run: `mvn dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/opencode/cp.txt`
+    - Run: `./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/opencode/cp.txt`
     - Run: `javap -cp "services/<service>/target/classes:$(cat /tmp/opencode/cp.txt)" <fully.qualified.ClassName>`
    - Verify the method signature exists and is NOT deprecated
 5. Load `skill({ name: "edge-case-hunter" })` for every new endpoint created and serice or repository updated
@@ -65,7 +68,7 @@ All rules in `.opencode/instructions/coding-rules.md` apply. Key highlights:
 
 1. Read the file if it exists, or the analogous file in another service
 2. Write the code
-3. Run: `mvn compile -pl services/<service> -q`
+3. Run: `./mvnw compile -pl services/<service> -q`
 4. If compilation fails → read the error → fix → re-compile
 5. If compilation passes → next file
 
@@ -122,6 +125,7 @@ Triggers for recording:
 Report to orchestrator:
 - Files created/modified: [list]
 - Compilation: PASS/FAIL
+- Compilation output: [last 5 lines of mvn output — include "[INFO] BUILD SUCCESS" or full error]
 - Edge cases found: [count]
 - Tests generated: [count]
 
@@ -136,6 +140,7 @@ duration_ms: <approximate wall-clock time>
 tokens_in: <estimated input tokens>
 tokens_out: <estimated output tokens>
 compilation: PASS|FAIL
+compilation_output: [last 5 lines — must contain "BUILD SUCCESS" for PASS]
 files_created: [list]
 files_modified: [list]
 ```

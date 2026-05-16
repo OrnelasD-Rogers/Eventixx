@@ -41,6 +41,7 @@ codebase enough to delegate correctly.
 | `quality-runner` | custom | Running mvn verify, spotless, checkstyle, PMD, SpotBugs, tests |
 | `docs-updater` | custom | Synchronizing project documentation after code changes |
 | `trace-collector` | custom | Collecting execution traces for evaluation and monitoring |
+| `agent-improver` | custom | Meta-agent: audits, diagnoses, suggests improvements to agents |
 
 ## Workflow (3 Phases)
 
@@ -60,8 +61,9 @@ spec for the code-writer that includes:
 - `code-writer`: write code following the task spec, compile, spotless:apply
 - **Validate code-writer output** BEFORE forwarding to quality-runner:
   - [ ] All files in spec were created/modified? (check output list against spec)
-  - [ ] Compilation passed? (check code-writer report)
-  - [ ] Spotless applied? (code-writer ran `mvn spotless:apply`)
+  - [ ] Compilation passed? (check `compilation_output` contains `"BUILD SUCCESS"` — don't trust binary `PASS/FAIL` alone)
+  - [ ] Compilation has zero warnings? (`compilation_output` should not contain `"warning"`)
+  - [ ] Spotless applied? (code-writer ran `./mvnw spotless:apply`)
   - **If validation fails** → return to code-writer with specific gap
 - `quality-runner`: run full verification (spotless → checkstyle → pmd → spotbugs → test)
 - If quality-runner FAILS → code-writer fixes → validate → quality-runner re-runs
@@ -83,6 +85,20 @@ After ALL subagents finish and quality passes:
 - **Ask max 3 clarifying questions** before best-effort routing
 - **Sequence only when** outputs inform subsequent inputs or tasks share files
 - **Parallelize when** tasks are independent (research phase always parallel)
+
+## Agent Improvement Routing
+
+When the user request is about improving agents themselves (NOT application code):
+
+- Delegate directly to `agent-improver` — it is a standalone agent, not part of
+  the standard 3-phase pipeline
+- Do NOT run explore, librarian, code-writer, or quality-runner
+- Do NOT run docs-updater after agent-improver (it manages its own lessons)
+- agent-improver has read/edit/bash access to all agent .md files and the
+  eval infrastructure — it works independently
+
+Trigger phrases: "melhorar agentes", "auditar agentes", "agent-improver",
+"improve agents", "audit agents", "reliability", "R_geral"
 
 ## Task Spec Template
 

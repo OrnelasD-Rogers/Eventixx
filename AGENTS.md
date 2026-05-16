@@ -309,6 +309,16 @@ Located at `.opencode/evals/`:
 .opencode/evals/collect-traces.sh --session eval-qr --report
 ```
 
+### Agent Improvement
+
+The `agent-improver` meta-agent audits every agent, diagnoses the weakest,
+suggests specific improvements, validates with evals, and learns:
+
+```bash
+# Trigger agent-improver (via orchestrator or directly)
+# It will run collect-traces.sh, analyze, and propose changes
+```
+
 ### Full Documentation
 
 Detailed docs at `.opencode/agents-docs-eval/`:

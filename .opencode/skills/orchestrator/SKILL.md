@@ -142,6 +142,8 @@ Is pure investigation | explore only (skip code/docs phases)
 Is adding a new endpoint | Full pipeline: explore + librarian → code-writer → quality-runner → docs-updater
 Is a bug fix | explore (trace) → code-writer → quality-runner
 Is a dependency update | librarian (research impact) → code-writer → quality-runner → docs-updater
+Is about agent improvement/audit | agent-improver (standalone, no pipeline needed)
+Is about improving reliability | agent-improver (standalone, no pipeline needed)
 
 ## Output
 

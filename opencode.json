@@ -14,7 +14,8 @@
           "code-writer": "allow",
           "quality-runner": "allow",
           "docs-updater": "allow",
-          "trace-collector": "allow"
+          "trace-collector": "allow",
+          "agent-improver": "allow"
         },
         "skill": {
           "orchestrator": "allow",
