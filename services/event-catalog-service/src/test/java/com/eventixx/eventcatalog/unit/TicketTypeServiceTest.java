@@ -101,7 +101,7 @@ class TicketTypeServiceTest {
     when(ticketTypeRepository.findById(ticketType.getId())).thenReturn(Optional.of(ticketType));
     when(ticketTypeMapper.toResponse(ticketType)).thenReturn(ticketTypeResponse);
 
-    TicketTypeResponse result = ticketTypeService.findById(ticketType.getId());
+    TicketTypeResponse result = ticketTypeService.findById(event.getId(), ticketType.getId());
 
     assertThat(result).isEqualTo(ticketTypeResponse);
   }
@@ -111,9 +111,19 @@ class TicketTypeServiceTest {
     UUID id = UUID.randomUUID();
     when(ticketTypeRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> ticketTypeService.findById(id))
+    assertThatThrownBy(() -> ticketTypeService.findById(event.getId(), id))
         .isInstanceOf(ResourceNotFoundException.class)
         .hasMessageContaining("Ticket type with id");
+  }
+
+  @Test
+  void shouldThrow_whenTicketTypeNotFromEvent() {
+    UUID otherEventId = UUID.randomUUID();
+    when(ticketTypeRepository.findById(ticketType.getId())).thenReturn(Optional.of(ticketType));
+
+    assertThatThrownBy(() -> ticketTypeService.findById(otherEventId, ticketType.getId()))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessageContaining("not found for event");
   }
 
   @Test
@@ -134,18 +144,42 @@ class TicketTypeServiceTest {
     when(ticketTypeRepository.findById(ticketType.getId())).thenReturn(Optional.of(ticketType));
     when(ticketTypeMapper.toResponse(ticketType)).thenReturn(ticketTypeResponse);
 
-    TicketTypeResponse result = ticketTypeService.update(ticketType.getId(), request);
+    TicketTypeResponse result =
+        ticketTypeService.update(event.getId(), ticketType.getId(), request);
 
     assertThat(result).isEqualTo(ticketTypeResponse);
     verify(ticketTypeMapper).updateEntity(request, ticketType);
   }
 
   @Test
+  void shouldThrow_whenUpdateTicketTypeNotFromEvent() {
+    UUID otherEventId = UUID.randomUUID();
+    UpdateTicketTypeRequest request = new UpdateTicketTypeRequest("Updated GA", null, null);
+
+    when(ticketTypeRepository.findById(ticketType.getId())).thenReturn(Optional.of(ticketType));
+
+    assertThatThrownBy(() -> ticketTypeService.update(otherEventId, ticketType.getId(), request))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessageContaining("not found for event");
+  }
+
+  @Test
   void shouldDeleteTicketType() {
     when(ticketTypeRepository.findById(ticketType.getId())).thenReturn(Optional.of(ticketType));
 
-    ticketTypeService.delete(ticketType.getId());
+    ticketTypeService.delete(event.getId(), ticketType.getId(), "user-123");
 
-    verify(ticketTypeRepository).delete(ticketType);
+    verify(ticketTypeRepository)
+        .softDelete(ticketType.getId(), "user-123", "User deleted ticket type");
+  }
+
+  @Test
+  void shouldThrow_whenDeleteTicketTypeNotFromEvent() {
+    UUID otherEventId = UUID.randomUUID();
+    when(ticketTypeRepository.findById(ticketType.getId())).thenReturn(Optional.of(ticketType));
+
+    assertThatThrownBy(() -> ticketTypeService.delete(otherEventId, ticketType.getId(), "user-123"))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessageContaining("not found for event");
   }
 }

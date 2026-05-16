@@ -318,8 +318,8 @@ class EventServiceTest {
   void shouldDeleteEvent() {
     when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
 
-    eventService.delete(event.getId());
+    eventService.delete(event.getId(), "user-123");
 
-    verify(eventRepository).delete(event);
+    verify(eventRepository).softDelete(event.getId(), "user-123", "User deleted event");
   }
 }

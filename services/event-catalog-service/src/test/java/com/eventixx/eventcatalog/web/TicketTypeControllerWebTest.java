@@ -78,7 +78,7 @@ class TicketTypeControllerWebTest {
     TicketTypeResponse response =
         new TicketTypeResponse(
             ticketTypeId, "GA", BigDecimal.valueOf(50), 100, Instant.now(), Instant.now());
-    when(ticketTypeService.findById(ticketTypeId)).thenReturn(response);
+    when(ticketTypeService.findById(eventId, ticketTypeId)).thenReturn(response);
 
     mockMvc
         .perform(get("/api/v1/events/{eventId}/ticket-types/{id}", eventId, ticketTypeId))
@@ -88,7 +88,7 @@ class TicketTypeControllerWebTest {
 
   @Test
   void shouldReturn404_whenTicketTypeNotFound() throws Exception {
-    when(ticketTypeService.findById(ticketTypeId))
+    when(ticketTypeService.findById(eventId, ticketTypeId))
         .thenThrow(new ResourceNotFoundException("Ticket type not found"));
 
     mockMvc
@@ -116,7 +116,7 @@ class TicketTypeControllerWebTest {
     TicketTypeResponse response =
         new TicketTypeResponse(
             ticketTypeId, "Updated VIP", BigDecimal.valueOf(200), 50, Instant.now(), Instant.now());
-    when(ticketTypeService.update(eq(ticketTypeId), any())).thenReturn(response);
+    when(ticketTypeService.update(eq(eventId), eq(ticketTypeId), any())).thenReturn(response);
 
     mockMvc
         .perform(

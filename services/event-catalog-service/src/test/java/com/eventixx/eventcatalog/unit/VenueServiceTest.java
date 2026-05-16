@@ -11,7 +11,9 @@ import com.eventixx.eventcatalog.dto.venue.UpdateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.VenueResponse;
 import com.eventixx.eventcatalog.dto.venue.VenueSummaryResponse;
 import com.eventixx.eventcatalog.entities.Venue;
+import com.eventixx.eventcatalog.exceptions.BusinessException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
+import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
 import com.eventixx.eventcatalog.services.venue.VenueMapper;
 import com.eventixx.eventcatalog.services.venue.VenueService;
@@ -34,6 +36,7 @@ import org.springframework.data.domain.Pageable;
 class VenueServiceTest {
 
   @Mock private VenueRepository venueRepository;
+  @Mock private EventRepository eventRepository;
   @Mock private VenueMapper venueMapper;
 
   @InjectMocks private VenueService venueService;
@@ -137,9 +140,20 @@ class VenueServiceTest {
   @Test
   void shouldDeleteVenue() {
     when(venueRepository.findById(venue.getId())).thenReturn(Optional.of(venue));
+    when(eventRepository.existsByVenueId(venue.getId())).thenReturn(false);
 
-    venueService.delete(venue.getId());
+    venueService.delete(venue.getId(), "user-123");
 
-    verify(venueRepository).delete(venue);
+    verify(venueRepository).softDelete(venue.getId(), "user-123", "User deleted venue");
+  }
+
+  @Test
+  void shouldThrow_whenDeletingVenueWithActiveEvents() {
+    when(venueRepository.findById(venue.getId())).thenReturn(Optional.of(venue));
+    when(eventRepository.existsByVenueId(venue.getId())).thenReturn(true);
+
+    assertThatThrownBy(() -> venueService.delete(venue.getId(), "user-123"))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining("Cannot delete venue with active events");
   }
 }
