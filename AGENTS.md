@@ -32,6 +32,11 @@ Guide for AI agents working in this repository.
 # Auto-format all Java source files (Google Java Style)
 ./mvnw spotless:apply
 
+# Fast-fail: static analysis only (format + lint), without tests (~7s vs ~37s for full verify)
+./mvnw spotless:apply -pl services/event-catalog-service && \
+  ./mvnw checkstyle:check pmd:check pmd:cpd-check spotbugs:check \
+    -pl services/event-catalog-service -DskipTests
+
 # Full verification (Spotless + tests + SpotBugs + PMD + Checkstyle + ArchUnit)
 ./mvnw verify -pl services/event-catalog-service
 

@@ -22,3 +22,5 @@
 - Glossary updates are easy to forget. Every new entity that represents a core domain concept should trigger a glossary check, even when the entity name seems "obvious" from the existing UC text.
 - PUT semantics vs PATCH: `@BeanMapping(nullValuePropertyMappingStrategy = IGNORE)` is wrong for PUT because PUT replaces the entire resource. Only use `IGNORE` for PATCH endpoints. The user caught this — don't assume partial update without confirming the HTTP verb.
 - Service bug fixes that change observable behavior (e.g., 500 → 409) warrant UC Execution Log entries, even though the endpoint contracts remain the same. The fix fixes a bug in the implementation, not the API spec.
+- Build tool config changes (PMD ruleset, SpotBugs exclusions) rarely need doc updates. The tool config files themselves are the source of truth. Only update `setup.md` if a new tool is added or a significant behavioral change occurs.
+- New exception classes following existing project patterns (extending RuntimeException, in exceptions package) do not warrant doc updates. They are implementation details, not API contracts or data model changes.

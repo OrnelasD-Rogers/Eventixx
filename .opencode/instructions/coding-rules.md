@@ -256,7 +256,21 @@ The build fails at `verify` if .editorconfig rules are violated.
 
 ---
 
-## 15. Test Code (Project convention)
+## 15. Fast-Fail Workflow
+
+Antes do `mvn verify` completo (~37s), execute a análise estática primeiro (~7s):
+
+```bash
+./mvnw spotless:apply -pl services/<service> && \
+  ./mvnw checkstyle:check pmd:check pmd:cpd-check spotbugs:check \
+    -pl services/<service> -DskipTests
+```
+
+Isso falha rápido em violações de formatação/lint sem esperar os testes.
+
+---
+
+## 16. Test Code (Project convention)
 
 Use Spring Boot 4 migration patterns:
 - `@MockitoBean` (NOT `@MockBean`)
