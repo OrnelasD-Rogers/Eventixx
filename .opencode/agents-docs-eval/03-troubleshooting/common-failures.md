@@ -73,7 +73,47 @@ librarian, or research to code-writer).
 - For complexity: extract helper methods — aim for ≤8 to leave margin
 - Use `@Builder.Default` for DTO defaults instead of complex constructors
 
-### C-F03: Edge cases not covered
+### C-F04: Bash commands denied (./ prefix mismatch)
+
+**Symptom:** `mvnw` commands silently fail — no error output, but commands
+don't execute. Agent reports "command not found" or "permission denied".
+
+**Diagnosis:** The OpenCode runtime strips `./` from command invocations
+before matching against permission patterns. If the permission block only
+has `"./mvnw compile*"`, the runtime sees `mvnw compile ...` and finds no
+match, falling through to `"*": deny`.
+
+**Resolution:**
+- Always add patterns both WITH and WITHOUT `./` prefix for mvnw commands:
+  ```yaml
+  bash:
+    "./mvnw compile*": allow
+    "mvnw compile*": allow
+  ```
+- Audit all agent .md files for this pattern whenever bash permissions are modified
+
+### C-F05: Skill tool not permitted in permission block
+
+**Symptom:** Agent's prompt says "Load skill({ name: ... })" but the skill
+never loads. Agent may silently skip the skill-loading step or produce output
+without the skill's analysis.
+
+**Diagnosis:** The agent's frontmatter has a `permission:` block, which means
+tools NOT listed are implicitly denied. If `skill:` is missing from the block,
+the agent cannot load skills regardless of what the prompt instructs.
+
+**Resolution:**
+- Add a `skill:` subsection to the permission block:
+  ```yaml
+  permission:
+    skill:
+      "edge-case-hunter": allow
+      "*": deny
+  ```
+- Verify that every agent that references `skill()` in its prompt has `skill:` in its permission block
+- Check during agent-improver audits: run a grep for `skill(` in prompts, then verify the frontmatter
+
+### C-F06: Edge cases not covered
 
 **Symptom:** Tests miss null inputs, soft-deleted resources, pagination limits.
 

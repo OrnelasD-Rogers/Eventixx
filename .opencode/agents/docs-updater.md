@@ -12,10 +12,10 @@ permission:
   grep: allow
   edit: allow
   bash:
+    "*": deny
     "git diff*": allow
     "git status*": allow
     "git log*": allow
-    "*": deny
   webfetch: deny
   websearch: deny
   task: deny

@@ -11,9 +11,10 @@ permission:
   glob: allow
   edit: allow
   bash:
-    "./.opencode/evals/trace.sh*": allow
-    "cat *": allow
     "*": deny
+    "./.opencode/evals/trace.sh*": allow
+    ".opencode/evals/trace.sh*": allow
+    "cat *": allow
   webfetch: deny
   websearch: deny
   task: deny

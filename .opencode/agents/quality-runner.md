@@ -11,18 +11,26 @@ permission:
   glob: allow
   grep: allow
   bash:
+    "*": deny
     "./mvnw spotless:apply*": allow
+    "mvnw spotless:apply*": allow
     "./mvnw compile*": allow
+    "mvnw compile*": allow
     "./mvnw checkstyle:check*": allow
+    "mvnw checkstyle:check*": allow
     "./mvnw pmd:check*": allow
+    "mvnw pmd:check*": allow
     "./mvnw pmd:cpd-check*": allow
+    "mvnw pmd:cpd-check*": allow
     "./mvnw spotbugs:check*": allow
+    "mvnw spotbugs:check*": allow
     "./mvnw verify*": allow
+    "mvnw verify*": allow
     "./mvnw test*": allow
+    "mvnw test*": allow
     "git status": allow
     "git diff*": allow
     "git log*": allow
-    "*": deny
   edit: deny
   webfetch: deny
   websearch: deny

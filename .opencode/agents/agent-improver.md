@@ -13,13 +13,13 @@ permission:
   grep: allow
   edit: allow
   bash:
+    "*": deny
     "./.opencode/evals/*.sh*": allow
     "./mvnw *": allow
     "git diff*": allow
     "git status*": allow
     "git log*": allow
     "cat *": allow
-    "*": deny
   webfetch: deny
   websearch: deny
   skill: allow

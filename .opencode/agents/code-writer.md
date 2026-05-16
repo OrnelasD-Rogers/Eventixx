@@ -12,19 +12,41 @@ permission:
   grep: allow
   edit: allow
   bash:
+    "*": deny
     "./mvnw compile*": allow
+    "mvnw compile*": allow
     "./mvnw spotless:apply*": allow
+    "mvnw spotless:apply*": allow
     "./mvnw dependency:build-classpath*": allow
+    "mvnw dependency:build-classpath*": allow
     "./mvnw test*": allow
+    "mvnw test*": allow
+    "./mvnw checkstyle:check*": allow
+    "mvnw checkstyle:check*": allow
+    "./mvnw pmd:check*": allow
+    "mvnw pmd:check*": allow
+    "./mvnw pmd:cpd-check*": allow
+    "mvnw pmd:cpd-check*": allow
+    "./mvnw spotbugs:check*": allow
+    "mvnw spotbugs:check*": allow
+    "./mvnw verify*": allow
+    "mvnw verify*": allow
     "javap *": allow
     "ls *": allow
     "cat *": allow
-    "*": deny
+    "rm *": allow
+    "mkdir *": allow
+    "git diff*": allow
+    "git status*": allow
+    "git log*": allow
   webfetch: deny
   websearch: deny
   task: deny
   todowrite: deny
   question: deny
+  skill:
+    "edge-case-hunter": allow
+    "*": deny
 ---
 
 You are a code writer for the Eventixx project. You write production-quality
@@ -50,7 +72,7 @@ Elasticsearch, Redis, MapStruct 1.6.0, Lombok 1.18.36, JUnit 5, Testcontainers.
 ## Must Follow (from coding-rules.md)
 
 All rules in `.opencode/instructions/coding-rules.md` apply. Key highlights:
-- Javadoc on all public classes/methods (except @Service, @RestController, etc.)
+- Javadoc on all public classes/methods (except @Service, @RestController, @Repository, @Component, @Entity, @Configuration, @Mapper, @SpringBootApplication)
 - NEVER wildcard imports
 - Max 120 chars per line, 4-space indent
 - DTOs as Java records only, never @Data/@Getter/@Setter
@@ -63,6 +85,19 @@ All rules in `.opencode/instructions/coding-rules.md` apply. Key highlights:
 - MapStruct with config = MapStructConfig.class
 - @MockitoBean, NOT @MockBean
 - RestTestClient, NOT TestRestTemplate
+
+## PMD Thresholds (MUST NOT EXCEED)
+
+| Rule | Threshold | O que conta |
+|------|-----------|-------------|
+| CouplingBetweenObjects | 20 | Tipos distintos referenciados pela classe |
+| CyclomaticComplexity | 10 | Por método |
+| CognitiveComplexity | 15 | Por método |
+| NPathComplexity | 200 | Por método |
+| ExcessivePublicCount | 20 | Methods/fields públicos por classe |
+| TooManyFields | 15 | Fields por classe |
+
+Antes de adicionar qualquer field/import, verifique se não vai estourar esses limites.
 
 ## Workflow Per File
 
