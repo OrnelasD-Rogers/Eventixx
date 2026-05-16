@@ -5,6 +5,7 @@ import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.exceptions.ProblemType;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.exceptions.ValidationErrorDetail;
+import jakarta.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -118,6 +119,19 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handles method-level constraint violations (e.g. @NotBlank on @RequestHeader) with HTTP 400.
+   */
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ProblemDetail handleConstraintViolation(ConstraintViolationException ex) {
+    log.warn("Constraint violation: {}", ex.getMessage());
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problem.setType(ProblemType.VALIDATION_ERROR);
+    problem.setTitle(ProblemType.TITLE_VALIDATION_ERROR);
+    return problem;
+  }
+
+  /**
    * Handles invalid sort fields with HTTP 400.
    */
   @ExceptionHandler(PropertyReferenceException.class)
@@ -144,6 +158,19 @@ public class GlobalExceptionHandler {
             "Resource was updated by another user. Please reload and try again.");
     problem.setType(ProblemType.CONFLICT);
     problem.setTitle(ProblemType.TITLE_CONFLICT);
+    return problem;
+  }
+
+  /**
+   * Handles invalid arguments (e.g. invalid enum values) with HTTP 400.
+   */
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
+    log.warn("Invalid argument: {}", ex.getMessage());
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problem.setType(ProblemType.VALIDATION_ERROR);
+    problem.setTitle(ProblemType.TITLE_VALIDATION_ERROR);
     return problem;
   }
 

@@ -1,8 +1,10 @@
 package com.eventixx.eventcatalog.dto.event;
 
 import com.eventixx.eventcatalog.dto.tickettype.CreateTicketTypeRequest;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
@@ -17,4 +19,9 @@ public record CreateEventRequest(
     @NotNull UUID categoryId,
     @NotNull @Future Instant startTime,
     @NotNull @Future Instant endTime,
-    @NotNull List<CreateTicketTypeRequest> ticketTypes) {}
+    @NotEmpty List<CreateTicketTypeRequest> ticketTypes) {
+
+  @AssertTrue(message = "endTime must be after startTime") boolean isEndTimeAfterStartTime() {
+    return endTime != null && startTime != null && endTime.isAfter(startTime);
+  }
+}
