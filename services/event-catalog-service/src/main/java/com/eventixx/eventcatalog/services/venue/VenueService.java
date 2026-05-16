@@ -5,7 +5,9 @@ import com.eventixx.eventcatalog.dto.venue.UpdateVenueRequest;
 import com.eventixx.eventcatalog.dto.venue.VenueResponse;
 import com.eventixx.eventcatalog.dto.venue.VenueSummaryResponse;
 import com.eventixx.eventcatalog.entities.Venue;
+import com.eventixx.eventcatalog.exceptions.BusinessException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
+import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class VenueService {
 
   private final VenueRepository venueRepository;
+  private final EventRepository eventRepository;
   private final VenueMapper venueMapper;
 
   @Transactional
@@ -50,10 +53,19 @@ public class VenueService {
     return venueMapper.toResponse(venue);
   }
 
+  /**
+   * Soft-deletes a venue, checking it has no active events first.
+   *
+   * @param id     the venue ID
+   * @param userId the user performing the deletion
+   */
   @Transactional
-  public void delete(UUID id) {
+  public void delete(UUID id, String userId) {
     Venue venue = findVenueOrThrow(id);
-    venueRepository.delete(venue);
+    if (eventRepository.existsByVenueId(venue.getId())) {
+      throw new BusinessException("Cannot delete venue with active events");
+    }
+    venueRepository.softDelete(venue.getId(), userId, "User deleted venue");
   }
 
   private Venue findVenueOrThrow(UUID id) {

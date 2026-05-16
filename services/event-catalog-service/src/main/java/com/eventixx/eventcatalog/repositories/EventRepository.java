@@ -22,5 +22,9 @@ public interface EventRepository {
 
   boolean existsByCategoryId(UUID categoryId);
 
+  boolean existsByVenueId(UUID venueId);
+
+  void softDelete(UUID id, String deletedBy, String deletedReason);
+
   void delete(Event event);
 }

@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +30,16 @@ import org.hibernate.annotations.SQLRestriction;
 @Entity
 @Table(name = "events")
 @SQLRestriction("deleted_at IS NULL")
-@SQLDelete(sql = "UPDATE events SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(
+    sql =
+        "UPDATE events SET deleted_at = CURRENT_TIMESTAMP, version = version + 1 WHERE id = ?"
+            + " AND version = ?")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
+@SuppressWarnings("PMD.TooManyFields")
 public class Event {
 
   @Id
@@ -73,6 +78,7 @@ public class Event {
   @Builder.Default
   private List<TicketType> ticketTypes = new ArrayList<>();
 
+  // CPD-OFF
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default
   private Instant createdAt = Instant.now();
@@ -83,4 +89,15 @@ public class Event {
 
   @Column(name = "deleted_at")
   private Instant deletedAt;
+
+  @Column(name = "deleted_by")
+  private String deletedBy;
+
+  @Column(name = "deleted_reason", length = 500)
+  private String deletedReason;
+
+  @Version
+  @Column(name = "version", nullable = false)
+  private long version;
+  // CPD-ON
 }

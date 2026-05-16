@@ -43,17 +43,22 @@ public class TicketTypeService {
   }
 
   /**
-   * Finds a ticket type by ID.
+   * Finds a ticket type by ID, verifying it belongs to the given event.
    *
+   * @param eventId the event ID from the path
    * @param id the ticket type ID
    * @return the ticket type
    */
-  public TicketTypeResponse findById(UUID id) {
-    return ticketTypeMapper.toResponse(
+  public TicketTypeResponse findById(UUID eventId, UUID id) {
+    TicketType ticketType =
         ticketTypeRepository
             .findById(id)
             .orElseThrow(
-                () -> new ResourceNotFoundException("Ticket type with id " + id + " not found")));
+                () -> new ResourceNotFoundException("Ticket type with id " + id + " not found"));
+    if (!ticketType.getEvent().getId().equals(eventId)) {
+      throw new ResourceNotFoundException("Ticket type with id " + id + " not found for event");
+    }
+    return ticketTypeMapper.toResponse(ticketType);
   }
 
   /**
@@ -67,19 +72,23 @@ public class TicketTypeService {
   }
 
   /**
-   * Updates a ticket type.
+   * Updates a ticket type, verifying it belongs to the given event.
    *
+   * @param eventId the event ID from the path
    * @param id      the ticket type ID
    * @param request the update request
    * @return the updated ticket type
    */
   @Transactional
-  public TicketTypeResponse update(UUID id, UpdateTicketTypeRequest request) {
+  public TicketTypeResponse update(UUID eventId, UUID id, UpdateTicketTypeRequest request) {
     TicketType ticketType =
         ticketTypeRepository
             .findById(id)
             .orElseThrow(
                 () -> new ResourceNotFoundException("Ticket type with id " + id + " not found"));
+    if (!ticketType.getEvent().getId().equals(eventId)) {
+      throw new ResourceNotFoundException("Ticket type with id " + id + " not found for event");
+    }
     ticketTypeMapper.updateEntity(request, ticketType);
     return ticketTypeMapper.toResponse(ticketType);
   }
@@ -87,15 +96,20 @@ public class TicketTypeService {
   /**
    * Soft-deletes a ticket type.
    *
+   * @param eventId the event ID from the path
    * @param id the ticket type ID
+   * @param userId the user performing the deletion
    */
   @Transactional
-  public void delete(UUID id) {
+  public void delete(UUID eventId, UUID id, String userId) {
     TicketType ticketType =
         ticketTypeRepository
             .findById(id)
             .orElseThrow(
                 () -> new ResourceNotFoundException("Ticket type with id " + id + " not found"));
-    ticketTypeRepository.delete(ticketType);
+    if (!ticketType.getEvent().getId().equals(eventId)) {
+      throw new ResourceNotFoundException("Ticket type with id " + id + " not found for event");
+    }
+    ticketTypeRepository.softDelete(id, userId, "User deleted ticket type");
   }
 }

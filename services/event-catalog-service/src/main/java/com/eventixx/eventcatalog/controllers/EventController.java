@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/events")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Events", description = "Event catalog management")
 public class EventController {
 
@@ -40,7 +43,8 @@ public class EventController {
   @ApiResponse(responseCode = "201", description = "Event created successfully")
   @ApiResponse(responseCode = "400", description = "Invalid input")
   public EventResponse create(
-      @Valid @RequestBody CreateEventRequest request, @RequestHeader("X-User-Id") String userId) {
+      @Valid @RequestBody CreateEventRequest request,
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
     return eventService.create(request);
   }
 
@@ -86,7 +90,7 @@ public class EventController {
   public EventResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody UpdateEventRequest request,
-      @RequestHeader("X-User-Id") String userId) {
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
     return eventService.update(id, request);
   }
 
@@ -94,7 +98,8 @@ public class EventController {
   @Operation(summary = "Publish event")
   @ApiResponse(responseCode = "200", description = "Event published")
   @ApiResponse(responseCode = "409", description = "Event already published")
-  public EventResponse publish(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
+  public EventResponse publish(
+      @PathVariable UUID id, @NotBlank @RequestHeader("X-User-Id") String userId) {
     return eventService.publish(id);
   }
 
@@ -102,7 +107,8 @@ public class EventController {
   @Operation(summary = "Cancel event")
   @ApiResponse(responseCode = "200", description = "Event cancelled")
   @ApiResponse(responseCode = "400", description = "Event is not published")
-  public EventResponse cancel(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
+  public EventResponse cancel(
+      @PathVariable UUID id, @NotBlank @RequestHeader("X-User-Id") String userId) {
     return eventService.cancel(id);
   }
 
@@ -111,7 +117,7 @@ public class EventController {
   @Operation(summary = "Delete event")
   @ApiResponse(responseCode = "204", description = "Event deleted")
   @ApiResponse(responseCode = "404", description = "Event not found")
-  public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
-    eventService.delete(id);
+  public void delete(@PathVariable UUID id, @NotBlank @RequestHeader("X-User-Id") String userId) {
+    eventService.delete(id, userId);
   }
 }

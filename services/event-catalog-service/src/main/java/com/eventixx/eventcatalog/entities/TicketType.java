@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -24,11 +25,15 @@ import org.hibernate.annotations.SQLRestriction;
 @Entity
 @Table(name = "ticket_types")
 @SQLRestriction("deleted_at IS NULL")
-@SQLDelete(sql = "UPDATE ticket_types SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(
+    sql =
+        "UPDATE ticket_types SET deleted_at = CURRENT_TIMESTAMP, version = version + 1 WHERE id = ?"
+            + " AND version = ?")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
+@SuppressWarnings("PMD.TooManyFields")
 public class TicketType {
 
   @Id
@@ -52,6 +57,7 @@ public class TicketType {
   @Column(name = "quantity_available", nullable = false)
   private Integer quantityAvailable;
 
+  // CPD-OFF
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default
   private Instant createdAt = Instant.now();
@@ -62,4 +68,15 @@ public class TicketType {
 
   @Column(name = "deleted_at")
   private Instant deletedAt;
+
+  @Column(name = "deleted_by")
+  private String deletedBy;
+
+  @Column(name = "deleted_reason", length = 500)
+  private String deletedReason;
+
+  @Version
+  @Column(name = "version", nullable = false)
+  private long version;
+  // CPD-ON
 }

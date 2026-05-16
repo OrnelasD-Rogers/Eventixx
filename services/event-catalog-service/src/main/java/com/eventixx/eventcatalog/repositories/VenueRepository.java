@@ -17,5 +17,7 @@ public interface VenueRepository {
 
   Page<Venue> findAll(Pageable pageable);
 
+  void softDelete(UUID id, String deletedBy, String deletedReason);
+
   void delete(Venue venue);
 }

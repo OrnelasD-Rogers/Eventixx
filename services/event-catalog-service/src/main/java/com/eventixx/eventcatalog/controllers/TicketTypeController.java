@@ -8,10 +8,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/events/{eventId}/ticket-types")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Ticket Types", description = "Ticket type management for events")
 public class TicketTypeController {
 
@@ -40,7 +43,7 @@ public class TicketTypeController {
   public TicketTypeResponse create(
       @PathVariable UUID eventId,
       @Valid @RequestBody CreateTicketTypeRequest request,
-      @RequestHeader("X-User-Id") String userId) {
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
     return ticketTypeService.create(eventId, request);
   }
 
@@ -49,7 +52,7 @@ public class TicketTypeController {
   @ApiResponse(responseCode = "200", description = "Ticket type found")
   @ApiResponse(responseCode = "404", description = "Ticket type not found")
   public TicketTypeResponse getById(@PathVariable UUID eventId, @PathVariable UUID id) {
-    return ticketTypeService.findById(id);
+    return ticketTypeService.findById(eventId, id);
   }
 
   @GetMapping
@@ -68,8 +71,8 @@ public class TicketTypeController {
       @PathVariable UUID eventId,
       @PathVariable UUID id,
       @Valid @RequestBody UpdateTicketTypeRequest request,
-      @RequestHeader("X-User-Id") String userId) {
-    return ticketTypeService.update(id, request);
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
+    return ticketTypeService.update(eventId, id, request);
   }
 
   @DeleteMapping("/{id}")
@@ -80,7 +83,7 @@ public class TicketTypeController {
   public void delete(
       @PathVariable UUID eventId,
       @PathVariable UUID id,
-      @RequestHeader("X-User-Id") String userId) {
-    ticketTypeService.delete(id);
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
+    ticketTypeService.delete(eventId, id, userId);
   }
 }

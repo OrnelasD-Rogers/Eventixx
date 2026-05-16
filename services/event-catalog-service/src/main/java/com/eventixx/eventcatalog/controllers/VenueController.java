@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/venues")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Venues", description = "Venue management")
 public class VenueController {
 
@@ -39,7 +42,8 @@ public class VenueController {
   @ApiResponse(responseCode = "201", description = "Venue created successfully")
   @ApiResponse(responseCode = "400", description = "Invalid input")
   public VenueResponse create(
-      @Valid @RequestBody CreateVenueRequest request, @RequestHeader("X-User-Id") String userId) {
+      @Valid @RequestBody CreateVenueRequest request,
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
     return venueService.create(request);
   }
 
@@ -66,7 +70,7 @@ public class VenueController {
   public VenueResponse update(
       @PathVariable UUID id,
       @Valid @RequestBody UpdateVenueRequest request,
-      @RequestHeader("X-User-Id") String userId) {
+      @NotBlank @RequestHeader("X-User-Id") String userId) {
     return venueService.update(id, request);
   }
 
@@ -75,7 +79,7 @@ public class VenueController {
   @Operation(summary = "Delete venue")
   @ApiResponse(responseCode = "204", description = "Venue deleted")
   @ApiResponse(responseCode = "404", description = "Venue not found")
-  public void delete(@PathVariable UUID id, @RequestHeader("X-User-Id") String userId) {
-    venueService.delete(id);
+  public void delete(@PathVariable UUID id, @NotBlank @RequestHeader("X-User-Id") String userId) {
+    venueService.delete(id, userId);
   }
 }

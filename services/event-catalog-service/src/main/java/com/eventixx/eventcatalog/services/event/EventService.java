@@ -13,6 +13,7 @@ import com.eventixx.eventcatalog.entities.Venue;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
 import com.eventixx.eventcatalog.repositories.CategoryRepository;
 import com.eventixx.eventcatalog.repositories.EventRepository;
+import com.eventixx.eventcatalog.repositories.TicketTypeRepository;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
 import com.eventixx.eventcatalog.services.DomainEventPublisher;
 import com.eventixx.eventcatalog.services.messaging.EventPublished;
@@ -34,6 +35,7 @@ public class EventService {
   private final EventRepository eventRepository;
   private final VenueRepository venueRepository;
   private final CategoryRepository categoryRepository;
+  private final TicketTypeRepository ticketTypeRepository;
   private final EventMapper eventMapper;
   private final DomainEventPublisher domainEventPublisher;
   private final EventValidator eventValidator;
@@ -106,14 +108,19 @@ public class EventService {
   }
 
   /**
-   * Soft-deletes an event.
+   * Soft-deletes an event and its ticket types.
    *
    * @param id the event ID
+   * @param userId the user performing the deletion
    */
   @Transactional
-  public void delete(UUID id) {
+  public void delete(UUID id, String userId) {
     Event event = findEventOrThrow(id);
-    eventRepository.delete(event);
+    String reason = "User deleted event";
+    for (var tt : event.getTicketTypes()) {
+      ticketTypeRepository.softDelete(tt.getId(), userId, "Cascade from event deletion");
+    }
+    eventRepository.softDelete(id, userId, reason);
   }
 
   // === Private helpers ===

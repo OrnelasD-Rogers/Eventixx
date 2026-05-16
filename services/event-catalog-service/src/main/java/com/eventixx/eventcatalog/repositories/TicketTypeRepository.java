@@ -16,5 +16,7 @@ public interface TicketTypeRepository {
 
   List<TicketType> findAllByEventId(UUID eventId);
 
+  void softDelete(UUID id, String deletedBy, String deletedReason);
+
   void delete(TicketType ticketType);
 }
