@@ -31,3 +31,10 @@
 - The `dependency` category should distinguish BOM-managed Spring Boot starters (no version to track, no doc update) from standalone libraries with explicit version pins (update `setup.md` + `AGENTS.md` `spring-boot-starter-opentelemetry` is managed by the Spring Boot BOM).
 - When a planned tech-stack item from `PROJECT_CHARTER.md` is implemented (e.g., OpenTelemetry was already listed under Observability), the charter does not need updating — it was already defined as in-scope.
 - UC-001 serves as the single source of truth for cross-service observability changes. Applying structured JSON logging, tracing, and metrics to both `event-catalog-service` and `search-service` is appropriately documented in a single UC task section rather than duplicated across docs.
+
+## 2026-05-17
+
+- Kafka message records (like `EventPublished`) are message contracts, not JPA entities. The `data-model.md` only documents database tables, not Kafka schemas. A field addition to a message record does not trigger a data-model.md update.
+- When adding a completed entry to a UC Execution Log for a task that already has a "☐ Pending" placeholder row, the old placeholder must be explicitly removed — otherwise the task appears twice (once as Pending, once as Completed).
+- `docker-compose.{service}.yml` files for individual service isolation are already covered by the generic pattern in setup.md ("Each service has a docker-compose.{service}.yml"). No deployment.md or setup.md update is needed for new docker-compose files that follow this pattern.
+- The `aspectjweaver` dependency is BOM-managed by Spring Boot 4.0.6 (no explicit version pin). Per previous lesson, no setup.md/AGENTS.md version table update is needed.

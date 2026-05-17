@@ -60,36 +60,41 @@ it precisely. NEVER guess APIs — verify with javap.
 Java 21, Spring Boot 4.0.6, Spring Cloud 2025.1.0, PostgreSQL 16, Kafka KRaft,
 Elasticsearch, Redis, MapStruct 1.6.0, Lombok 1.18.36, JUnit 5, Testcontainers.
 
-## Required Skill Loading
+## Workflow (REQUIRED sequence)
 
-ALWAYS load these skills BEFORE implementing ANY code:
+Follow this EXACT sequence. Do not skip steps. Do not reorder.
 
-1. **edge-case-hunter** — call `skill({ name: "edge-case-hunter" })`
-   - Load BEFORE writing code, AFTER reading all relevant files
-   - Analyzes controllers, services, DTOs, entities, repositories for:
-     missing edge cases, security issues, concurrency bugs, test gaps
-   - Generates JUnit 5 test code for uncovered scenarios
+### Step 0: LOAD SKILLS
 
-2. **javap-inspector** — call `skill({ name: "javap-inspector" })`
-   - Load BEFORE writing code that references any framework API
-   - Use javap to inspect actual bytecode signatures
-   - Never guess method signatures — verify with javap
+Before ANY other operation (reading files, writing code, compiling, javap):
 
-3. **If the orchestrator passes `SKILLS:` in the task spec**, load those skills
-   implicitly before starting.
+1. Call `skill({ name: "edge-case-hunter" })`
+2. Call `skill({ name: "javap-inspector" })`
+3. If the orchestrator's task spec includes additional SKILLS, load those too
+4. ONLY after all skills are loaded, proceed to Step 1
 
-## Before Writing ANY Code
+**This is NOT optional.** The orchestrator trusts that you load these skills.
+If you skip this step, code quality will degrade because you cannot:
+- Detect edge cases before writing code
+- Verify API signatures before using them
+
+**Self-check**: After loading, verify `skills_loaded` includes both
+edge-case-hunter and javap-inspector. If not, retry loading.
+
+### Step 1: Read Task Spec & Research
 
 1. Read the task spec from orchestrator (APIs to Use, APIs to Avoid, context)
 2. Read `.opencode/references/migration-guide.md`
 3. Read the existing code in the target files/services
-4. For EVERY Spring/Kafka/JPA/Hibernate/Jackson API you reference:
-    - Step 1: `./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=services/<service>/target/.opencode-cp.txt`
-    - Step 2: Read the classpath file: `cat services/<service>/target/.opencode-cp.txt`
-    - Step 3: Copy the JAR path from the output that contains the class you need
-    - Step 4: `javap -cp "services/<service>/target/classes:<paste-jar-path>" <fully.qualified.ClassName>`
-   - Verify the method signature exists and is NOT deprecated
-5. Load `skill({ name: "edge-case-hunter" })` and `skill({ name: "javap-inspector" })` — these are REQUIRED
+
+### Step 2: Verify APIs via javap (if applicable)
+
+For EVERY Spring/Kafka/JPA/Hibernate/Jackson API you reference:
+1. `./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=services/<service>/target/.opencode-cp.txt`
+2. `cat services/<service>/target/.opencode-cp.txt`
+3. Copy the JAR path that contains the class you need
+4. `javap -cp "services/<service>/target/classes:<paste-jar-path>" <fully.qualified.ClassName>`
+5. Verify the method signature exists and is NOT deprecated
 
 ## Must Follow (from coding-rules.md)
 
@@ -121,18 +126,13 @@ All rules in `.opencode/instructions/coding-rules.md` apply. Key highlights:
 
 Antes de adicionar qualquer field/import, verifique se não vai estourar esses limites.
 
-## Workflow Per File
+### Step 3: Write & Compile (per file)
 
 1. Read the file if it exists, or the analogous file in another service
 2. Write the code
 3. Run: `./mvnw compile -pl services/<service> -q`
 4. If compilation fails → read the error → fix → re-compile
 5. If compilation passes → next file
-
-## After All Files Written
-
-Load `skill({ name: "edge-case-hunter" })` on every new endpoint and modified
-service or repository. Generate tests for uncovered edge cases.
 
 ## Lessons Learned (Self-Improvement)
 
@@ -205,6 +205,28 @@ Track every tool you use during execution. At the end, include failures in the T
 - Keep commands simple: one command, one set of arguments, no shell features
 - ✅ Correct: `./mvnw compile -pl services/event-catalog-service -q`
 - ❌ Wrong: `CP=$(cat services/<service>/target/.opencode-cp.txt) && javap -cp $CP ClassName 2>&1 | head -5`
+
+### Pipe Self-Check (REQUIRED before every bash command)
+
+Before running ANY bash command, visually inspect it for `|` characters.
+If the command contains `|`, REFORMULATE it:
+
+❌ Wrong: `./mvnw compile -pl services/X 2>&1 | tail -5`
+✅ Correct: `./mvnw compile -pl services/X -q`
+(Use `-q` flag for quiet mode instead of piping to tail)
+
+❌ Wrong: `./mvnw test -pl services/X 2>&1 | grep "Tests run"`
+✅ Correct: `./mvnw test -pl services/X`
+(Read the full output — the summary is at the end)
+
+❌ Wrong: `./mvnw verify -pl services/X 2>&1 | head -20`
+✅ Correct: `./mvnw verify -pl services/X`
+(Read the full output — the tool truncates long output safely)
+
+**Rationale**: The permission system compares the first token of your command
+against the allowlist. `./mvnw [...] | tail` starts with `./mvnw` but the
+runtime sees the full command including `|` shell syntax and fails to match
+any allow pattern, falling through to the default `"*": deny`.
 
 ## Output
 

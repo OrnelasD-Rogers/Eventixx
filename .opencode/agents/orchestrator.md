@@ -113,10 +113,27 @@ quality-runner ──→ [Step 0] Fast-Lint (~3s)
 - Do NOT reject the result solely due to tool failures — the quality-runner will catch any real issues
 
 ### Phase 3: CLOSE (sequential, once)
-After ALL subagents finish and quality passes:
-- `docs-updater`: sync documentation (git diff → categorize → map → edit → verify)
-- `trace-collector`: collect all subagent traces and write to `.opencode/evals/traces/`
-- Run both ONCE at the end, never inside the implementation loop
+
+After ALL subagents finish and quality passes, execute CLOSE phase. This phase
+must VERIFIABLY complete — do not skip or assume success.
+
+**Step 1: docs-updater**
+```
+task("Sync documentation for the changes made", subagent_type="docs-updater")
+```
+**Verify immediately**: Check that the docs-updater returns `status=success`
+AND `duration_ms > 0`. If docs-updater returns `status=pending` or
+`duration_ms=0`, re-dispatch once with explicit instructions.
+
+**Step 2: trace-collector**
+```
+task("Collect session traces", subagent_type="trace-collector")
+```
+
+**Critical Rule**: Docs-updater and trace-collector MUST actually execute and
+complete. Do not create trace entries for subagents that did not run. If a
+subagent fails to start (status=pending), re-dispatch with explicit
+instructions.
 
 ## Delegation Rules
 
@@ -214,13 +231,28 @@ Verification: [what quality-runner will check — REQUIRED]
 Edge Cases: [known risks: coupling thresholds, PMD limits, NPE paths — REQUIRED]
 ```
 
-**Template validation checklist before dispatch:**
-- [ ] Trace Context present? (parent_trace_id + YOUR_trace_id)
-- [ ] SKILLS field present?
-- [ ] All 8 task fields present? (reject if missing)
-- [ ] APIs to Avoid non-empty? (librarian always returns deprecations — insist)
-- [ ] Edge Cases mentions PMD thresholds for the target class?
-- [ ] Files to Modify/Create lists exact paths, not directories?
+### Pre-Dispatch Validation (REQUIRED before every code-writer task())
+
+Every code-writer dispatch MUST pass this automated validation. If any check
+fails, DO NOT dispatch — fix the spec first.
+
+1. **Build the spec with ALL fields first** (do not dispatch incomplete)
+2. **Validate using this checklist** (MENTALLY CHECK each item):
+   - [ ] `## Trace Context` present? (parent_trace_id + YOUR_trace_id)
+   - [ ] `## SKILLS` field present and populated?
+     → If this code-writer creates new controllers/endpoints: MUST include edge-case-hunter
+     → If this code-writer modifies framework APIs (Spring, Kafka, JPA): MUST include javap-inspector
+     → Default (when unsure): include BOTH edge-case-hunter AND javap-inspector
+   - [ ] All 8 task fields present? (Goal, Context, APIs to Use, APIs to Avoid,
+     Conventions, Files to Modify/Create, Verification, Edge Cases)
+   - [ ] `APIs to Avoid` non-empty? (librarian always returns deprecations — insist)
+   - [ ] `Edge Cases` mentions PMD thresholds for the target class?
+   - [ ] `Files to Modify/Create` lists exact paths, not directories?
+
+3. **Rule of thumb**: When in doubt about which skills to include, include ALL
+   relevant skills. The cost of loading a skill is ~100 tokens; the cost of a
+   missing skill is an extra quality-runner loop (~30s + ~5000 tokens).
+   **Prefer loading more skills rather than fewer.**
 
 ## Trace Collection
 
@@ -307,6 +339,7 @@ Result: [final response to user]
 | New endpoint | Full pipeline: explore + librarian → code-writer → quality-runner → docs-updater |
 | Bug fix | explore (trace) → code-writer → quality-runner |
 | Dependency update | librarian → code-writer → quality-runner → docs-updater |
+| **Any code-writer dispatch** | **ALWAYS include SKILLS field in task spec** |
 
 ## Error Recovery
 

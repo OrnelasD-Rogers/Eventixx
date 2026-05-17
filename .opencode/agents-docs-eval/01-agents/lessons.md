@@ -254,3 +254,26 @@ Use este formato para novas entradas:
 - **Solução**: Adicionar ao Output Format + Workflow (consider project context).
 - **Impacto**: Librarian runtime agora retorna recomendação ranqueada.
 - **Agentes afetados**: librarian, orchestrator.
+
+## 2026-05-17 — Auditoria Pós-Sessão UC-001 T3+T5
+
+### SKILLS field ausente em task specs do orchestrator
+- **Problema**: Na sessão UC-001 T3+T5, 4 de 5 code-writers não carregaram edge-case-hunter nem javap-inspector. A raiz foi o orchestrator não incluir o campo SKILLS nos task specs. O code-writer tem instrução no prompt para "Always load skills", mas sem o SKILLS field no spec, o comportamento não ocorre consistentemente.
+- **Solução**: Três camadas de defesa: (1) Pre-Dispatch Validation no orchestrator.md — checklist obrigatório com SKILLS field, (2) Step 0: LOAD SKILLS no code-writer.md — skill loading ANTES de ler arquivos, (3) Routing heuristic explícita "ALWAYS include SKILLS field".
+- **Gatilho**: Orchestrator cria task spec sem SKILLS → code-writer não carrega skills → edge cases não detectados → qualidade degradada sem alerta.
+- **Impacto**: R_code_writer estimado sobe de ~67% para ~88% (+21pp). R_geral sobe de ~78% para ~83% (+5pp).
+- **Agentes afetados**: orchestrator (pre-dispatch validation), code-writer (Step 0 workflow).
+
+### Docs-updater não-executado (pending)
+- **Problema**: O trace da sessão mostra docs-updater com `status: pending` e `duration_ms: 0` — o subagente foi registrado no trace mas nunca executou. Documentação não foi sincronizada.
+- **Solução**: Phase 3: CLOSE agora exige verificação explícita — se docs-updater retorna `status=pending` ou `duration_ms=0`, re-despachar. Instrução "Critical Rule" adicionada.
+- **Gatilho**: Fim da implementação, orchestrator cria entrada de trace para docs-updater mas não verifica execução real.
+- **Impacto**: Documentação passa a ser sincronizada em vez de ignorada.
+- **Agentes afetados**: orchestrator (CLOSE phase verification).
+
+### Pipe em bash commands persiste (3/5 code-writers)
+- **Problema**: 3 de 5 code-writers usaram pipes (`|`) em comandos bash, resultando em DENIED. Instrução "NEVER use shell pipes" já existia no prompt mas foi ignorada.
+- **Solução**: Adicionar Pipe Self-Check obrigatório com exemplos concretos de ❌/✅ para cada padrão comum, mais rationale sobre permission matching.
+- **Gatilho**: Code-writer precisa de output truncado e usa `| tail -5` ou `| grep` por hábito.
+- **Impacto**: Redução de tool failures em code-writer. Economia de ~5-10s por comando que não precisa ser retentado.
+- **Agentes afetados**: code-writer (Pipe Self-Check section).
