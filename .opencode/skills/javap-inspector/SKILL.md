@@ -39,7 +39,7 @@ ALWAYS use this workflow BEFORE writing code that references:
 - Jackson APIs (`ObjectMapper`, `JsonNode`)
 - Hibernate/JPA APIs (`@Entity`, `@JoinColumn`, `Specification`)
 - Any library class from your Maven dependencies
-- When `mvn compile` fails with "cannot find symbol" or "package does not exist"
+- When `./mvnw compile` fails with "cannot find symbol" or "package does not exist"
 - When you need to know the exact method signature of a framework class
 
 ## Core Workflow
@@ -49,14 +49,14 @@ ALWAYS use this workflow BEFORE writing code that references:
 Before you can inspect any dependency class, you need the classpath that Maven resolves:
 
 ```bash
-mvn dependency:build-classpath -pl services/<service-name> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/cp.txt
+./mvnw dependency:build-classpath -pl services/<service-name> -DincludeScope=compile -q -Dmdep.outputFile=services/<service-name>/target/.opencode-cp.txt
 ```
 
-This saves a colon-separated list of all JAR paths to `/tmp/cp.txt`. Use `-DincludeScope=compile` for main source dependencies, or `test` for test dependencies.
+This saves a colon-separated list of all JAR paths to `services/<service-name>/target/.opencode-cp.txt`. Use `-DincludeScope=compile` for main source dependencies, or `test` for test dependencies.
 
 Store the result:
 ```bash
-CP=$(cat /tmp/cp.txt)
+CP=$(cat services/<service-name>/target/.opencode-cp.txt)
 ```
 
 ### Step 2: Inspect the Class
@@ -79,13 +79,13 @@ When bytecode inspection is not enough and you need the actual Java source:
 
 ```bash
 # Download sources for ALL dependencies (may take a while)
-mvn dependency:resolve-sources -pl services/<service-name> -q
+./mvnw dependency:resolve-sources -pl services/<service-name> -q
 
 # Or download for a specific artifact
-mvn dependency:sources -pl services/<service-name> -DincludeArtifactIds=spring-boot-starter-web -q
+./mvnw dependency:sources -pl services/<service-name> -DincludeArtifactIds=spring-boot-starter-web -q
 ```
 
-Note: `mvn dependency:sources` is deprecated in favor of `dependency:resolve-sources` but both still work. Source jars are downloaded to your local Maven repository (`~/.m2/repository/`).
+Note: `./mvnw dependency:sources` is deprecated in favor of `dependency:resolve-sources` but both still work. Source jars are downloaded to your local Maven repository (`~/.m2/repository/`).
 
 To find and read a downloaded source jar:
 ```bash
@@ -98,13 +98,13 @@ unzip -p /path/to/sources.jar com/example/MyClass.java | head -200
 
 ### Step 4: The Compile-First Loop
 
-After writing ANY `.java` file, compile immediately — don't wait for `mvn verify`:
+After writing ANY `.java` file, compile immediately — don't wait for `./mvnw verify`:
 
 ```bash
-mvn compile -pl services/<service-name> -q 2>&1
+./mvnw compile -pl services/<service-name> -q 2>&1
 ```
 
-`mvn compile` is 5-10x faster than `mvn verify` (no tests, no static analysis). If it fails, resolve ALL errors before creating more files. Use `javap` from Steps 1-2 to look up the correct API when the error is a wrong import or method signature.
+`./mvnw compile` is 5-10x faster than `./mvnw verify` (no tests, no static analysis). If it fails, resolve ALL errors before creating more files. Use `javap` from Steps 1-2 to look up the correct API when the error is a wrong import or method signature.
 
 ## Common Scenarios
 
@@ -115,8 +115,8 @@ mvn compile -pl services/<service-name> -q 2>&1
 **Fix:**
 ```bash
 # Find where the class actually lives
-mvn dependency:build-classpath -pl services/my-service -DincludeScope=compile -q -Dmdep.outputFile=/tmp/cp.txt
-CP=$(cat /tmp/cp.txt)
+./mvnw dependency:build-classpath -pl services/my-service -DincludeScope=compile -q -Dmdep.outputFile=services/<service-name>/target/.opencode-cp.txt
+CP=$(cat services/<service-name>/target/.opencode-cp.txt)
 
 # Search for the class in all JARs
 for jar in $(echo $CP | tr ':' ' '); do
@@ -168,7 +168,7 @@ After editing and compiling, verify the bytecode matches your expectations:
 
 ```bash
 # Compile first
-mvn compile -pl services/my-service -q
+./mvnw compile -pl services/my-service -q
 
 # Then inspect your own compiled class
 javap -cp "services/my-service/target/classes" -p com.eventixx.myservice.controllers.MyController
@@ -189,6 +189,6 @@ If you're editing code in one service, use `-pl services/<that-service>`.
 
 - `javap` reads **bytecode**, not source. You won't see comments, local variable names (unless compiled with `-g`), or method bodies as readable Java. For that, download source jars.
 - The `-cp` flag is critical. Without it, `javap` only knows about JDK classes.
-- `mvn dependency:build-classpath` can be slow (~10-30s) the first time in a session. Cache the result (`/tmp/cp.txt`) and reuse it for multiple `javap` calls.
+- `./mvnw dependency:build-classpath` can be slow (~10-30s) the first time in a session. Cache the result (`services/<service-name>/target/.opencode-cp.txt`) and reuse it for multiple `javap` calls.
 - Some classes exist in multiple JARs. `javap` uses the **first** one on the classpath.
 - Source jars may not be available for all dependencies (proprietary libraries, etc.). In that case, `javap -c` and `javap -verbose` are your best options.

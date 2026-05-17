@@ -106,6 +106,12 @@ quality-runner ──→ [Step 0] Fast-Lint (~3s)
   The code-writer gets ALL violations in the first failure report.
 - **Loop until quality-runner PASSES** — but now typically 1-2 iterations instead of 3+.
 
+**Tool failure awareness:**
+- When code-writer returns, check its report for `tool_failures`
+- If `tool_failures` contains critical failures (javap blocked, compile denied, skills not loaded), note this in your synthesis — the code may have reduced quality because the agent couldn't verify APIs
+- Include tool failure summary in the trace data sent to trace-collector
+- Do NOT reject the result solely due to tool failures — the quality-runner will catch any real issues
+
 ### Phase 3: CLOSE (sequential, once)
 After ALL subagents finish and quality passes:
 - `docs-updater`: sync documentation (git diff → categorize → map → edit → verify)
@@ -249,6 +255,8 @@ During Phase 3, after docs-updater finishes, delegate to `trace-collector`:
     - status: <from subagent report>
     - duration_ms: <from subagent report>
     - ... (all fields from subagent's ## Trace section)
+    - tool_failures: <from subagent report, if present>
+    - bash_commands_denied: <count>
     ```
       ),
       subagent_type="trace-collector"
@@ -261,3 +269,51 @@ After all phases complete (including trace collection):
 2. Resolve any conflicts between findings
 3. Produce a single cohesive response to the user
 4. Include: what was done, what passed/failed, what docs were updated
+
+### Tool Diagnostics (include in every synthesis)
+- **code-writer**: X/Y bash commands denied, Z skills failed to load
+- **quality-runner**: X/Y bash commands denied
+- **librarian**: X/Y web searches failed, X/Y fetches failed
+- **docs-updater**: X/Y git commands denied
+- **agent-improver**: X/Y bash commands denied, Z skills failed to load
+- **trace-collector**: X/Y bash commands denied
+
+If any agent had tool failures, include a brief statement of impact:
+> "code-writer could not verify API signatures via javap (command denied). Code was written based on training data — quality-runner will validate."
+
+## Output Format
+
+```
+## Orchestration Summary
+
+| Phase | Subagent | Status | Details |
+|-------|----------|--------|---------|
+| Research | explore | ✅ | Found 3 files |
+| Research | librarian | ✅ | 2 APIs confirmed |
+| Implement | code-writer | ✅ | 2 files modified |
+| Verify | quality-runner | ✅ | All checks pass |
+| Close | docs-updater | ✅ | 1 doc updated |
+
+Result: [final response to user]
+```
+
+## Routing Heuristics
+
+| Request Type | Route |
+|-------------|-------|
+| Touches 1 service, <5 files | 1 code-writer session |
+| Touches 2+ services, independent | Fan-out parallel code-writer |
+| Pure investigation | explore only |
+| New endpoint | Full pipeline: explore + librarian → code-writer → quality-runner → docs-updater |
+| Bug fix | explore (trace) → code-writer → quality-runner |
+| Dependency update | librarian → code-writer → quality-runner → docs-updater |
+
+## Error Recovery
+
+| Failure | Action |
+|---------|--------|
+| subagent returns incomplete result | Retry with more specific instructions (max 1) |
+| subagent returns wrong result | Report back with specific feedback (max 1) |
+| quality-runner detects violations | Loop back to code-writer with exact file:line |
+| subagent times out | Log and re-dispatch with increased timeout |
+| explore + librarian disagree | Cross-reference and resolve (prefer librarian for API facts) |

@@ -11,10 +11,16 @@ Searches the web for CURRENT (2026) Java/Spring Boot/Kafka API patterns,
 migration guides, deprecation status, and best practices. Researches BEFORE
 code is written. Reports findings to orchestrator.
 
+## Project Stack
+
+Java 21, Spring Boot 4.0.6, Spring Cloud 2025.1.0, Spring Security 6.x,
+Kafka KRaft (no Zookeeper), PostgreSQL 16, Elasticsearch, Redis,
+MapStruct 1.6.0, Lombok 1.18.36, JUnit 5, Testcontainers.
+
 ## Key Version Awareness
 
 The project uses Spring Boot 4.x — most web tutorials are for Spring Boot 3.x.
-Always specify version in searches.
+Always specify version in searches. Known migrations:
 
 | Old (3.x) | New (4.x) |
 |-----------|-----------|
@@ -104,3 +110,51 @@ When evaluating multiple valid approaches, prefer the one that:
 - The top-ranked approach goes in "✅ Recommended"
 - Other approaches go in "🔄 Alternatives" (sub-section under APIs to Use)
 - If approaches are equivalent, prefer the one with higher official confidence
+
+## Tool Failure Reporting
+
+Track every tool you use during execution. At the end, include failures in the Trace section.
+
+### What to Track
+- **websearch**: record every search query and whether it returned results
+  - `SUCCESS`: search returned useful results
+  - `RATE_LIMITED`: search was denied due to rate limiting
+  - `TIMEOUT`: search timed out
+  - `NO_RESULTS`: search returned no relevant results
+- **webfetch**: record every URL fetched and whether it loaded
+  - `SUCCESS`: page loaded
+  - `TIMEOUT`: connection timed out
+  - `DENIED`: URL blocked by permission system
+  - `ERROR`: HTTP error (4xx, 5xx)
+
+### When a Tool Fails
+1. Note which search/fetch failed and what happened
+2. If websearch is rate-limited, wait and retry or try alternative queries
+3. If webfetch fails, try a different source URL
+4. NEVER silently ignore a tool failure — report it
+5. If you cannot find reliable sources, state clearly: "No official sources found — confidence is ❓ Uncertain"
+
+## Output Trace Data (REQUIRED — include at end of every report)
+
+```
+## Trace
+trace_id: <generated-id>
+parent_trace_id: <from orchestrator spec>
+status: success|fail
+duration_ms: <approximate wall-clock time>
+tokens_in: <estimated input tokens>
+tokens_out: <estimated output tokens>
+queries: <number of websearch calls>
+apis_confirmed: [list of confirmed APIs]
+apis_avoided: [list of deprecated APIs found]
+tools_attempted: [websearch, webfetch]
+websearch_queries: <count>
+websearch_failures: <count>
+webfetch_attempts: <count>
+webfetch_failures: <count>
+tool_failures:
+  - tool: websearch|webfetch
+    command: "query or URL"
+    error: "RATE_LIMITED|TIMEOUT|DENIED|ERROR — description"
+    impact: "what information was missed"
+```

@@ -305,6 +305,52 @@ Answer: [the human's answer]
 
 Use this response to continue your workflow.
 
+## Tool Failure Reporting
+
+Track every tool you use during execution. Include diagnostics in your Phase 1 AUDIT output.
+
+### What to Track
+- **bash**: record EVERY command attempted and its result
+  - `SUCCESS`: command produced expected output
+  - `DENIED`: command was blocked (no output / empty result)
+  - `FAILED`: command ran but returned non-zero exit
+- **read/glob/grep**: record files searched and whether they succeeded
+- **edit**: record files edited and whether the edit tool succeeded
+- **skill**: record which skills were loaded and whether they loaded successfully
+
+### When a Tool Fails
+1. Note the exact command and what happened
+2. If possible, try an alternative approach
+3. NEVER silently ignore a tool failure — report it
+4. If eval scripts are denied, you cannot calculate R_geral — report as critical failure
+
+### Tool Command Rules (to avoid permission issues)
+- Use `./.opencode/evals/` prefix for eval scripts (not just `bash .opencode/...`)
+- NEVER use shell pipes (`|`) in bash commands — they break permission matching
+- NEVER use shell variables or command chaining — run one command at a time
+- Keep commands simple: one command, one set of arguments
+
+### Trace Data (include in every report output)
+
+```
+## Trace
+trace_id: <generated-unique-id>
+parent_trace_id: <from orchestrator spec, if applicable>
+status: success|fail
+duration_ms: <approximate wall-clock time in ms>
+tokens_in: <estimated input tokens>
+tokens_out: <estimated output tokens>
+tools_attempted: [read, edit, bash, ...]
+bash_commands_run: <count>
+bash_commands_denied: <count>
+bash_commands_failed: <count>
+tool_failures:
+  - tool: bash|read|edit|skill
+    command: "exact command attempted"
+    error: "DENIED|FAILED — description"
+    impact: "what this affected"
+```
+
 ## When to Run
 
 - **On-demand**: when user says "improve agents" or "audit agents"

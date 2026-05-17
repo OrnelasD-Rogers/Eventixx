@@ -32,6 +32,7 @@ permission:
     "./mvnw verify*": allow
     "mvnw verify*": allow
     "javap *": allow
+    "jar *": allow
     "ls *": allow
     "cat *": allow
     "rm *": allow
@@ -83,8 +84,10 @@ ALWAYS load these skills BEFORE implementing ANY code:
 2. Read `.opencode/references/migration-guide.md`
 3. Read the existing code in the target files/services
 4. For EVERY Spring/Kafka/JPA/Hibernate/Jackson API you reference:
-    - Run: `./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/opencode/cp.txt`
-    - Run: `javap -cp "services/<service>/target/classes:$(cat /tmp/opencode/cp.txt)" <fully.qualified.ClassName>`
+    - Step 1: `./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=services/<service>/target/.opencode-cp.txt`
+    - Step 2: Read the classpath file: `cat services/<service>/target/.opencode-cp.txt`
+    - Step 3: Copy the JAR path from the output that contains the class you need
+    - Step 4: `javap -cp "services/<service>/target/classes:<paste-jar-path>" <fully.qualified.ClassName>`
    - Verify the method signature exists and is NOT deprecated
 5. Load `skill({ name: "edge-case-hunter" })` and `skill({ name: "javap-inspector" })` — these are REQUIRED
 
@@ -174,6 +177,35 @@ Triggers for recording:
 - You discovered a convention that affects doc categorization
 - A service change required or didn't require doc updates unexpectedly
 
+## Tool Failure Reporting
+
+Track every tool you use during execution. At the end, include failures in the Trace section.
+
+### What to Track
+- **read/glob/grep**: record file path and whether it succeeded
+- **bash**: record EVERY command attempted and its result
+  - `SUCCESS`: command produced expected output
+  - `DENIED`: command was blocked (no output / empty result)
+  - `FAILED`: command ran but returned non-zero exit
+  - `SKIPPED`: not executed due to dependency failure
+- **skill**: record which skills were loaded and whether they loaded successfully
+- **edit**: record which files were edited and whether the edit tool succeeded
+
+### When a Tool Fails
+1. Note the exact command and what happened
+2. If possible, try an alternative approach
+3. NEVER silently ignore a tool failure — report it
+4. If a failure prevents critical verification (javap, jar, compile blocked), state clearly in your report: what was blocked, what the impact is, and what you did instead
+
+### Tool Command Rules (to avoid permission issues)
+- Use `./mvnw` (not `mvn`, not `mvnw` alone)
+- NEVER use shell pipes (`|`) in bash commands — they break permission matching
+- NEVER use shell variables (`CP=$(...)`) in bash commands — first token must be a command name
+- NEVER use command chaining (`&&`, `||`, `;`) — run commands sequentially, one at a time
+- Keep commands simple: one command, one set of arguments, no shell features
+- ✅ Correct: `./mvnw compile -pl services/event-catalog-service -q`
+- ❌ Wrong: `CP=$(cat services/<service>/target/.opencode-cp.txt) && javap -cp $CP ClassName 2>&1 | head -5`
+
 ## Output
 
 Report to orchestrator:
@@ -200,4 +232,14 @@ compilation: PASS|FAIL
 compilation_output: [last 5 lines — must contain "BUILD SUCCESS" for PASS]
 files_created: [list]
 files_modified: [list]
+tools_attempted: [read, edit, bash, skill, ...]
+bash_commands_run: <count>
+bash_commands_denied: <count>
+bash_commands_failed: <count>
+skills_loaded: [skill-name, ...]
+tool_failures:
+  - tool: bash|skill|read|edit
+    command: "exact command attempted"
+    error: "DENIED|FAILED|TIMEOUT — description"
+    impact: "what this affected (e.g., API verification skipped)"
 ```

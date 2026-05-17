@@ -13,23 +13,23 @@
 └──────┬───────┘
        │
        ▼
-┌──────────────────────────────────────────────────────┐
-│  Primary Agent: orchestrator                         │
-│  • Top-level router                                  │
-│  • Decomposes tasks into DAG                         │
-│  • Delegates to subagents                            │
-│  • Never executes work directly                      │
-└──────────┬───────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│  Primary Agent: orchestrator                                         │
+│  • Top-level router                                                  │
+│  • Decomposes tasks into DAG                                         │
+│  • Delegates to subagents                                            │
+│  • Never executes work directly                                      │
+└──────────┬───────────────────────────────────────────────────────────┘
            │
-    ┌──────┴──────┬──────────┬─────────────┬──────────┐
-    ▼             ▼          ▼             ▼          ▼
-┌────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐ ┌───────────┐
-│ explore│ │ librarian│ │code-writer│ │quality-    │ │docs-      │
-│(built- │ │(custom)  │ │(custom)  │ │runner      │ │updater    │
-│ in)    │ │          │ │          │ │(custom)    │ │(custom)   │
-└────────┘ └──────────┘ └──────────┘ └────────────┘ └───────────┘
- PHASE 1     PHASE 1      PHASE 2      PHASE 2       PHASE 3
- RESEARCH    RESEARCH     IMPLEMENT    VERIFY        CLOSE
+     ┌──────┴──────┬──────────┬─────────────┬────────────┬──────────────┬──────────────┐
+     ▼             ▼          ▼             ▼            ▼              ▼              ▼
+┌────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐ ┌───────────┐ ┌──────────────┐ ┌──────────────┐
+│ explore│ │ librarian│ │code-writer│ │quality-    │ │docs-      │ │trace-        │ │agent-        │
+│(built- │ │(custom)  │ │(custom)  │ │runner      │ │updater    │ │collector     │ │improver      │
+│ in)    │ │          │ │          │ │(custom)    │ │(custom)   │ │(custom)      │ │(custom)      │
+└────────┘ └──────────┘ └──────────┘ └────────────┘ └───────────┘ └──────────────┘ └──────────────┘
+ PHASE 1     PHASE 1      PHASE 2      PHASE 2       PHASE 3       PHASE 3        STANDALONE
+ RESEARCH    RESEARCH     IMPLEMENT    VERIFY        CLOSE          CLOSE          (on demand)
 ```
 
 ## Agent Modes
@@ -54,7 +54,9 @@ skills are allowed.
   "librarian": "allow",
   "code-writer": "allow",
   "quality-runner": "allow",
-  "docs-updater": "allow"
+  "docs-updater": "allow",
+  "trace-collector": "allow",
+  "agent-improver": "allow"
 },
 "skill": {
   "orchestrator": "allow",
@@ -69,10 +71,12 @@ skills are allowed.
 | Agent | read | edit | bash | webfetch | websearch | task |
 |-------|------|------|------|----------|-----------|------|
 | orchestrator | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| code-writer | ✅ | ✅ | ✅(limited) | ❌ | ❌ | ❌ |
+| code-writer | ✅ | ✅ | ✅(mvn, git, cat) | ❌ | ❌ | ❌ |
 | librarian | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
 | quality-runner | ✅ | ❌ | ✅(mvn only) | ❌ | ❌ | ❌ |
 | docs-updater | ✅ | ✅ | ✅(git only) | ❌ | ❌ | ❌ |
+| trace-collector | ✅ | ✅ | ✅(trace.sh, cat) | ❌ | ❌ | ❌ |
+| agent-improver | ✅ | ✅ | ✅(eval scripts, mvn, git, cat, sed) | ❌ | ❌ | ❌ |
 
 ## Delegation Flow
 

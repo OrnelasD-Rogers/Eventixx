@@ -226,3 +226,31 @@ Use este formato para novas entradas:
 - **Impacto**: Code-writer agora consegue verificar assinaturas de API via javap antes de escrever código. Risco de APIs incorretas reduzido.
 - **Lições**: (1) Sempre que um skill é adicionado ao prompt de um agente, verificar se o frontmatter de permissão permite. (2) O padrão `"*": deny` é seguro mas exige lista explícita de skills permitidos — qualquer adição ao prompt requer adição ao frontmatter. (3) O desalinhamento entre prompt e frontmatter é silencioso — o skill falha sem erro visível.
 - **Agentes afetados**: code-writer (frontmatter desatualizado).
+
+## 2026-05-17 — Tool Failure Reporting Audit
+
+### Reference copies desync (.opencode/agents-docs-eval/ vs .opencode/agents/)
+- **Problema**: Os arquivos em `01-agents/` (referência) estavam completamente dessincronizados dos arquivos runtime em `.opencode/agents/`. Tool Failure Reporting, `./mvnw`, pipeline 3-pass existiam apenas em um dos locais.
+- **Solução**: Sincronizar 5 arquivos preservando melhorias exclusivas de cada lado (pipeline 3-pass no quality-runner, ✅ Recommended no librarian).
+- **Gatilho**: Auditoria revelou 2 diretórios com conteúdo diferente.
+- **Impacto**: Todos os 7 agentes têm Tool Failure Reporting em ambos os locais.
+- **Agentes afetados**: Todos.
+
+### agent-improver sem Tool Failure Reporting
+- **Problema**: agent-improver.md não tinha Tool Failure Reporting nem Trace section. Falhas silenciosas não eram registradas.
+- **Solução**: Adicionar Tool Failure Reporting + Trace com `bash_commands_run/denied/failed` e `tool_failures[]`.
+- **Gatilho**: Auditoria revelou que todos os outros agentes runtime tinham, exceto agent-improver.
+- **Impacto**: Meta-agent agora rastreia falhas de ferramentas.
+- **Agentes afetados**: agent-improver.
+
+### quality-runner runtime com pipeline 2-pass
+- **Problema**: Runtime quality-runner.md ainda usava pipeline 2-pass, referência já tinha 3-pass.
+- **Solução**: Substituir pipeline para 3-pass + Static Analysis Detail + Tool Details.
+- **Impacto**: Análise estática sempre roda antes dos testes.
+- **Agentes afetados**: quality-runner, orchestrator.
+
+### librarian runtime sem ✅ Recommended
+- **Problema**: Runtime librarian.md não tinha ✅ Recommended, Heuristics, nem Limitations.
+- **Solução**: Adicionar ao Output Format + Workflow (consider project context).
+- **Impacto**: Librarian runtime agora retorna recomendação ranqueada.
+- **Agentes afetados**: librarian, orchestrator.

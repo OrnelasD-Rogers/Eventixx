@@ -216,7 +216,7 @@ docs/
 
 ## Zero-Warnings Code Rules
 
-This project enforces **4 static analysis tools** at `mvn verify`: Checkstyle, PMD, SpotBugs, EditorConfig. The checklist in `.opencode/instructions/coding-rules.md` is loaded automatically by OpenCode — follow it to avoid rework.
+This project enforces **4 static analysis tools** at `./mvnw verify`: Checkstyle, PMD, SpotBugs, EditorConfig. The checklist in `.opencode/instructions/coding-rules.md` is loaded automatically by OpenCode — follow it to avoid rework.
 
 After any code change, run:
 ```bash
@@ -247,8 +247,8 @@ This project uses `javap` (JDK built-in, zero installation) instead of JARP-MCP 
 
 ```bash
 # 1. Get the classpath for your service
-mvn dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/cp.txt
-CP=$(cat /tmp/cp.txt)
+./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=services/<service>/target/.opencode-cp.txt
+CP=$(cat services/<service>/target/.opencode-cp.txt)
 
 # 2. Inspect the class (flags: -p for all members, -verbose for deprecated, -s for internal signatures)
 javap -cp $CP <fully.qualified.ClassName>

@@ -15,13 +15,18 @@ Never modifies code — only checks and reports.
 
 ### Step 0: Fast-Lint (~3s)
 
+Run these sequentially, one command at a time:
+
 ```bash
-./mvnw spotless:apply -pl services/<service> -q && \
-  ./mvnw checkstyle:check pmd:check pmd:cpd-check spotbugs:check \
+# Step 0a: Format
+./mvnw spotless:apply -pl services/<service> -q
+
+# Step 0b: Static Analysis
+./mvnw checkstyle:check pmd:check pmd:cpd-check spotbugs:check \
     -pl services/<service> -DskipTests -q
 ```
 
-Run this FIRST. If it fails, report failures immediately — do NOT proceed to tests.
+Run Step 0a FIRST. If Spotless reformats files, the code-writer skipped that step (report as process violation). Then run Step 0b. If it fails, report failures immediately — do NOT proceed to tests.
 This catches formatting, lint, and basic violations quickly.
 
 If Spotless reformats files here, the code-writer skipped that step (report as
@@ -63,6 +68,28 @@ This causes 3+ loop iterations:
 
 With 3-step (static analysis first), the code-writer gets ALL violations
 in the FIRST failure report and fixes everything in ONE iteration.
+
+## Tool Failure Reporting
+
+Track every bash command you execute. At the end, include failures in the Trace section.
+
+### What to Track
+- **bash**: record EVERY command attempted and its result
+  - `SUCCESS`: command produced expected output
+  - `DENIED`: command was blocked (no output / empty result)
+  - `FAILED`: command ran but returned non-zero exit
+  - `SKIPPED`: not executed due to dependency failure (e.g., Step 0 failed)
+
+### When a Tool Fails
+1. Note the exact command and what happened
+2. Report ALL failures — even if Step 0 fails and you skip Step 1, report that Step 1 was skipped due to Step 0 failure
+3. NEVER silently ignore a tool failure
+
+### Tool Command Rules (to avoid permission issues)
+- Use `./mvnw` (not `mvn`, not `mvnw` alone)
+- NEVER use shell pipes (`|`) in bash commands — they break permission matching
+- NEVER use shell variables or command chaining (`&&`, `||`, `;`) — run one command at a time
+- Keep commands simple: one command, one set of arguments, no shell features
 
 ## Output Format
 
@@ -111,10 +138,37 @@ This gives the code-writer a complete picture in every failure report.
 | SpotBugs | Baz.java:67 | NP_NULL_ON_SOME_PATH | Add null check |
 | Test | QuxTest.java:89 | expected: 200, actual: 404 | Check path mapping |
 
-### Verdict
-
+### Overall Verdict
 - **PASS**: all checks green, code-writer can proceed
 - **FAIL**: report failures above, code-writer must fix and re-submit
+
+### Trace Data (REQUIRED — include at end of every report)
+
+```
+## Trace
+trace_id: <generated-id>
+parent_trace_id: <from orchestrator spec>
+status: success|fail
+duration_ms: <approximate wall-clock time>
+tokens_in: <estimated input tokens>
+tokens_out: <estimated output tokens>
+quality_passed: true|false
+tool_results:
+  spotless: PASS|FAIL
+  checkstyle: PASS|FAIL
+  pmd: PASS|FAIL
+  spotbugs: PASS|FAIL
+  tests: PASS|FAIL
+  tools_attempted: [bash]
+  bash_commands_run: <count>
+  bash_commands_denied: <count>
+  bash_commands_failed: <count>
+  tool_failures:
+    - tool: bash
+      command: "exact command attempted"
+      error: "DENIED|FAILED — description"
+      impact: "what was affected"
+```
 
 ## Tool Details
 

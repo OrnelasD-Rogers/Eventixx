@@ -30,6 +30,24 @@ librarian, or research to code-writer).
 - If unclear, ask user (max 3 questions) rather than guessing
 - When in doubt, favor explore + librarian over direct code-writer dispatch
 
+### O-F04: Tool failure diagnostics missing from synthesis
+
+**Symptom:** Orchestrator synthesis does not mention tool failures (bash denied,
+skills blocked, websearch rate-limited), even when subagent reports contain them.
+
+**Diagnosis:** Orchestrator is not reading the `tool_failures` field from subagent
+reports, or the Synthesis section omits Tool Diagnostics.
+
+**Resolution:**
+- In Phase 2 (IMPLEMENT), check code-writer's report for `tool_failures` after
+  each iteration — especially critical failures (javap blocked, skills not loaded)
+- In Synthesis, always include the Tool Diagnostics section:
+  - code-writer: X/Y bash denied, Z skills failed to load
+  - quality-runner: X/Y bash denied
+  - librarian: X/Y web searches failed, X/Y fetches failed
+  - docs-updater: X/Y git commands denied
+- Include impact statement if any agent had tool failures
+
 ### O-F03: Error propagation from subagent to final output
 
 **Symptom:** User sees an error from a subagent in the final synthesis.
@@ -113,6 +131,22 @@ the agent cannot load skills regardless of what the prompt instructs.
 - Verify that every agent that references `skill()` in its prompt has `skill:` in its permission block
 - Check during agent-improver audits: run a grep for `skill(` in prompts, then verify the frontmatter
 
+### C-F07: Tool failure tracking not implemented
+
+**Symptom:** Agent does not report `tool_failures[]`, `bash_commands_run/denied/failed`,
+or `skills_loaded` in its Trace section. Tool failures happen silently.
+
+**Diagnosis:** Missing "Tool Failure Reporting" section in agent definition,
+or Trace section uses an older format without diagnostics fields.
+
+**Resolution:**
+- Add "Tool Failure Reporting" section to the agent .md following the template
+  (What to Track, When a Tool Fails, Tool Command Rules)
+- Update the Trace section to include: `bash_commands_run`, `bash_commands_denied`,
+  `bash_commands_failed`, `tool_failures[]`, and agent-specific fields
+  (e.g., `skills_loaded` for code-writer, `websearch_failures` for librarian)
+- Verify the trace-collector schema's Required Fields table lists all diagnostics fields
+
 ### C-F06: Edge cases not covered
 
 **Symptom:** Tests miss null inputs, soft-deleted resources, pagination limits.
@@ -139,6 +173,23 @@ deprecated in Spring Boot 4.
 - Verify dates on search results — prefer 2025-2026
 - Cross-reference with `.opencode/references/migration-guide.md`
 - Report confidence in output (✅ / ⚠️ / ❓)
+
+### L-F03: Websearch/webfetch failures silently ignored
+
+**Symptom:** Librarian completes research but misses key APIs because searches
+were rate-limited or fetches timed out. Orchestrator receives incomplete results.
+
+**Diagnosis:** `websearch_failures` or `webfetch_failures` were non-zero but
+librarian did not report them, or reported them only in the Trace section without
+highlighting impact.
+
+**Resolution:**
+- Track every websearch/webfetch attempt and its result
+- If any tool fails, note it clearly in the report body (not just Trace)
+- For rate-limited searches: wait 2-3s and retry with different query terms
+- For timed-out fetches: try alternative sources for the same information
+- If multiple failures prevent reliable research, state: "Search quality degraded
+  due to tool failures — use confidence ⚠️ for all results"
 
 ### L-F02: Search latency >30s
 
@@ -219,3 +270,24 @@ deprecated in Spring Boot 4.
 - Always run Step 4 after edits
 - Check at minimum: AGENTS.md ↔ setup.md, AGENTS.md ↔ PROJECT_CHARTER.md
 - If any mismatch, fix before closing
+
+## General
+
+### G-F01: Overly broad bash permissions (security risk)
+
+**Symptom:** Agent has `cat *`, `sed *`, `rm *`, or `mkdir *` permission patterns that allow access to any file on the filesystem, not just project files.
+
+**Affected agents:**
+- code-writer: `cat *`, `rm *`, `mkdir *`
+- trace-collector: `cat *`
+- agent-improver: `cat *`, `sed *`, `ls *`, `sort *`
+
+**Risk:** A malicious or buggy agent prompt could read sensitive files (`/etc/passwd`, `.env`, SSH keys), modify critical config files via `sed`, or delete project data via `rm`.
+
+**Recommended scoping:**
+- Prefer path-prefixed patterns: `"cat services/<service>/target/*"`, `"cat .opencode/*"`
+- For `sed`, scope to specific file patterns: `"sed -i .opencode/agents/*"`
+- Avoid bare `rm *` — prefer `"rm services/<service>/target/*"`
+- Use `"*": deny` as fallback with explicit allowlist of safe commands
+
+**Note:** These are recommendations only. Actual permission changes require frontmatter edits and thorough testing.

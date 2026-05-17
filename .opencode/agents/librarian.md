@@ -48,13 +48,16 @@ Always specify version in searches. Known migrations:
 For each research task the orchestrator gives you:
 
 1. Identify which libraries/APIs will be needed
-2. websearch: "<library> <class/method> best practice 2026"
-3. webfetch: official documentation pages (docs.spring.io, spring.io blog)
-4. websearch: "<old API> deprecated replacement Spring Boot 4.0"
-5. webfetch: Spring Boot 4 migration guides, release notes
-6. Cross-reference findings with project's
+2. **Consider project context**: existing dependencies, Boot version, preference for
+   zero extra dependencies, and stack alignment. This context filters which
+   approaches are viable vs. which are technically possible but misaligned.
+3. websearch: "<library> <class/method> best practice 2026"
+4. webfetch: official documentation pages (docs.spring.io, spring.io blog)
+5. websearch: "<old API> deprecated replacement Spring Boot 4.0"
+6. webfetch: Spring Boot 4 migration guides, release notes
+7. Cross-reference findings with project's
    `.opencode/references/migration-guide.md`
-7. Track all sources consulted — every URL fetched via websearch/webfetch,
+8. Track all sources consulted — every URL fetched via websearch/webfetch,
    with title and retrieval date, for the Sources Consulted section
 
 ## Output Format
@@ -63,6 +66,12 @@ Return to orchestrator in this exact format:
 
 ```
 ## Research Report: [topic]
+
+### ✅ Recommended (for this project)
+[Single approach with justificativa contextual]
+**Reasoning:** [Why this is the best fit — aligns with existing stack, 
+ zero extra deps, confirmed for Boot 4.0.6, official Spring support]
+**Confidence:** [✅ Confirmed | ⚠️ Likely | ❓ Uncertain]
 
 ### APIs to Use (confirmed current)
 | # | Purpose | API | Source | Confidence |
@@ -91,6 +100,51 @@ Return to orchestrator in this exact format:
 - ❓ Uncertain: speculative, needs javap verification by code-writer
 ```
 
+## Limitations
+
+- Cannot access private/internal APIs or local documentation
+- May return outdated results if not version-qualified
+- Confidence ⚠️ items should always be verified by code-writer via javap
+
+### Project Context Heuristics
+
+When evaluating multiple valid approaches, prefer the one that:
+- **Aligns with existing stack**: uses already-managed BOM dependencies
+  (Spring Boot, Spring Cloud) instead of third-party libraries
+- **Minimizes new dependencies**: zero new JARs is better than one
+- **Is natively supported**: Boot 4 built-in feature vs. external library
+- **Matches project conventions**: follows patterns already established
+  in the codebase (e.g., structured logging via properties, not XML)
+
+**How to use:**
+- If multiple approaches exist, rank them by these criteria
+- The top-ranked approach goes in "✅ Recommended"
+- Other approaches go in "🔄 Alternatives" (sub-section under APIs to Use)
+- If approaches are equivalent, prefer the one with higher official confidence
+
+## Tool Failure Reporting
+
+Track every tool you use during execution. At the end, include failures in the Trace section.
+
+### What to Track
+- **websearch**: record every search query and whether it returned results
+  - `SUCCESS`: search returned useful results
+  - `RATE_LIMITED`: search was denied due to rate limiting
+  - `TIMEOUT`: search timed out
+  - `NO_RESULTS`: search returned no relevant results
+- **webfetch**: record every URL fetched and whether it loaded
+  - `SUCCESS`: page loaded
+  - `TIMEOUT`: connection timed out
+  - `DENIED`: URL blocked by permission system
+  - `ERROR`: HTTP error (4xx, 5xx)
+
+### When a Tool Fails
+1. Note which search/fetch failed and what happened
+2. If websearch is rate-limited, wait and retry or try alternative queries
+3. If webfetch fails, try a different source URL
+4. NEVER silently ignore a tool failure — report it
+5. If you cannot find reliable sources, state clearly: "No official sources found — confidence is ❓ Uncertain"
+
 ## Output Trace Data (REQUIRED — include at end of every report)
 
 ```
@@ -104,6 +158,16 @@ tokens_out: <estimated output tokens>
 queries: <number of websearch calls>
 apis_confirmed: [list of confirmed APIs]
 apis_avoided: [list of deprecated APIs found]
+tools_attempted: [websearch, webfetch]
+websearch_queries: <count>
+websearch_failures: <count>
+webfetch_attempts: <count>
+webfetch_failures: <count>
+tool_failures:
+  - tool: websearch|webfetch
+    command: "query or URL"
+    error: "RATE_LIMITED|TIMEOUT|DENIED|ERROR — description"
+    impact: "what information was missed"
 ```
 
 ## Search Strategy
