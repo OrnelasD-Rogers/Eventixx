@@ -24,6 +24,20 @@
           "javap-inspector": "allow"
         }
       }
+    },
+    "code-writer": {
+      "permission": {
+        "skill": {
+          "*": "allow"
+        }
+      }
+    },
+    "docs-updater": {
+      "permission": {
+        "skill": {
+          "*": "allow"
+        }
+      }
     }
   }
 }

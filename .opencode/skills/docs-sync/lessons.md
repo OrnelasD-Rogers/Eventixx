@@ -24,3 +24,10 @@
 - Service bug fixes that change observable behavior (e.g., 500 → 409) warrant UC Execution Log entries, even though the endpoint contracts remain the same. The fix fixes a bug in the implementation, not the API spec.
 - Build tool config changes (PMD ruleset, SpotBugs exclusions) rarely need doc updates. The tool config files themselves are the source of truth. Only update `setup.md` if a new tool is added or a significant behavioral change occurs.
 - New exception classes following existing project patterns (extending RuntimeException, in exceptions package) do not warrant doc updates. They are implementation details, not API contracts or data model changes.
+
+## 2026-05-16
+
+- Observability instrumentation (OpenTelemetry, Micrometer counters, structured JSON logging) that doesn't change external API contracts, setup procedures, or test patterns only needs UC documentation — no updates to `setup.md`, `testing-strategy.md`, or `AGENTS.md` needed.
+- The `dependency` category should distinguish BOM-managed Spring Boot starters (no version to track, no doc update) from standalone libraries with explicit version pins (update `setup.md` + `AGENTS.md` `spring-boot-starter-opentelemetry` is managed by the Spring Boot BOM).
+- When a planned tech-stack item from `PROJECT_CHARTER.md` is implemented (e.g., OpenTelemetry was already listed under Observability), the charter does not need updating — it was already defined as in-scope.
+- UC-001 serves as the single source of truth for cross-service observability changes. Applying structured JSON logging, tracing, and metrics to both `event-catalog-service` and `search-service` is appropriately documented in a single UC task section rather than duplicated across docs.

@@ -15,11 +15,16 @@ permission:
   bash:
     "*": deny
     "./.opencode/evals/*.sh*": allow
+    ".opencode/evals/*.sh*": allow
+    "bash ./.opencode/evals/*.sh*": allow
     "./mvnw *": allow
     "git diff*": allow
     "git status*": allow
     "git log*": allow
     "cat *": allow
+    "ls *": allow
+    "sed *": allow
+    "sort *": allow
   webfetch: deny
   websearch: deny
   skill: allow
@@ -40,6 +45,7 @@ documentation — you improve the agents themselves.
 - Eval suite: `.opencode/agents-docs-eval/02-evaluation/suite.md`
 - Metrics: `.opencode/agents-docs-eval/02-evaluation/framework.md`
 - Failures: `.opencode/agents-docs-eval/03-troubleshooting/common-failures.md`
+- Lessons: `.opencode/agents-docs-eval/01-agents/lessons.md`
 - Source of truth: `AGENTS.md`, `opencode.json`
 - Runtime: traces at `.opencode/evals/traces/`
 
@@ -57,9 +63,15 @@ documentation — you improve the agents themselves.
 
 Collect the current state of the system:
 
-1. Run `collect-traces.sh --report` (or use date/session filters)
+1. Run `collect-traces.sh --session <session-id> --report` (substitute <session-id>
+   from the most recent trace file, or use date/session filters)
    ```bash
-   ./.opencode/evals/collect-traces.sh --report
+   ./.opencode/evals/collect-traces.sh --report        # fallback: latest default traces
+   ./.opencode/evals/collect-traces.sh --session <session-id> --report  # specific session
+   ```
+   To find available sessions, list trace files first:
+   ```bash
+   ls .opencode/evals/traces/*.jsonl | sed 's/.*\/\(.*\)-[0-9]\{4\}-.*\.jsonl/\1/' | sort -u
    ```
 2. If no traces exist, run the automated eval suite first:
    ```bash
@@ -187,9 +199,9 @@ Apply this change? (Human decision needed)
    ```bash
    ./.opencode/evals/run-eval.sh --all
    ```
-5. Collect traces and compare:
+5. Collect traces and compare (include session id for accuracy):
    ```bash
-   ./.opencode/evals/collect-traces.sh --report
+   ./.opencode/evals/collect-traces.sh --session <eval-session-id> --report
    ```
 
 ```
@@ -226,6 +238,8 @@ Apply this change? (Human decision needed)
    - **Confidence**: alta/média
    - **Lesson**: <what to watch for in the future>
    ```
+   The lessons file is at **`.opencode/agents-docs-eval/01-agents/lessons.md`**.
+   Read it first to understand existing patterns, then append.
 2. If new failure pattern discovered → add to common-failures.md:
    ```
    ### <agent>-F<XX>: <title>
@@ -247,6 +261,49 @@ context:
 | **Robustness** | % of tasks succeeding under different input variations | Multi-scenario evals |
 
 If agent reports no confidence, Calibration defaults to 1.0 (no penalty).
+
+## Question Protocol
+
+When you need clarification from the human BEFORE proceeding to the next phase,
+use this EXACT format at the end of your report:
+
+```
+==QUESTION==
+Context: [what phase you're in, what you were analyzing]
+Issue: [what needs to be decided]
+Question: [the actual question for the human]
+Options:
+- [option A]: [description]
+- [option B]: [description]
+==END_QUESTION==
+```
+
+**How it works:**
+1. The orchestrator detects `==QUESTION==` in your output
+2. It pauses, shows the question to the human WITH your context
+3. The human responds
+4. The orchestrator RESUMES your session with `task(task_id=<same>)` passing the answer
+5. You continue from exactly where you stopped, with the answer in context
+
+**Rules:**
+- ONLY use this format when you genuinely need human input (approval, choice, clarification)
+- The context must be specific enough for the human to decide without reading your full report
+- If the question is YES/NO, phrase it as a binary option
+- If you need approval for a change, use this format in Phase 3 (SUGGEST)
+- After the human responds, continue your workflow naturally
+
+## Questions from agent-improver
+
+When the orchestrator relays a question from you to the human, your task prompt
+will include the human's response like this:
+
+```
+## Human Response
+Context: [your original context]
+Answer: [the human's answer]
+```
+
+Use this response to continue your workflow.
 
 ## When to Run
 

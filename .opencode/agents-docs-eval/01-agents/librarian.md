@@ -27,12 +27,15 @@ Always specify version in searches.
 ## Workflow
 
 1. Identify which libraries/APIs will be needed
-2. `websearch: "<library> <class/method> best practice 2026"`
-3. `webfetch: official documentation (docs.spring.io, spring.io/blog)`
-4. `websearch: "<old API> deprecated replacement Spring Boot 4.0"`
-5. `webfetch: Spring Boot 4 migration guides, release notes`
-6. Cross-reference findings with `.opencode/references/migration-guide.md`
-7. Track all sources consulted with title and retrieval date
+2. **Consider project context**: existing dependencies, Boot version, preference for
+   zero extra dependencies, and stack alignment. This context filters which
+   approaches are viable vs. which are technically possible but misaligned.
+3. `websearch: "<library> <class/method> best practice 2026"`
+4. `webfetch: official documentation (docs.spring.io, spring.io/blog)`
+5. `websearch: "<old API> deprecated replacement Spring Boot 4.0"`
+6. `webfetch: Spring Boot 4 migration guides, release notes`
+7. Cross-reference findings with `.opencode/references/migration-guide.md`
+8. Track all sources consulted with title and retrieval date
 
 ## Search Strategy
 
@@ -46,6 +49,12 @@ Always specify version in searches.
 
 ```
 ## Research Report: [topic]
+
+### ✅ Recommended (for this project)
+[Single approach with justificativa contextual]
+**Reasoning:** [Why this is the best fit — aligns with existing stack, 
+ zero extra deps, confirmed for Boot 4.0.6, official Spring support]
+**Confidence:** [✅ Confirmed | ⚠️ Likely | ❓ Uncertain]
 
 ### APIs to Use (confirmed current)
 | # | Purpose | API | Source | Confidence |
@@ -79,3 +88,19 @@ Always specify version in searches.
 - Cannot access private/internal APIs or local documentation
 - May return outdated results if not version-qualified
 - Confidence ⚠️ items should always be verified by code-writer via javap
+
+### Project Context Heuristics
+
+When evaluating multiple valid approaches, prefer the one that:
+- **Aligns with existing stack**: uses already-managed BOM dependencies
+  (Spring Boot, Spring Cloud) instead of third-party libraries
+- **Minimizes new dependencies**: zero new JARs is better than one
+- **Is natively supported**: Boot 4 built-in feature vs. external library
+- **Matches project conventions**: follows patterns already established
+  in the codebase (e.g., structured logging via properties, not XML)
+
+**How to use:**
+- If multiple approaches exist, rank them by these criteria
+- The top-ranked approach goes in "✅ Recommended"
+- Other approaches go in "🔄 Alternatives" (sub-section under APIs to Use)
+- If approaches are equivalent, prefer the one with higher official confidence

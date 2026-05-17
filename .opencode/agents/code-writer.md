@@ -46,6 +46,7 @@ permission:
   question: deny
   skill:
     "edge-case-hunter": allow
+    "javap-inspector": allow
     "*": deny
 ---
 
@@ -58,6 +59,24 @@ it precisely. NEVER guess APIs — verify with javap.
 Java 21, Spring Boot 4.0.6, Spring Cloud 2025.1.0, PostgreSQL 16, Kafka KRaft,
 Elasticsearch, Redis, MapStruct 1.6.0, Lombok 1.18.36, JUnit 5, Testcontainers.
 
+## Required Skill Loading
+
+ALWAYS load these skills BEFORE implementing ANY code:
+
+1. **edge-case-hunter** — call `skill({ name: "edge-case-hunter" })`
+   - Load BEFORE writing code, AFTER reading all relevant files
+   - Analyzes controllers, services, DTOs, entities, repositories for:
+     missing edge cases, security issues, concurrency bugs, test gaps
+   - Generates JUnit 5 test code for uncovered scenarios
+
+2. **javap-inspector** — call `skill({ name: "javap-inspector" })`
+   - Load BEFORE writing code that references any framework API
+   - Use javap to inspect actual bytecode signatures
+   - Never guess method signatures — verify with javap
+
+3. **If the orchestrator passes `SKILLS:` in the task spec**, load those skills
+   implicitly before starting.
+
 ## Before Writing ANY Code
 
 1. Read the task spec from orchestrator (APIs to Use, APIs to Avoid, context)
@@ -67,7 +86,7 @@ Elasticsearch, Redis, MapStruct 1.6.0, Lombok 1.18.36, JUnit 5, Testcontainers.
     - Run: `./mvnw dependency:build-classpath -pl services/<service> -DincludeScope=compile -q -Dmdep.outputFile=/tmp/opencode/cp.txt`
     - Run: `javap -cp "services/<service>/target/classes:$(cat /tmp/opencode/cp.txt)" <fully.qualified.ClassName>`
    - Verify the method signature exists and is NOT deprecated
-5. Load `skill({ name: "edge-case-hunter" })` for every new endpoint created and serice or repository updated
+5. Load `skill({ name: "edge-case-hunter" })` and `skill({ name: "javap-inspector" })` — these are REQUIRED
 
 ## Must Follow (from coding-rules.md)
 
@@ -163,15 +182,18 @@ Report to orchestrator:
 - Compilation output: [last 5 lines of mvn output — include "[INFO] BUILD SUCCESS" or full error]
 - Edge cases found: [count]
 - Tests generated: [count]
+- Trace details (REQUIRED):
+  - trace_id: <unique-id-for-this-delegation>
+  - parent_trace_id: <from orchestrator's Trace Context>
 
 ### Trace Data (REQUIRED — include at end of every report)
 
 ```
 ## Trace
-trace_id: <generated-id>
-parent_trace_id: <from orchestrator spec>
+trace_id: <generated-unique-id — MUST be unique per delegation>
+parent_trace_id: <from orchestrator's Trace Context — MUST match exactly>
 status: success|fail
-duration_ms: <approximate wall-clock time>
+duration_ms: <approximate wall-clock time in ms>
 tokens_in: <estimated input tokens>
 tokens_out: <estimated output tokens>
 compilation: PASS|FAIL
