@@ -27,7 +27,20 @@ than a single subagent call.
 
 ## Core Workflow
 
-### Step 0: Load Lessons Learned
+### Step 0: Recall Past Context
+
+At the START of every session, BEFORE parsing the request, run:
+
+```
+memory_search(query="<topic>")
+```
+
+This recalls past decisions, lessons learned, and known error patterns.
+Apply relevant context before planning any work.
+
+Skip only if the user explicitly says "ignore memory".
+
+### Step 0b: Load Lessons Learned
 
 Check if `<skill-path>/lessons.md` exists. If yes, read and apply relevant
 guidance.
@@ -56,8 +69,15 @@ Decomposition:
   B: librarian search Spring Data JPA Specification best practice 2026 (independent)
   └─→ A + B → C: code-writer implement endpoint (depends on A, B)
        └─→ D: quality-runner verify (depends on C)
-            └─→ E: docs-updater sync docs (depends on D)
+             └─→ E: docs-updater sync docs (depends on D)
 ```
+
+Explore can be called **multiple times** at different thoroughness levels:
+- `thoroughness=quick` — directory structure, signatures, key config (default for Phase 1)
+- `thoroughness=deep` — full file content (opt-in, when implementation needs it)
+- `thoroughness=verify` — targeted lookup (opt-in, during debugging)
+
+This avoids dumping hundreds of irrelevant lines in the initial research pass.
 
 Rules:
 - Max 5 subtasks per request
@@ -97,10 +117,45 @@ Edge Cases: [known risks from edge-case-hunter]
 )
 ```
 
+Include TWO new sections at the top of every code-writer task prompt:
+
+1. **Trace Context** — for traceability across agents:
+```
+## Trace Context
+- parent_trace_id: <session-trace-id>
+- YOUR_trace_id: <generate a unique ID>
+```
+
+2. **SKILLS** — skills the code-writer must load:
+```
+## SKILLS
+SKILLS: file:.opencode/skills/edge-case-hunter/SKILL.md, file:.opencode/skills/javap-inspector/SKILL.md
+```
+
 Delegation rules:
 - Phase 1 (research): `explore` + `librarian` in parallel
 - Phase 2 (implement): `code-writer` → `quality-runner` sequential loop
+  - **Reuse task_id**: save the task_id from the first code-writer call.
+    On retry, pass the same task_id to preserve the code-writer's context.
+  - **Trust code-writer**: do NOT validate output before quality-runner.
+    The quality-runner catches all issues.
 - Phase 3 (close): `docs-updater` once, after all pass
+
+### Quality-Runner 2-Pass Workflow
+
+The quality-runner now uses a **3-step pipeline** instead of a single `mvn verify`:
+
+1. **Fast-Lint** (~3s): spotless:apply + checkstyle + pmd + spotbugs (all -DskipTests)
+2. **Static Analysis** (~7s): `verify -DskipTests` — runs full quality pipeline without tests
+3. **Tests** (~15-37s): `mvn test` — runs tests separately
+
+**Why:** If tests fail in `mvn verify`, static analysis never runs (Maven aborts at test
+phase). This caused 3+ loop iterations. With 2-pass, the code-writer receives ALL
+violations (static + test) in the FIRST failure report, reducing loops to 1-2.
+
+**How the orchestrator should handle quality-runner results:**
+- If any step fails: forward ALL failure details (static violations + test errors) to code-writer
+- Do NOT filter or prioritize — let code-writer fix everything in one iteration
 
 ### Step 5: Collect & Validate
 
@@ -122,6 +177,7 @@ After all phases complete:
 - Decompose before delegating
 - Run research phase (explore + librarian) in parallel
 - Include task spec with all 8 sections for code-writer
+- Reference explore evidence types when building task specs (DIRECT = trust, INFERRED = verify if high-risk)
 - Run docs-updater once at the end, never inside the code loop
 - Max 1 retry per failed subagent result
 
@@ -142,8 +198,22 @@ Is pure investigation | explore only (skip code/docs phases)
 Is adding a new endpoint | Full pipeline: explore + librarian → code-writer → quality-runner → docs-updater
 Is a bug fix | explore (trace) → code-writer → quality-runner
 Is a dependency update | librarian (research impact) → code-writer → quality-runner → docs-updater
+The librarian now returns a **✅ Recommended** section in its output.
+Trust this recommendation — it considers project context. Still verify
+"APIs to Avoid" before building the task spec.
+
 Is about agent improvement/audit | agent-improver (standalone, no pipeline needed)
 Is about improving reliability | agent-improver (standalone, no pipeline needed)
+
+**Question Relay Flow for agent-improver:**
+```
+1. task(agent-improver, task_id=NEW)
+   → agent-improver returns ==QUESTION== block
+2. question() → relay to human with context
+3. task(agent-improver, task_id=SAME, "Human response: X")
+   → agent-improver continues with context preserved
+4. Repeat until no ==QUESTION== in output
+```
 
 ## Output
 
