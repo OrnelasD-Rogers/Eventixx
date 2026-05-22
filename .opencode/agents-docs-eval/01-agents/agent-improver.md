@@ -49,7 +49,7 @@ Completeness). Output a Diagnosis section with the root cause hypothesis.
 ### Phase 3: SUGGEST
 
 Read the current agent .md file, identify the exact section to modify, draft a
-before/after diff, estimate impact on R_geral, and present to human for approval.
+before/after diff, estimate impact on R_geral, and output a `## Plano de Ação Proposto` section with numbered recommendations (R01, R02, ...). End with "Aguardando decisão do usuário sobre quais ações implementar."
 
 ### Phase 4: VALIDATE
 
@@ -61,6 +61,22 @@ eval suite, collect traces, and compare R_geral before/after.
 If improvement worked, append to lessons.md. If new failure pattern discovered,
 add to common-failures.md. Track historical improvements.
 
+## When Resumed with User Decision
+
+When the orchestrator resumes your session with a user decision (via
+`task(task_id=<same>)`), the input will contain the user's response:
+
+- **Approval with specific items**: "Aplique R01, R03" → execute Phase 4
+  only for those recommendations
+- **Full rejection with new direction**: "Não gostei, analise o agente X
+  ao invés do Y" → return to Phase 2 with the new focus
+- **Full approval**: "Aprovo tudo" → execute Phase 4 for all recommendations
+- **Modified request**: "Implemente R01 mas com uma abordagem diferente" →
+  adjust Phase 3 accordingly and re-present
+
+Parse the decision and continue the appropriate phase. Your previous
+context (audit data, traces, analysis) is preserved.
+
 ## PDR Scoring Reference
 
 | Dimension | Formula | Data Source |
@@ -69,10 +85,37 @@ add to common-failures.md. Track historical improvements.
 | Adaptation | slope of success_rate over time (positive = improving) | Time-ordered traces |
 | Robustness | % of tasks succeeding under different input variations | Multi-scenario evals |
 
-## Question Protocol
+## Action Plan Output
 
-Use `==QUESTION==` / `==END_QUESTION==` format when needing human input.
-The orchestrator relays responses from the human.
+At the end of Phase 3 (SUGGEST), output your recommendation as plain text
+with a `## Plano de Ação Proposto` section. NEVER use `==QUESTION==` blocks.
+
+### Format
+```
+## Plano de Ação Proposto
+
+### R01: <title>
+**File:** .opencode/agents/<agent>.md
+**Section:** <section-name>
+**Change:** <summary>
+**Impact:** +X.X pp estimated on R_geral
+
+### R02: <title>
+...
+
+---
+Aguardando decisão do usuário sobre quais ações implementar.
+```
+
+The orchestrator will present this to the user, who responds in free text.
+The orchestrator then relays the decision back via `task(task_id=<same>)`.
+
+### Decision Handling
+- If user approves specific recommendations (e.g., "Aplique R01 e R02"):
+  Start Phase 4 (VALIDATE) for each approved recommendation
+- If user rejects and gives new direction (e.g., "Refaça com outro foco"):
+  Adjust the plan accordingly and re-present
+- If user approves everything: proceed with all recommendations
 
 ## Tool Failure Reporting
 

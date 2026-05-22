@@ -128,7 +128,8 @@ After ALL subagents finish and quality passes:
 
 ## Agent Improvement Routing
 
-When the user request is about improving agents themselves (NOT application code):
+When the user request is about improving agents themselves (NOT application
+code):
 
 - Delegate directly to `agent-improver` — it is a standalone agent, not part of
   the standard 3-phase pipeline
@@ -137,42 +138,65 @@ When the user request is about improving agents themselves (NOT application code
 - agent-improver has read/edit/bash access to all agent .md files and the
   eval infrastructure — it works independently
 
-**SAVE the task_id** from the agent-improver `task()` call. If the agent-improver
-returns a `==QUESTION==` block, you must relay it to the human and resume the
-same session:
+**SAVE the task_id** from the agent-improver `task()` call. The agent-improver
+returns a plain-text report with a `## Plano de Ação Proposto` section. You
+must relay this to the user in free text and relay the response back:
 
 ```
-# After agent-improver returns:
+# After agent-improver returns its audit + action plan:
 result = task("audit agents", subagent_type="agent-improver")
-task_id = result.task_id  # SAVE THIS
+task_id = result.task_id  # SAVE THIS — essential for resuming!
 
-if "==QUESTION==" in result.output:
-    # 1. Extract the question (everything between ==QUESTION== and ==END_QUESTION==)
-    # 2. Present to the human
-    response = question([
-        "Context: <from the ==QUESTION== block>",
-        "Question: <from the ==QUESTION== block>",
-        "Options: <from the ==QUESTION== block>"
-    ])
-    # 3. Resume agent-improver with the answer
-    result = task(
-        f"The human answered: {response}",
-        subagent_type="agent-improver",
-        task_id=task_id  # RESUME same session
-    )
-    # 4. Repeat until no more ==QUESTION== blocks
+# 1. Present the agent-improver's full report to the user as plain text
+#    (the report contains ## Plano de Ação Proposto with recommendations)
+
+# 2. Ask the user in free text:
+#    "O agent-improver concluiu a auditoria e propôs o plano acima.
+#     O que você deseja fazer? (ex: 'Aplique R01 e R02', 'Aprovo tudo',
+#     'Não gostei, refaça auditando o agente X', 'Mude a abordagem de R03')"
+
+# 3. Relay the user's free-text response to agent-improver, reusing task_id:
+result = task(
+    f"Decisão do usuário: {user_response}",
+    subagent_type="agent-improver",
+    task_id=task_id  # RESUME same session with full context
+)
+
+# 4. agent-improver processes the decision:
+#    - If approved: proceeds to Phase 4 (VALIDATE) and applies changes
+#    - If rejected with new direction: adjusts plan and re-presents
+#    - Return the final result to you
+#    - You present it to the user
 ```
 
-Example relay flow:
+**Complete relay example:**
+
 ```
 You: "Quero auditar os agentes"
 Orchestrator → agent-improver (task_id=abc)
-  agent-improver: "==QUESTION== Preciso de aprovação para mudar X..."
-Orchestrator → You: "O agent-improver está na fase SUGGEST e precisa de
-  aprovação para modificar o arquivo Y. Aprova?"
-You: "Sim"
-Orchestrator → agent-improver (task_id=abc): "O humano aprovou: Sim"
-  agent-improver: "Aplicando mudança... Relatório final..."
+  agent-improver returns: [Audit Report + ## Plano de Ação Proposto
+    R01: Aumentar timeout do quality-runner
+    R02: Adicionar verificação de consistência no orchestrator
+    ---
+    Aguardando decisão do usuário sobre quais ações implementar.]
+
+Orchestrator → You (free text):
+  "O agent-improver concluiu a auditoria. Plano proposto:
+   R01: Aumentar timeout do quality-runner (+3.2 pp)
+   R02: Adicionar verificação de consistência (+1.8 pp)
+   O que você deseja fazer?"
+
+You: "Aplique só R01 por enquanto"
+
+Orchestrator → agent-improver (task_id=abc):
+  "Decisão do usuário: Aplique só R01 por enquanto"
+
+  agent-improver: "Aplicando R01... Validação concluída...
+   R_geral: 72.3% → 75.5% (+3.2 pp). Lição registrada."
+
+Orchestrator → You:
+  "R01 aplicado com sucesso. R_geral subiu de 72.3% para 75.5%.
+   R02 ainda pendente — quer que eu peça para o agent-improver aplicar?"
 ```
 
 Trigger phrases: "melhorar agentes", "auditar agentes", "agent-improver",

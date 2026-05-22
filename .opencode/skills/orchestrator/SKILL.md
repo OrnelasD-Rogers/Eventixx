@@ -205,15 +205,20 @@ Trust this recommendation — it considers project context. Still verify
 Is about agent improvement/audit | agent-improver (standalone, no pipeline needed)
 Is about improving reliability | agent-improver (standalone, no pipeline needed)
 
-**Question Relay Flow for agent-improver:**
+**Free-Text Relay Flow for agent-improver:**
 ```
 1. task(agent-improver, task_id=NEW)
-   → agent-improver returns ==QUESTION== block
-2. question() → relay to human with context
-3. task(agent-improver, task_id=SAME, "Human response: X")
-   → agent-improver continues with context preserved
-4. Repeat until no ==QUESTION== in output
+   → agent-improver returns plain text report with ## Plano de Ação Proposto
+2. Present report to user in free text (do NOT use question() tool)
+3. Ask user: "O que você deseja fazer?" — free text response
+4. task(agent-improver, task_id=SAME, "Decisão do usuário: <free text>")
+   → agent-improver resumes with full context, implements or adjusts
+5. Present final result to user
 ```
+
+**Key difference from old flow:**
+- Old: `==QUESTION==` block → `question()` tool (multiple choice)
+- New: Plain text report → Free text user response → `task_id` relay
 
 ## Output
 

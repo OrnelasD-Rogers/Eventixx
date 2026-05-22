@@ -19,6 +19,8 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    template:
+      observation-enabled: true
 
 server:
   port: 8080
@@ -37,6 +39,9 @@ management:
       show-details: always
 
 logging:
+  structured:
+    format:
+      console: ecs
   level:
     com.eventixx.eventcatalog: DEBUG
     org.apache.kafka: WARN

@@ -38,3 +38,9 @@
 - When adding a completed entry to a UC Execution Log for a task that already has a "☐ Pending" placeholder row, the old placeholder must be explicitly removed — otherwise the task appears twice (once as Pending, once as Completed).
 - `docker-compose.{service}.yml` files for individual service isolation are already covered by the generic pattern in setup.md ("Each service has a docker-compose.{service}.yml"). No deployment.md or setup.md update is needed for new docker-compose files that follow this pattern.
 - The `aspectjweaver` dependency is BOM-managed by Spring Boot 4.0.6 (no explicit version pin). Per previous lesson, no setup.md/AGENTS.md version table update is needed.
+
+### 2026-05-17 (2)
+
+- When a pre-existing fully implemented service (search-service) is documented retroactively in UC-001 Task 3, the docs-sync edits include both the original Task 3 artifacts AND Task 5 (observability) artifacts. The Execution Log must remove both placeholder rows and add both completed entries.
+- Acceptance criteria must be updated together with task completion count. Task 3 added 2 new checked criteria (search indexing, search API), Task 5 added 1 (structured logs). All 10 criteria are now checked.
+- `micrometer-registry-prometheus` is a transitive dependency carrier for `micrometer-core` — without it, `micrometer-core` is missing from the classpath even though `spring-boot-starter-actuator` is present. This is a subtle Boot 4 change worth documenting.

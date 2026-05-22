@@ -16,6 +16,7 @@ import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.repositories.TicketTypeRepository;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
 import com.eventixx.eventcatalog.services.DomainEventPublisher;
+import com.eventixx.eventcatalog.services.EventMetricsService;
 import com.eventixx.eventcatalog.services.messaging.EventPublished;
 import java.time.Instant;
 import java.util.List;
@@ -39,6 +40,7 @@ public class EventService {
   private final EventMapper eventMapper;
   private final DomainEventPublisher domainEventPublisher;
   private final EventValidator eventValidator;
+  private final EventMetricsService eventMetricsService;
 
   /**
    * Creates a new event.
@@ -51,7 +53,9 @@ public class EventService {
     Event event = buildEvent(request, venue, category);
     attachTicketTypes(event, request.ticketTypes());
 
-    return eventMapper.toResponse(eventRepository.save(event));
+    EventResponse response = eventMapper.toResponse(eventRepository.save(event));
+    eventMetricsService.recordEventCreated();
+    return response;
   }
 
   public EventResponse findById(UUID id) {
@@ -90,7 +94,9 @@ public class EventService {
     eventValidator.validateCanBePublished(event);
     markAsPublished(event);
     publishEventToKafka(event);
-    return eventMapper.toResponse(eventRepository.save(event));
+    EventResponse response = eventMapper.toResponse(eventRepository.save(event));
+    eventMetricsService.recordEventPublished();
+    return response;
   }
 
   /**

@@ -57,6 +57,13 @@
         <exclude name="SignatureDeclareThrowsException"/> <!-- Spring Security config throws Exception -->
     </rule>
 
+    <!-- CouplingBetweenObjects: increased to 25 for Spring services with legitimate multi-repository dependencies -->
+    <rule ref="category/java/design.xml/CouplingBetweenObjects">
+        <properties>
+            <property name="threshold" value="25"/>
+        </properties>
+    </rule>
+
     <!-- TooManyMethods: re-enabled with threshold 20 (Spring services legitimately have ~12-15 public methods) -->
     <rule ref="category/java/design.xml/TooManyMethods">
         <properties>

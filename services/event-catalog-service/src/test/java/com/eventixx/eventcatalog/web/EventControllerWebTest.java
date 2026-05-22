@@ -19,6 +19,7 @@ import com.eventixx.eventcatalog.dto.event.UpdateEventRequest;
 import com.eventixx.eventcatalog.exceptions.BusinessException;
 import com.eventixx.eventcatalog.exceptions.ConflictException;
 import com.eventixx.eventcatalog.exceptions.ResourceNotFoundException;
+import com.eventixx.eventcatalog.services.EventMetricsService;
 import com.eventixx.eventcatalog.services.event.EventService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -42,6 +43,7 @@ class EventControllerWebTest {
   @Autowired private ObjectMapper objectMapper;
 
   @MockitoBean private EventService eventService;
+  @MockitoBean private EventMetricsService eventMetricsService;
 
   private final UUID eventId = UUID.randomUUID();
 

@@ -20,6 +20,7 @@ import com.eventixx.eventcatalog.repositories.CategoryRepository;
 import com.eventixx.eventcatalog.repositories.EventRepository;
 import com.eventixx.eventcatalog.repositories.VenueRepository;
 import com.eventixx.eventcatalog.services.DomainEventPublisher;
+import com.eventixx.eventcatalog.services.EventMetricsService;
 import com.eventixx.eventcatalog.services.event.EventMapper;
 import com.eventixx.eventcatalog.services.event.EventService;
 import com.eventixx.eventcatalog.services.event.EventValidator;
@@ -48,6 +49,7 @@ class EventServiceTest {
   @Mock private EventMapper eventMapper;
   @Mock private DomainEventPublisher domainEventPublisher;
   @Mock private EventValidator eventValidator;
+  @Mock private EventMetricsService eventMetricsService;
 
   @InjectMocks private EventService eventService;
 

@@ -17,6 +17,14 @@
 - **New patterns discovered**: When analyzing observability infrastructure (metrics, tracing, logging) rather than REST endpoints, the 7-category model still works but needs adaptation — C3 (Concurrency) maps to Micrometer Counter thread-safety, C7 (Integration) maps to dependency availability at startup. Infrastructure changes don't always have a single HTTP method/path to analyze.
 - **False positives**: None. The `MeterRegistryCustomizer` import LSP error was an environment issue (LSP classpath resolution), not a compilation error — this was confirmed by the search-service having the same import pattern.
 
+## 2026-05-17
+- **Context**: Search service observability — structured JSON logging (ECS), OpenTelemetry tracing, Kafka listener observation
+- **What worked**: CATEGORIES.md C7 integration check correctly identified that existing tests serve as validation for structured logging configuration — the `SearchControllerWebTest` test output showed `{"@timestamp":"...","ecs":{"version":"8.11"}}` lines, confirming ECS JSON logging was active without any test changes.
+- **What didn't**: The 7-category catalog focuses on REST endpoints with controllers/services/entities. This task was purely config changes (pom.xml + yml) with no new Java files. The edge-case analysis was minimal — no DTOs, no entities, no repositories to analyze. The catalog could benefit from a "Configuration change" category.
+- **New patterns discovered**: Structured logging (ECS) can be verified during existing test runs — JSON output in the `@WebMvcTest` logs confirms the format is active. No need for a dedicated test if the observation is a side effect. Also: `logging.structured.format.console=ecs` is the correct property (NOT `logging.structured.format=json`).
+- **False positives**: None.
+- **Endpoint**: N/A — configuration-only change
+
 <!--
 Template for each entry:
 ## YYYY-MM-DD

@@ -152,18 +152,20 @@
 - **Agentes afetados**: agent-improver (permissions), e qualquer novo agente
   que precise de bash.
 
-### agent-improver perguntas devem ser relayed pelo orchestrator
-- **Problema**: agent-improver fazia perguntas diretamente ao humano via
-  `question()` tool, mas as perguntas ficavam presas na sessão do subagente.
-  Se o humano não abria o subagente, não via o contexto nem as opções.
-- **Solução**: agent-improver agora usa formato `==QUESTION== ... ==END_QUESTION==`
-  no output. O orchestrator detecta, relay ao humano com contexto via
-  `question()` tool, e retoma a sessão do agent-improver com `task_id` reutilizado.
-- **Gatilho**: agent-improver precisa de aprovação ou clarificação do humano.
-- **Impacto**: Humano vê contexto completo sem precisar abrir o subagente.
-  Agent-improver não perde contexto porque a sessão é retomada.
-- **Agentes afetados**: agent-improver (formato de saída para perguntas),
-  orchestrator (lógica de relay), SKILL.md (documentação do fluxo).
+### agent-improver com plano de ação em texto livre
+- **Problema**: agent-improver usava `==QUESTION==` blocks que forçavam
+  múltipla escolha via `question()` tool. O formato engessava a resposta
+  do usuário e exigia manutenção extra no orchestrator.
+- **Solução**: agent-improver agora retorna relatório completo com seção
+  `## Plano de Ação Proposto` em texto puro. O orchestrator apresenta ao
+  usuário em formato de texto livre e pergunta "O que você deseja fazer?".
+  Usuário responde em texto livre; orchestrator relay com `task_id`.
+- **Gatilho**: agent-improver conclui auditoria e propõe mudanças.
+- **Impacto**: Usuário tem liberdade para aprovar, rejeitar ou modificar
+  o plano sem ficar preso a opções pré-definidas. Menos manutenção no
+  orchestrator (sem lógica de detecção de `==QUESTION==`).
+- **Agentes afetados**: agent-improver (formato de saída), orchestrator
+  (lógica de relay simplificada), SKILL.md (documentação atualizada).
 
 ### javap-inspector skill bloqueado no frontmatter do code-writer
 - **Problema**: Prompt do code-writer foi atualizado para REQUERER
